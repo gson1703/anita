@@ -5,7 +5,7 @@ import sys
 import os
 import time
 
-os.system("qemu-img create hd 1G")
+os.system("qemu-img create hd 1500M")
 
 def send_slowly(child, str):
     for char in str:
@@ -15,7 +15,7 @@ def send_slowly(child, str):
 #dist="/usr/build/136/release/i386/installation"
 #child = pexpect.spawn("qemu -m 32 -hda hd -fda %s/floppy/boot-com1.fs -cdrom %s/cdrom/netbsd-i386.iso -boot a -serial stdio -nographic" % (dist, dist))
 
-child = pexpect.spawn("qemu -m 32 -hda hd pkg.hd -fda boot-com1.fs -cdrom i386cd-3.0.1.iso -boot a -serial stdio -nographic")
+child = pexpect.spawn("qemu -m 32 -hda hd -fda boot-com1.fs -cdrom i386cd-3.0.1.iso -boot a -serial stdio -nographic")
 
 child.log_file = sys.stdout
 child.timeout = 3600
@@ -50,9 +50,6 @@ child.expect("b: Use the entire disk")
 child.send("b\n")
 child.expect("Do you want to install the NetBSD bootcode")
 child.expect("a: Yes")
-
-child.interact()
-
 child.send("\n")
 # XXX If you select "b: Use existing partition sizes" here, things go wrong
 child.send("\n")
