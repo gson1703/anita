@@ -11,12 +11,14 @@ def send_slowly(child, str):
         child.send(char)
         child.expect(char)
 
-def run_netbsd(iso, boot1, boot2, hd):
+def install_netbsd(iso, boot1, boot2, hd):
 
     os.system("qemu-img create %s 1500M" % hd)
 
-    child = pexpect.spawn("ktrace -f qemu.kt qemu -m 32 -hda %s -fda %s -cdrom %s -boot a -serial stdio -nographic" % (hd, boot1, iso))
-
+    # ktrace -f qemu.kt
+    qemu_command = "qemu -m 32 -hda %s -fda %s -cdrom %s -boot a -serial stdio -nographic" % (hd, boot1, iso)
+    print qemu_command
+    child = pexpect.spawn(qemu_command)
     child.log_file = sys.stdout
     child.timeout = 3600
 
@@ -96,11 +98,77 @@ def run_netbsd(iso, boot1, boot2, hd):
     child.send("halt\n")
     child.expect("halted by root")
 
+def root_command(child, cmd):
+    child.send(cmd + "\n")
+    child.expect("\n# ")
+
+
+def install_pgsql(child, version):
+    root_command(child, "cd /mnt")
+    root_command(child, "pkg_add %s.tgz" % version)
+    # # If you actually do this, pgsql won't start due to lacking server.crt.
+    # # root_command(child, "echo 'pgsql_flags=\"-l\"' >>/etc/rc.conf")
+    root_command(child, "cp /usr/pkg/share/examples/rc.d/pgsql /etc/rc.d/")
+    root_command(child, "echo 'pgsql=YES' >>/etc/rc.conf")
+    root_command(child, "/etc/rc.d/pgsql start")
+
+def run_netbsd(hd):
+    qemu_command = "qemu -m 32 -hda hd-1004 -hdb pkg.hd -serial stdio -nographic -snapshot"
+    print qemu_command
+    child = pexpect.spawn(qemu_command)
+    child.log_file = sys.stdout
+    child.timeout = 3600
+
+    child.expect("login:")
+    child.send("root\n")
+    child.expect("\n# ")
+
+    root_command(child, "mount /dev/wd1a /mnt")
+
+    install_pgsql(child, "postgresql74-server-7.4.13")
+
+    # Populate the database
+    #root_command(child, "su pgsql -c 'psql -d template1 -f araneus.pgdump'")
+# createdb root
+# pgsql
+#
+
+    root_command(child, "cd /tmp")
+    root_command(child, "su pgsql -c 'pg_dumpall' >backup.pgdump")
+    root_command(child, "su pgsql -c 'pg_dumpall -o' >backup.pgdump-o")
+
+    root_command(child, "/etc/rc.d/pgsql stop")
+    root_command(child, "pkg_delete -R postgresql74-server")
+
+    root_command(child, "rm -rf /usr/pkg/pgsql")
+
+    install_pgsql(child, "postgresql81-server-8.1.4")
+
+    root_command(child, "su pgsql -c 'psql -d postgres -f /tmp/backup.pgdump-o'")
+
+    child.interact()
+
+	
 # 3.0.1
-run_netbsd("i386cd-3.0.1.iso", "boot-com1.fs", "boot2.fs", "hd-3.0.1")
+# installs fine but booting the installed hd hangs after "root on ffs"
+#install_netbsd("i386cd-3.0.1.iso", "boot-com1.fs", "boot2.fs", "hd-3.0.1")
 
-# current
+# current / guava
+# works
 #dist="/usr/build/136/release/i386/installation"
-#run_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-current")
+#install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-136")
+#install_netbsd("dist/136/netbsd-i386.iso", "dist/136/boot-com1.fs", "dist/136/boot2.fs", "hd-136")
 
+# current / guam
+# install kernel hangs after probing kbc
+#dist="/usr/build/1003/release/i386/installation"
+#install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-1003")
 
+# current / guam
+# works
+
+#dist="/usr/build/1004/release/i386/installation"
+#install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-1004")
+#os.system("touch hd-1004.timestamp")
+
+run_netbsd("hd-1004")
