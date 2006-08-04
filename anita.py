@@ -15,7 +15,6 @@ def install_netbsd(iso, boot1, boot2, hd):
 
     os.system("qemu-img create %s 1500M" % hd)
 
-    # ktrace -f qemu.kt
     qemu_command = "qemu -m 32 -hda %s -fda %s -cdrom %s -boot a -serial stdio -nographic" % (hd, boot1, iso)
     print qemu_command
     child = pexpect.spawn(qemu_command)
@@ -155,8 +154,8 @@ def run_netbsd(hd):
 
 # current / guava
 # works
-#dist="/usr/build/136/release/i386/installation"
-#install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-136")
+dist="/usr/build/136/release/i386/installation"
+install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-136")
 #install_netbsd("dist/136/netbsd-i386.iso", "dist/136/boot-com1.fs", "dist/136/boot2.fs", "hd-136")
 
 # current / guam
@@ -171,4 +170,4 @@ def run_netbsd(hd):
 #install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-1004")
 #os.system("touch hd-1004.timestamp")
 
-run_netbsd("hd-1004")
+#run_netbsd("hd-1004")
