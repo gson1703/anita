@@ -6,6 +6,8 @@ import os
 import time
 import re
 
+# XXX unused, remove
+
 def send_slowly(child, str):
     for char in str:
         child.send(char)
@@ -25,7 +27,8 @@ def install_netbsd(iso, boot1, boot2, hd):
     # Escape into qemu command mode to switch floppies
     child.send("\001c")
     child.expect('\(qemu\)')
-    send_slowly(child, "change fda %s" % boot2)
+    #send_slowly(child, "change fda %s" % boot2)
+    child.send("change fda %s" % boot2)
     child.send("\n")
     child.expect('\(qemu\)')
     # Exit qemu command mode
@@ -93,14 +96,31 @@ def install_netbsd(iso, boot1, boot2, hd):
     child.send("\n")
     child.expect("x: Exit")
     child.send("x\n")
-    child.expect("#")
+    child.expect("#")  
     child.send("halt\n")
     child.expect("halted by root")
+
+# XXX hardcodes pkg.hd, snapshot
+
+def boot_netbsd(hd):
+    qemu_command = "qemu -m 32 -hda " + hd + " -hdb pkg.hd -serial stdio -nographic -snapshot"
+    print qemu_command
+    child = pexpect.spawn(qemu_command)
+    child.log_file = sys.stdout
+    child.timeout = 3600
+
+    child.expect("login:")
+    child.send("root\n")
+    child.expect("\n# ")
+    return child
 
 def root_command(child, cmd):
     child.send(cmd + "\n")
     child.expect("\n# ")
 
+########################################################################
+
+# pgsql stuff
 
 def install_pgsql(child, version):
     root_command(child, "cd /mnt")
@@ -111,27 +131,16 @@ def install_pgsql(child, version):
     root_command(child, "echo 'pgsql=YES' >>/etc/rc.conf")
     root_command(child, "/etc/rc.d/pgsql start")
 
-def run_netbsd(hd):
-    qemu_command = "qemu -m 32 -hda hd-1004 -hdb pkg.hd -serial stdio -nographic -snapshot"
-    print qemu_command
-    child = pexpect.spawn(qemu_command)
-    child.log_file = sys.stdout
-    child.timeout = 3600
-
-    child.expect("login:")
-    child.send("root\n")
-    child.expect("\n# ")
-
+def test_pgsql(child):
     root_command(child, "mount /dev/wd1a /mnt")
 
     install_pgsql(child, "postgresql74-server-7.4.13")
 
     # Populate the database
     #root_command(child, "su pgsql -c 'psql -d template1 -f araneus.pgdump'")
-# createdb root
-# pgsql
-#
-
+    # createdb root
+    # pgsql
+    #
     root_command(child, "cd /tmp")
     root_command(child, "su pgsql -c 'pg_dumpall' >backup.pgdump")
     root_command(child, "su pgsql -c 'pg_dumpall -o' >backup.pgdump-o")
@@ -141,21 +150,22 @@ def run_netbsd(hd):
 
     root_command(child, "rm -rf /usr/pkg/pgsql")
 
+    # restore in 8.1:
     install_pgsql(child, "postgresql81-server-8.1.4")
-
     root_command(child, "su pgsql -c 'psql -d postgres -f /tmp/backup.pgdump-o'")
 
-    child.interact()
+    # restore in 7.4.13
+    #install_pgsql(child, "postgresql74-server-7.4.13")
+    #root_command(child, "su pgsql -c 'psql -d template1 -f /tmp/backup.pgdump-o'")
 
-	
 # 3.0.1
 # installs fine but booting the installed hd hangs after "root on ffs"
 #install_netbsd("i386cd-3.0.1.iso", "boot-com1.fs", "boot2.fs", "hd-3.0.1")
 
 # current / guava
 # works
-dist="/usr/build/136/release/i386/installation"
-install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-136")
+#dist="/usr/build/136/release/i386/installation"
+#install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-136")
 #install_netbsd("dist/136/netbsd-i386.iso", "dist/136/boot-com1.fs", "dist/136/boot2.fs", "hd-136")
 
 # current / guam
@@ -170,4 +180,51 @@ install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", d
 #install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-1004")
 #os.system("touch hd-1004.timestamp")
 
-#run_netbsd("hd-1004")
+def ftp_if_missing(url, file):
+	if not os.path.isfile(file):
+		dir = os.path.dirname(file)
+		if not os.path.isdir(dir):
+			os.makedirs(dir)
+		# XXX check result
+		os.spawnlp(os.P_WAIT, "ftp", "ftp", "-o", file, url)
+
+# Determine the name of the official NetBSD install ISO for version "ver"
+
+def iso_name(ver):
+    if re.match("^[3-9]", ver) is not None:
+	return "i386cd-" + ver + ".iso"
+    else:
+	return "i386cd.iso"
+
+# FTP a NetBSD distribution.  We need an ISO and serial console boot floppies.
+# This should work for 2.0 through 3.0.1, at least.
+
+def ftp_netbsd_dist(ver):
+    base_url = "http://ftp.netbsd.org/pub/NetBSD/"
+    for floppy in ['boot-com1.fs', 'boot2.fs']:
+	ftp_if_missing(base_url + "NetBSD-" + ver + "/i386/installation/floppy/" + floppy, "dist/" + ver + "/" + floppy)
+    isoname = iso_name(ver)
+    ftp_if_missing(base_url + "iso/" + ver + "/" + isoname, "dist/" + ver + "/" + isoname)
+
+def install_netbsd_dist(ver):
+    dir = "dist/" + ver + "/"
+    install_netbsd(dir  + iso_name(ver), dir + "boot-com1.fs", dir + "boot2.fs", "hd-" + ver)
+
+# run_netbsd("hd-1004")
+
+#install_netbsd_dist("2.1")
+
+#ftp_netbsd_dist("3.0")
+
+#child = boot_netbsd("hd-3.0")
+#child.interact()
+
+#install_netbsd_dist("3.0.1")
+#boot_netbsd("hd-3.0.1")
+
+
+
+#install_netbsd_dist("3.0")
+#boot_netbsd("hd-3.0")
+
+boot_netbsd("hd-1004")
