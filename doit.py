@@ -10,10 +10,13 @@ import time
 import re
 
 def install_netbsd(iso, boot1, boot2, hd):
-    os.system("qemu-img create %s 1500M" % hd)
-    qemu_command = "qemu -m 32 -hda %s -fda %s -cdrom %s -boot a -serial stdio -nographic" % (hd, boot1, iso)
-    print qemu_command
-    child = pexpect.spawn(qemu_command)
+    if os.path.isfile(hd):
+        return
+    ret = os.spawnlp(os.P_WAIT, "qemu-img", "qemu-img", "create", hd, "1500M")
+    if ret != 0:
+        raise RuntimeError("could not run qemu-img")
+    child = pexpect.spawn("qemu", ["qemu", "-m", "32", "-hda", hd, "-fda", boot1, "-cdrom", iso, \
+        "-boot", "a", "-serial", "stdio", "-nographic"])
     child.log_file = sys.stdout
     child.timeout = 3600
 
@@ -39,7 +42,18 @@ def install_netbsd(iso, boot1, boot2, hd):
     child.expect("Hit enter to continue")
     child.send("\n")
     child.expect("a: Full installation")
-    child.send("\n")
+    if False:
+	# With X
+	child.send("a\n")
+    else:
+	# Without X
+	child.send("b\n")
+	child.expect("o: X11 sets")
+	child.send("o\n")
+	child.expect("g: Deselect all")
+	child.send("g\n")
+	child.send("x\n")
+	child.send("x\n")
     child.expect("a: This is the correct geometry")
     child.send("\n")
     child.expect("b: Use the entire disk")
@@ -47,11 +61,10 @@ def install_netbsd(iso, boot1, boot2, hd):
     child.expect("Do you want to install the NetBSD bootcode")
     child.expect("a: Yes")
     child.send("\n")
-    # XXX If you select "b: Use existing partition sizes" here, things go wrong
     child.send("\n")
     child.expect("Accept partition sizes")
-    # Press control-N enought times to get to the end of the list,
-    # then press enter to continue
+    # Press control-N enough times to get to the end of the list,
+    # then enter to continue
     child.send("\016\016\016\016\016\016\016\016\n")
     child.expect("x: Partition sizes ok")
     child.send("\n")
@@ -61,8 +74,6 @@ def install_netbsd(iso, boot1, boot2, hd):
     child.expect("b: Yes")
     child.send("b\n")
     child.expect("b: Use serial port com0")
-    # XXX sysinst is inconsistent here; you must select "x" to exit
-    # the dialog, whereas other similar dialogs let you just press enter.
     child.send("bx\n")
     child.expect("a: Progress bar")
     child.send("\n")
@@ -93,13 +104,13 @@ def install_netbsd(iso, boot1, boot2, hd):
     child.send("halt\n")
     child.expect("halted by root")
 
-# XXX hardcodes pkg.hd, snapshot
+# XXX hardcodes -snapshot
 
 def boot_netbsd(ver):
     hd = "netbsd-" + ver + "/" + "wd0"
-    qemu_command = "qemu -m 32 -hda " + hd + " -hdb pkg.hd -serial stdio -nographic -snapshot"
-    print qemu_command
-    child = pexpect.spawn(qemu_command)
+
+    child = pexpect.spawn("qemu", ["qemu", "-m", "32", "-hda", hd, "-serial", "stdio", "-nographic", "-snapshot"])
+
     child.log_file = sys.stdout
     child.timeout = 3600
 
@@ -181,16 +192,17 @@ def ftp_if_missing(url, file):
 		os.spawnlp(os.P_WAIT, "ftp", "ftp", "-o", file, url)
 
 def ftp_if_missing_2(urlbase, dirbase, relfile):
-        url = urlbase + relfile
-        file = dirbase + "/" + relfile
-	if not os.path.isfile(file):
-		print "missing " + file
-		dir = os.path.dirname(file)
-		if not os.path.isdir(dir):
-			os.makedirs(dir)
-		# XXX check result
-		print "FTP " + url
-		os.spawnlp(os.P_WAIT, "ftp", "ftp", "-o", file, url)
+    url = urlbase + relfile
+    file = dirbase + "/" + relfile
+    if os.path.isfile(file):
+	return
+    print "missing " + file
+    dir = os.path.dirname(file)
+    if not os.path.isdir(dir):
+	os.makedirs(dir)
+    # XXX check result
+    print "FTP " + url
+    os.spawnlp(os.P_WAIT, "ftp", "ftp", "-o", file, url)
 
 # Determine the name of the official NetBSD install ISO for version "ver"
 
@@ -266,11 +278,12 @@ def ftp_netbsd_daily(ver, datetime):
     base_dir = "netbsd-" + ver + "/ftp/"
     for floppy in ['boot-com1.fs', 'boot2.fs']:
 	ftp_if_missing_2(dist_url, base_dir, "i386/installation/floppy/" + floppy)
-    for set in [ "base", "comp", "etc", "games", "man", "misc", "text", "xbase", "xcomp", "xetc", "xfont", "xserver", "kern-GENERIC" ]:
+    # "xbase", "xcomp", "xetc", "xfont", "xserver", 
+    for set in [ "base", "comp", "etc", "games", "man", "misc", "text", "kern-GENERIC" ]:
         ftp_if_missing_2(dist_url, base_dir, "i386/binary/sets/" + set + ".tgz")
     os.system("makefs -t cd9660 -o rockridge " + "netbsd-" + ver + "/" + iso_name(ver) + " " + base_dir)
 
-ftp_netbsd_daily("4", "200608170000Z")
-install_netbsd_dist("4")
+#ftp_netbsd_daily("4", "200608170000Z")
+#install_netbsd_dist("4")
 child = boot_netbsd("4")
 child.interact()
