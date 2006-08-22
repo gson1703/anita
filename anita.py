@@ -1,4 +1,7 @@
 #!/usr/pkg/bin/python
+#
+# Scripted NetBSD installation
+#
 
 import pexpect
 import sys
@@ -6,17 +9,8 @@ import os
 import time
 import re
 
-# XXX unused, remove
-
-def send_slowly(child, str):
-    for char in str:
-        child.send(char)
-        child.expect(char)
-
 def install_netbsd(iso, boot1, boot2, hd):
-
     os.system("qemu-img create %s 1500M" % hd)
-
     qemu_command = "qemu -m 32 -hda %s -fda %s -cdrom %s -boot a -serial stdio -nographic" % (hd, boot1, iso)
     print qemu_command
     child = pexpect.spawn(qemu_command)
@@ -27,7 +21,6 @@ def install_netbsd(iso, boot1, boot2, hd):
     # Escape into qemu command mode to switch floppies
     child.send("\001c")
     child.expect('\(qemu\)')
-    #send_slowly(child, "change fda %s" % boot2)
     child.send("change fda %s" % boot2)
     child.send("\n")
     child.expect('\(qemu\)')
@@ -102,7 +95,8 @@ def install_netbsd(iso, boot1, boot2, hd):
 
 # XXX hardcodes pkg.hd, snapshot
 
-def boot_netbsd(hd):
+def boot_netbsd(ver):
+    hd = "netbsd-" + ver + "/" + "wd0"
     qemu_command = "qemu -m 32 -hda " + hd + " -hdb pkg.hd -serial stdio -nographic -snapshot"
     print qemu_command
     child = pexpect.spawn(qemu_command)
@@ -176,16 +170,26 @@ def test_pgsql(child):
 # current / guam
 # works
 
-#dist="/usr/build/1004/release/i386/installation"
-#install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-1004")
-#os.system("touch hd-1004.timestamp")
-
 def ftp_if_missing(url, file):
 	if not os.path.isfile(file):
+		dir = os.path.dirname(file)
+		print "missing " + file
+		if not os.path.isdir(dir):
+			os.makedirs(dir)
+		# XXX check result
+		print "FTP " + url
+		os.spawnlp(os.P_WAIT, "ftp", "ftp", "-o", file, url)
+
+def ftp_if_missing_2(urlbase, dirbase, relfile):
+        url = urlbase + relfile
+        file = dirbase + "/" + relfile
+	if not os.path.isfile(file):
+		print "missing " + file
 		dir = os.path.dirname(file)
 		if not os.path.isdir(dir):
 			os.makedirs(dir)
 		# XXX check result
+		print "FTP " + url
 		os.spawnlp(os.P_WAIT, "ftp", "ftp", "-o", file, url)
 
 # Determine the name of the official NetBSD install ISO for version "ver"
@@ -201,19 +205,28 @@ def iso_name(ver):
 
 def ftp_netbsd_dist(ver):
     base_url = "http://ftp.netbsd.org/pub/NetBSD/"
+    dist_url = base_url + "NetBSD-" + ver + "/"
     for floppy in ['boot-com1.fs', 'boot2.fs']:
-	ftp_if_missing(base_url + "NetBSD-" + ver + "/i386/installation/floppy/" + floppy, "dist/" + ver + "/" + floppy)
+	ftp_if_missing(dist_url + "i386/installation/floppy/" + floppy, "dist/" + ver + "/" + floppy)
     isoname = iso_name(ver)
     ftp_if_missing(base_url + "iso/" + ver + "/" + isoname, "dist/" + ver + "/" + isoname)
 
-def install_netbsd_dist(ver):
-    dir = "dist/" + ver + "/"
-    install_netbsd(dir  + iso_name(ver), dir + "boot-com1.fs", dir + "boot2.fs", "hd-" + ver)
 
-# run_netbsd("hd-1004")
+def ftp_netbsd_rc(ver, datetime):
+    dash_ver = re.sub("[\\._]", "-", ver)
+    base_url = "http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-" + dash_ver + "/" + datetime + "/";
+    dist_url = base_url
+    for floppy in ['boot-com1.fs', 'boot2.fs']:
+	ftp_if_missing(dist_url + "i386/installation/floppy/" + floppy, "dist/" + ver + "/" + floppy)
+    isoname = iso_name(ver)
+    ftp_if_missing(base_url + "iso/" + isoname, "dist/" + ver + "/" + isoname)
+
+def install_netbsd_dist(ver):
+    dir = "netbsd-" + ver + "/"
+    floppy_dir = dir + "ftp/i386/installation/floppy/"
+    install_netbsd(dir  + iso_name(ver), floppy_dir + "boot-com1.fs", floppy_dir + "boot2.fs", dir + "wd0")
 
 #install_netbsd_dist("2.1")
-
 #ftp_netbsd_dist("3.0")
 
 #child = boot_netbsd("hd-3.0")
@@ -227,4 +240,37 @@ def install_netbsd_dist(ver):
 #install_netbsd_dist("3.0")
 #boot_netbsd("hd-3.0")
 
-boot_netbsd("hd-1004")
+#boot_netbsd("hd-1004")
+
+#dist="/usr/build/1005/release/i386/installation"
+#install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-1005")
+#os.system("touch hd-1005.timestamp")
+
+#child = boot_netbsd("hd-1005")
+#child.interact()
+
+# ftp://ftp.netbsd.org/pub/NetBSD-daily/HEAD/200608050000Z/i386/installation/cdrom/boot-com.iso
+
+#ftp_netbsd_rc("3.1_RC1", "200608202102Z")
+#install_netbsd_dist("3.1_RC1")
+#boot_netbsd("hd-3.1_RC1")
+
+#ftp_netbsd_rc("HEAD", "200608050000Z")
+
+#ftp://ftp.netbsd.org/pub/NetBSD-daily/HEAD/200608050000Z/i386/installation/cdrom/boot-com.iso
+
+def ftp_netbsd_daily(ver, datetime):
+    dash_ver = re.sub("[\\._]", "-", ver)
+    base_url = "http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-" + dash_ver + "/" + datetime + "/"
+    dist_url = base_url
+    base_dir = "netbsd-" + ver + "/ftp/"
+    for floppy in ['boot-com1.fs', 'boot2.fs']:
+	ftp_if_missing_2(dist_url, base_dir, "i386/installation/floppy/" + floppy)
+    for set in [ "base", "comp", "etc", "games", "man", "misc", "text", "xbase", "xcomp", "xetc", "xfont", "xserver", "kern-GENERIC" ]:
+        ftp_if_missing_2(dist_url, base_dir, "i386/binary/sets/" + set + ".tgz")
+    os.system("makefs -t cd9660 -o rockridge " + "netbsd-" + ver + "/" + iso_name(ver) + " " + base_dir)
+
+ftp_netbsd_daily("4", "200608170000Z")
+install_netbsd_dist("4")
+child = boot_netbsd("4")
+child.interact()
