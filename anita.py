@@ -9,12 +9,15 @@ import os
 import time
 import re
 
+def spawn(command, args):
+    ret = os.spawnvp(os.P_WAIT, command, args)
+    if ret != 0:
+        raise RuntimeError("could not run " + command)
+
 def install_netbsd(iso, boot1, boot2, hd):
     if os.path.isfile(hd):
         return
-    ret = os.spawnlp(os.P_WAIT, "qemu-img", "qemu-img", "create", hd, "1500M")
-    if ret != 0:
-        raise RuntimeError("could not run qemu-img")
+    spawn("qemu-img", ["qemu-img", "create", hd, "1500M"])
     child = pexpect.spawn("qemu", ["qemu", "-m", "32", "-hda", hd, "-fda", boot1, "-cdrom", iso, \
         "-boot", "a", "-serial", "stdio", "-nographic"])
     child.log_file = sys.stdout
@@ -108,60 +111,12 @@ def install_netbsd(iso, boot1, boot2, hd):
 
 def boot_netbsd(ver):
     hd = "netbsd-" + ver + "/" + "wd0"
-
     child = pexpect.spawn("qemu", ["qemu", "-m", "32", "-hda", hd, "-serial", "stdio", "-nographic", "-snapshot"])
-
     child.log_file = sys.stdout
     child.timeout = 3600
-
     child.expect("login:")
-    child.send("root\n")
-    child.expect("\n# ")
     return child
 
-def root_command(child, cmd):
-    child.send(cmd + "\n")
-    child.expect("\n# ")
-
-########################################################################
-
-# pgsql stuff
-
-def install_pgsql(child, version):
-    root_command(child, "cd /mnt")
-    root_command(child, "pkg_add %s.tgz" % version)
-    # # If you actually do this, pgsql won't start due to lacking server.crt.
-    # # root_command(child, "echo 'pgsql_flags=\"-l\"' >>/etc/rc.conf")
-    root_command(child, "cp /usr/pkg/share/examples/rc.d/pgsql /etc/rc.d/")
-    root_command(child, "echo 'pgsql=YES' >>/etc/rc.conf")
-    root_command(child, "/etc/rc.d/pgsql start")
-
-def test_pgsql(child):
-    root_command(child, "mount /dev/wd1a /mnt")
-
-    install_pgsql(child, "postgresql74-server-7.4.13")
-
-    # Populate the database
-    #root_command(child, "su pgsql -c 'psql -d template1 -f araneus.pgdump'")
-    # createdb root
-    # pgsql
-    #
-    root_command(child, "cd /tmp")
-    root_command(child, "su pgsql -c 'pg_dumpall' >backup.pgdump")
-    root_command(child, "su pgsql -c 'pg_dumpall -o' >backup.pgdump-o")
-
-    root_command(child, "/etc/rc.d/pgsql stop")
-    root_command(child, "pkg_delete -R postgresql74-server")
-
-    root_command(child, "rm -rf /usr/pkg/pgsql")
-
-    # restore in 8.1:
-    install_pgsql(child, "postgresql81-server-8.1.4")
-    root_command(child, "su pgsql -c 'psql -d postgres -f /tmp/backup.pgdump-o'")
-
-    # restore in 7.4.13
-    #install_pgsql(child, "postgresql74-server-7.4.13")
-    #root_command(child, "su pgsql -c 'psql -d template1 -f /tmp/backup.pgdump-o'")
 
 # 3.0.1
 # installs fine but booting the installed hd hangs after "root on ffs"
@@ -187,9 +142,8 @@ def ftp_if_missing(url, file):
 		print "missing " + file
 		if not os.path.isdir(dir):
 			os.makedirs(dir)
-		# XXX check result
 		print "FTP " + url
-		os.spawnlp(os.P_WAIT, "ftp", "ftp", "-o", file, url)
+		spawn("ftp", ["ftp", "-o", file, url])
 
 def ftp_if_missing_2(urlbase, dirbase, relfile):
     url = urlbase + relfile
@@ -200,9 +154,8 @@ def ftp_if_missing_2(urlbase, dirbase, relfile):
     dir = os.path.dirname(file)
     if not os.path.isdir(dir):
 	os.makedirs(dir)
-    # XXX check result
     print "FTP " + url
-    os.spawnlp(os.P_WAIT, "ftp", "ftp", "-o", file, url)
+    spawn("ftp", ["ftp", "-o", file, url])
 
 # Determine the name of the official NetBSD install ISO for version "ver"
 
@@ -247,8 +200,6 @@ def install_netbsd_dist(ver):
 #install_netbsd_dist("3.0.1")
 #boot_netbsd("hd-3.0.1")
 
-
-
 #install_netbsd_dist("3.0")
 #boot_netbsd("hd-3.0")
 
@@ -256,7 +207,6 @@ def install_netbsd_dist(ver):
 
 #dist="/usr/build/1005/release/i386/installation"
 #install_netbsd(dist + "/cdrom/netbsd-i386.iso", dist + "/floppy/boot-com1.fs", dist + "/floppy/boot2.fs", "hd-1005")
-#os.system("touch hd-1005.timestamp")
 
 #child = boot_netbsd("hd-1005")
 #child.interact()
@@ -281,7 +231,7 @@ def ftp_netbsd_daily(ver, datetime):
     # "xbase", "xcomp", "xetc", "xfont", "xserver", 
     for set in [ "base", "comp", "etc", "games", "man", "misc", "text", "kern-GENERIC" ]:
         ftp_if_missing_2(dist_url, base_dir, "i386/binary/sets/" + set + ".tgz")
-    os.system("makefs -t cd9660 -o rockridge " + "netbsd-" + ver + "/" + iso_name(ver) + " " + base_dir)
+    spawn("makefs", ["makefs", "-t", "cd9660", "-o", "rockridge", "netbsd-" + ver + "/" + iso_name(ver), "base_dir"])
 
 #ftp_netbsd_daily("4", "200608170000Z")
 #install_netbsd_dist("4")
