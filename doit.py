@@ -9,6 +9,12 @@ import os
 import time
 import re
 
+# Your preferred NetBSD FTP mirror site.
+# See http://www.netbsd.org/mirrors/#ftp for the complete list.
+
+netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/
+#netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
+
 # Helper function to run a shell command safely and with error
 # checking
 
@@ -123,6 +129,7 @@ class Version:
 	child.expect("Hit enter to continue")
 	child.send("\n")
 	child.expect("a: Full installation")
+        # XXX
 	if False:
 	    # With X
 	    child.send("a\n")
@@ -201,7 +208,7 @@ class Release(Version):
         Version.__init__(self, ver)
         pass
     def dist_url(self):
-        return "http://ftp.netbsd.org/pub/NetBSD/NetBSD-" + self.ver + "/"
+        return netbsd_mirror_url + "NetBSD-" + self.ver + "/"
 
 # A daily build
 
@@ -216,5 +223,3 @@ class DailyBuild(Version):
 # DailyBuild("4", "200608170000Z").boot().interact()
 ver = Release("3.0.1")
 ver.install()
-
-
