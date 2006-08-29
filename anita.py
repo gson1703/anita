@@ -201,6 +201,7 @@ class Version:
         child.expect("#")  
         child.send("halt\n")
         child.expect("halted by root")
+        os.unlink(self.iso_path())
 
     def install(self):
         # Already installed?
