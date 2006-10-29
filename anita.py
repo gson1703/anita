@@ -26,6 +26,14 @@ def spawn(command, args):
     if ret != 0:
         raise RuntimeError("could not run " + command)
 
+def ftp_file(file, url):
+    try:
+        spawn("ftp", ["ftp", "-o", file, url])
+    except:
+        if os.path.isfile(file):
+            os.unlink(file)
+        raise
+
 # FTP a file from the FTP directory tree rooted at "urlbase"
 # into a mirror tree rooted at "dirbase".  The file name to
 # FTP is "relfile", which is relative to both roots.
@@ -36,15 +44,11 @@ def ftp_if_missing(urlbase, dirbase, relfile):
     file = dirbase + "/" + relfile
     if os.path.isfile(file):
         return
-    try:
-        dir = os.path.dirname(file)
-        if not os.path.isdir(dir):
-            os.makedirs(dir)
-        spawn("ftp", ["ftp", "-o", file, url])
-    except:
-        if os.path.isfile(file):
-            os.unlink(file)
-        raise
+    dir = os.path.dirname(file)
+    if not os.path.isdir(dir):
+        os.makedirs(dir)
+    ftp_file(file, url)
+
 
 # A NetBSD version.
 #
@@ -133,23 +137,34 @@ class Version:
         child.expect("I found only one disk")
         child.expect("Hit enter to continue")
         child.send("\n")
-        child.expect("a: Full installation")
-        # Choose "custom installation"
-        child.send("b\n")
-        # Go to the X set selection submenu
-        child.expect("o: X11 sets")
-        child.send("o\n")
-        child.expect("a: X11 base and clients")
-        # Deselect the X sets one by one.  Avoid
-        # "g: Deselect all the above sets" as it behaves
-        # inconsistently between NetBSD versions:
-        # -current wants that to be followed by
-        # "x\n" to exit the dialog, but older versions
-        # do not.
-        for c in "abcde":
-             child.send(c + "\n")
-        # Exit the X set selection submenu
-        child.send("x\n")
+        # Custom installation is choice "c" in -current,
+        # choice "b" in older versions
+	# We could use "Minimal", but it doesn't exist in
+	# older versions.
+        child.expect(re.compile("([a-z]): Custom installation"))
+        child.send(child.match.group(1) + "\n")
+        print "sent " + child.match.group(1)
+	# Check the default for the comp set
+        child.expect(re.compile("([a-z]): Compiler Tools.*((Yes)|(No))"))
+        if child.match.group(2) == "No":
+	    # If disabled, enable it
+	    child.send(child.match.group(1) + "\n")
+        # Check the default for the X11 sets
+        child.expect(re.compile("o: X11 sets.*((All)|(None))"))
+	# If the X11 sets are selected by default, deselect them
+        if child.match.group(1) == "All":
+	    child.send("o\n")
+	    child.expect("a: X11 base and clients")
+	    # Deselect the X sets one by one.  Avoid
+	    # "g: Deselect all the above sets" as it behaves
+	    # inconsistently between NetBSD versions:
+	    # -current wants that to be followed by
+	    # "x\n" to exit the dialog, but older versions
+	    # do not.
+	    for c in "abcde":
+		 child.send(c + "\n")
+	    # Exit the X set selection submenu
+	    child.send("x\n")
         # Exit the main set selection menu
         child.send("x\n")
         child.expect("a: This is the correct geometry")
@@ -179,8 +194,7 @@ class Version:
         child.send("\n")
         # In 3.0.1, you type "c" to continue,; in -current, you type "x".
         # Handle both cases.
-        regex = re.compile("([cx]): Continue")
-        child.expect(regex)
+        child.expect(re.compile("([cx]): Continue"))
         child.send(child.match.group(1) + "\n")
         child.expect("Hit enter to continue")
         child.send("\n")
@@ -243,7 +257,18 @@ class DailyBuild(Version):
     def __init__(self, ver, timestamp):
         Version.__init__(self, ver)
         self.timestamp = timestamp
+    def base_dir(self):
+        return Version.base_dir(self) + "-" + self.timestamp
     def dist_url(self):
         dash_ver = re.sub("[\\._]", "-", self.ver)
         return "http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-" + \
             dash_ver + "/" + self.timestamp + "/"
+
+# A local build
+
+class LocalBuild(Version):
+    def __init__(self, ver, release_path):
+        Version.__init__(self, ver)
+        self.release_path = release_path
+    def dist_url(self):
+	return "file://" + self.release_path
