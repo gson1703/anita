@@ -167,7 +167,7 @@ class Version:
 	    # If disabled, enable it
 	    child.send(child.match.group(1) + "\n")
         # Check the default for the X11 sets
-        child.expect(re.compile("[a-z]: X11 sets.*((All)|(None))"))
+        child.expect(re.compile("([a-z]): X11 sets.*((All)|(None))"))
 	# If the X11 sets are selected by default, deselect them
         if child.match.group(2) == "All":
 	    child.send(child.match.group(1) + "\n")
