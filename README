@@ -4,9 +4,12 @@ and Test Application.
 Anita is an experimental tool for automated testing of the NetBSD/i386
 installation procedure.  Using anita, you can download a NetBSD/i386
 distribution and install it in a qemu virtual machine in a fully
-automated fashion, scripting the sysinst install procedure using
-pexpect over a virtual serial console.  It's fun to watch, and it has
-already played a part in finding several bugs in NetBSD.
+automated fashion.  It's fun to watch, and it has already played a
+part in finding several bugs in NetBSD.
+
+Anita is written in Python and uses the pexpect module to "screen
+scrape" the sysinst output (over an emulated serial console) and
+script the installation procedure.
 
 Anita is still a work in progress.  Currently, only NetBSD/i386 is
 supported as the system to install, but it should be possible to add
@@ -36,20 +39,35 @@ If you want to play with it, here is what you need:
 
  - About a gigabyte of free disk space
 
-You should now be able to download and install a NetBSD daily build in
-a virtual machine like this:
+You should now be able to download and install a NetBSD release in a
+virtual machine like this:
 
    $ python
    >>> import anita
+   >>> ver = anita.Release("3.1")
+   >>> ver.install()
+
+If you have built NetBSD locally using build.sh -R, you can install it
+by calling anita.LocalBuild with a string identifying the NetBSD
+version (using any naming scheme you like) and the RELEASEDIR, as in:
+
+   >>> ver = anita.LocalBuild("my-current", "/path/to/releasedir")
+   >>> ver.install()
+
+If you can find a daily build for i386 on releng.netbsd.org
+(unfortuately, they are not always availble), you can install it by
+calling anita.DailyBuild with the name of the branch (e.g., "3" or
+"HEAD") and the timestamp, as in:
+
    >>> ver = anita.DailyBuild("4", "200608280000Z")
    >>> ver.install()
 
 Anita will cache the distribution sets, boot floppies, and a hard disk
-image in a directory "netbsd-4-200608280000Z" under the current
-working directory, effectively turning the install() method a no-op if
-it is invoked again without first removing the cached files.  If you
-remove just the hard disk image (wd0.img), install() will recreate it
-from the cached distribution files.
+image in a directory "netbsd-<version>" under the current working
+directory, effectively turning the install() method a no-op if it is
+invoked again without first removing the cached files.  If you remove
+just the hard disk image (wd0.img), install() will recreate it from
+the cached distribution files.
 
 To boot the newly installed hard disk image and get a login prompt,
 type
@@ -62,16 +80,11 @@ Anita runs qemu with the "-snapshot" flag, so if you log in and make
 changes to the system, they will not be saved to the disk image file
 by default.
 
-To install an official NetBSD release, you can do:
-
-   >>> ver = anita.Release("3.0.1")
-   >>> ver.install()
-
-I have tested anita with the 2.1 and 3.0.1 releases and a couple of
-daily builds.  With the 2.1 and 3.0.1 releases, the installation part
-works, but for some unknown reason, booting the resulting hard disk
-image doesn't work (it hangs after the "root on ffs" message).
-Perhaps someone can clue me in as to why this happens.  Newer versions
-boot just fine.
+I have tested anita with the 2.1, 3.0.1, and 3.1 releases and a few
+daily builds and local builds.  With the releases, the installation
+part works, but for some unknown reason, booting the resulting hard
+disk image doesn't work (it hangs after the "root on ffs" message).
+Perhaps someone can clue me in as to why this happens, or even fix it.
+NetBSD-current works fine.
 
 Please send any comments, bug reports, or patches to gson@gson.org.
