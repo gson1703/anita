@@ -40,17 +40,18 @@ def ftp_file(file, url):
 # into a mirror tree rooted at "dirbase".  The file name to
 # FTP is "relfile", which is relative to both roots.
 # If the file already exists locally, do nothing.
+# Return true iff we actually downloaded the file.
 
 def ftp_if_missing(urlbase, dirbase, relfile):
     url = urlbase + relfile
     file = dirbase + "/" + relfile
     if os.path.isfile(file):
-        return
+        return False
     dir = os.path.dirname(file)
     if not os.path.isdir(dir):
         os.makedirs(dir)
     ftp_file(file, url)
-
+    return True
 
 # A NetBSD version.
 #
@@ -62,9 +63,6 @@ def ftp_if_missing(urlbase, dirbase, relfile):
 class Version:
     def __init__(self, ver):
         self.ver = ver
-        # This is the maximum number of floppies; it will be adjusted
-        # downwards for versions having less.
-        self.n_floppies = 3
 
     # The directory for files related to this release
     def base_dir(self):
@@ -88,24 +86,35 @@ class Version:
     def wd0_path(self):
         return os.path.join(self.base_dir(), "wd0.img")
 
+    # The list of boot floppies we should try downloading;
+    # not all may actually exist
+    def potential_floppies(self):
+        return ['boot-com1.fs', 'boot2.fs', 'boot3.fs']
+
+    # The list of boot floppies we actually have
     def floppies(self):
-        return ['boot-com1.fs', 'boot2.fs', 'boot3.fs'][0:self.n_floppies]
+        return [f for f in self.potential_floppies() \
+            if os.path.isfile(os.path.join(self.floppy_dir(), f))]
 
     # Download this release by FTP
     def ftp(self):
-        for floppy in self.floppies():
-            # Depending on the NetBSD version, there may be two or three
-            # boot floppies.  Therefore, we ignore failures in downloading
-            # the last floppy, and adjust the list of floppy image file
-            # names accordingly.
-            try:
-		ftp_if_missing(self.dist_url(), self.ftp_local_dir(), \
-		    "i386/installation/floppy/" + floppy)
-            except:
-                if floppy == self.floppies()[-1]:
-                    self.n_floppies = self.n_floppies - 1
-                else:
-                     raise
+        # Depending on the NetBSD version, there may be two or three
+        # boot floppies.  First download the ones that should always
+        # exist.
+        for floppy in self.potential_floppies()[0:2]:
+            did_download_floppies = ftp_if_missing(self.dist_url(), 
+                self.ftp_local_dir(), "i386/installation/floppy/" + floppy)
+        # Then attempt to download the remining ones, but only
+        # if we actually downloaded the initial ones rather
+        # than finding them in the cache.
+        if did_download_floppies:
+            for floppy in self.potential_floppies()[2:]:
+                try:
+                    ftp_if_missing(self.dist_url(),
+                       self.ftp_local_dir(),
+                       "i386/installation/floppy/" + floppy)
+                except:
+                    pass
         for set in [ "base", "comp", "etc", "games", "man", "misc", \
             "text", "kern-GENERIC" ]:
             ftp_if_missing(self.dist_url(), self.ftp_local_dir(), \
@@ -136,15 +145,15 @@ class Version:
         child.timeout = 300
 
         for i in range(1, len(floppy_paths)):
-	    child.expect("insert disk %d, and press return..." % (i + 1))
-	    # Escape into qemu command mode to switch floppies
-	    child.send("\001c")
-	    child.expect('\(qemu\)')
-	    child.send("change fda %s" % floppy_paths[i])
-	    child.send("\n")
-	    child.expect('\(qemu\)')
-	    # Exit qemu command mode
-	    child.send("\001c\n")
+            child.expect("insert disk %d, and press return..." % (i + 1))
+            # Escape into qemu command mode to switch floppies
+            child.send("\001c")
+            child.expect('\(qemu\)')
+            child.send("change fda %s" % floppy_paths[i])
+            child.send("\n")
+            child.expect('\(qemu\)')
+            # Exit qemu command mode
+            child.send("\001c\n")
 
         child.expect("a: Installation messages in English")
         child.send("\n")
@@ -160,32 +169,32 @@ class Version:
         child.send("\n")
         # Custom installation is choice "c" in -current,
         # choice "b" in older versions
-	# We could use "Minimal", but it doesn't exist in
-	# older versions.
+        # We could use "Minimal", but it doesn't exist in
+        # older versions.
         child.expect(re.compile("([a-z]): Custom installation"))
         child.send(child.match.group(1) + "\n")
         print "sent " + child.match.group(1)
-	# Check the default for the comp set
+        # Check the default for the comp set
         child.expect(re.compile("([a-z]): Compiler Tools.*((Yes)|(No))"))
         if child.match.group(2) == "No":
-	    # If disabled, enable it
-	    child.send(child.match.group(1) + "\n")
+            # If disabled, enable it
+            child.send(child.match.group(1) + "\n")
         # Check the default for the X11 sets
         child.expect(re.compile("([a-z]): X11 sets.*((All)|(None))"))
-	# If the X11 sets are selected by default, deselect them
+        # If the X11 sets are selected by default, deselect them
         if child.match.group(2) == "All":
-	    child.send(child.match.group(1) + "\n")
-	    child.expect("a: X11 base and clients")
-	    # Deselect the X sets one by one.  Avoid
-	    # "g: Deselect all the above sets" as it behaves
-	    # inconsistently between NetBSD versions:
-	    # -current wants that to be followed by
-	    # "x\n" to exit the dialog, but older versions
-	    # do not.
-	    for c in "abcde":
-		 child.send(c + "\n")
-	    # Exit the X set selection submenu
-	    child.send("x\n")
+            child.send(child.match.group(1) + "\n")
+            child.expect("a: X11 base and clients")
+            # Deselect the X sets one by one.  Avoid
+            # "g: Deselect all the above sets" as it behaves
+            # inconsistently between NetBSD versions:
+            # -current wants that to be followed by
+            # "x\n" to exit the dialog, but older versions
+            # do not.
+            for c in "abcde":
+                 child.send(c + "\n")
+            # Exit the X set selection submenu
+            child.send("x\n")
         # Exit the main set selection menu
         child.send("x\n")
         child.expect("a: This is the correct geometry")
@@ -294,4 +303,4 @@ class LocalBuild(Version):
         Version.__init__(self, ver)
         self.release_path = release_path
     def dist_url(self):
-	return "file://" + self.release_path
+        return "file://" + self.release_path
