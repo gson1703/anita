@@ -55,9 +55,10 @@ version (using any naming scheme you like) and the RELEASEDIR, as in:
    >>> ver.install()
 
 If you can find a daily build for i386 on releng.netbsd.org
-(unfortuately, they are not always availble), you can install it by
-calling anita.DailyBuild with the name of the branch (e.g., "3" or
-"HEAD") and the timestamp identifying the daily build, as in:
+(unfortuately, they are not always available), you can install it by
+calling anita.DailyBuild with the name used to identify the branch on
+releng.netbsd.org (e.g., "3" or "HEAD") and the timestamp identifying
+the specific daily build, as in:
 
    >>> ver = anita.DailyBuild("4", "200608280000Z")
    >>> ver.install()
@@ -80,11 +81,11 @@ Anita runs qemu with the "-snapshot" flag, so if you log in and make
 changes to the system, they will not be saved to the disk image file
 by default.
 
-Anita has been tested with the 2.1, 3.0.1, and 3.1 releases and a few
-daily builds and local builds.  With the releases, the installation
-part works, but for some unknown reason, booting the resulting hard
-disk image doesn't work (it hangs after the "root on ffs" message).
-Perhaps someone can figure out why this happens, or even fix it.
-Booting a NetBSD-current image works fine.
+Anita has been tested with the NetBSD 2.1, 3.0.1, and 3.1 releases and
+a number of recent daily builds and local builds.  With the releases,
+the installation part works, but for some unknown reason, booting the
+resulting hard disk image doesn't work (it hangs after the "root on
+ffs" message).  Perhaps someone can figure out why this happens, or
+even fix it.  Booting a NetBSD-current image works fine.
 
 Please send any comments, bug reports, or patches to gson@gson.org.
