@@ -60,6 +60,9 @@ def ftp_if_missing(urlbase, dirbase, relfile):
 class Version:
     def __init__(self, ver):
         self.ver = ver
+        # This is the maximum number of floppies; it will be adjusted
+        # downwards for versions having less.
+        self.n_floppies = 3
 
     # The directory for files related to this release
     def base_dir(self):
@@ -83,11 +86,24 @@ class Version:
     def wd0_path(self):
         return os.path.join(self.base_dir(), "wd0.img")
 
+    def floppies(self):
+        return ['boot-com1.fs', 'boot2.fs', 'boot3.fs'][0:self.n_floppies]
+
     # Download this release by FTP
     def ftp(self):
-        for floppy in ['boot-com1.fs', 'boot2.fs']:
-            ftp_if_missing(self.dist_url(), self.ftp_local_dir(), \
-                "i386/installation/floppy/" + floppy)
+        for floppy in self.floppies():
+            # Depending on the NetBSD version, there may be two or three
+            # boot floppies.  Therefore, we ignore failures in downloading
+            # the last floppy, and adjust the list of floppy image file
+            # names accordingly.
+            try:
+		ftp_if_missing(self.dist_url(), self.ftp_local_dir(), \
+		    "i386/installation/floppy/" + floppy)
+            except:
+                if floppy == self.floppies()[-1]:
+                    self.n_floppies = self.n_floppies - 1
+                else:
+                     raise
         for set in [ "base", "comp", "etc", "games", "man", "misc", \
             "text", "kern-GENERIC" ]:
             ftp_if_missing(self.dist_url(), self.ftp_local_dir(), \
@@ -105,26 +121,27 @@ class Version:
         # Get the install ISO
         self.make_iso()
 
-        boot1 = os.path.join(self.floppy_dir(), "boot-com1.fs")
-        boot2 = os.path.join(self.floppy_dir(), "boot2.fs")
+        floppy_paths = [ os.path.join(self.floppy_dir(), f) for f in self.floppies() ]
 
         spawn("qemu-img", ["qemu-img", "create", self.wd0_path(), "512M"])
         child = pexpect.spawn("qemu", ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
-            "-fda", boot1, "-cdrom", self.iso_path(), \
+            "-fda", floppy_paths[0], "-cdrom", self.iso_path(), \
             "-boot", "a", "-serial", "stdio", "-nographic"])
         child.log_file = sys.stdout
         child.timeout = 300
 
-        child.expect("insert disk 2, and press return...")
-        # Escape into qemu command mode to switch floppies
-        child.send("\001c")
-        child.expect('\(qemu\)')
-        child.send("change fda %s" % boot2)
-        child.send("\n")
-        child.expect('\(qemu\)')
-        # Exit qemu command mode
-        child.send("\001c\n")
+        for i in range(1, len(floppy_paths)):
+	    child.expect("insert disk %d, and press return..." % (i + 1))
+	    # Escape into qemu command mode to switch floppies
+	    child.send("\001c")
+	    child.expect('\(qemu\)')
+	    child.send("change fda %s" % floppy_paths[i])
+	    child.send("\n")
+	    child.expect('\(qemu\)')
+	    # Exit qemu command mode
+	    child.send("\001c\n")
+
         child.expect("a: Installation messages in English")
         child.send("\n")
         child.expect("Keyboard type")
@@ -150,10 +167,10 @@ class Version:
 	    # If disabled, enable it
 	    child.send(child.match.group(1) + "\n")
         # Check the default for the X11 sets
-        child.expect(re.compile("o: X11 sets.*((All)|(None))"))
+        child.expect(re.compile("[a-z]: X11 sets.*((All)|(None))"))
 	# If the X11 sets are selected by default, deselect them
-        if child.match.group(1) == "All":
-	    child.send("o\n")
+        if child.match.group(2) == "All":
+	    child.send(child.match.group(1) + "\n")
 	    child.expect("a: X11 base and clients")
 	    # Deselect the X sets one by one.  Avoid
 	    # "g: Deselect all the above sets" as it behaves
