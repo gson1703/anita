@@ -1,0 +1,77 @@
+This is the documentation for Anita, an Automated NetBSD Installation
+and Test Application.
+
+Anita is an experimental tool for automated testing of the NetBSD/i386
+installation procedure.  Using anita, you can download a NetBSD/i386
+distribution and install it in a qemu virtual machine in a fully
+automated fashion, scripting the sysinst install procedure using
+pexpect over a virtual serial console.  It's fun to watch, and it has
+already played a part in finding several bugs in NetBSD.
+
+Anita is still a work in progress.  Currently, only NetBSD/i386 is
+supported as the system to install, but it should be possible to add
+support for installing other ports, as well as cross-installation
+setups where the machine running anita is a different architecture
+from the virtual machine being installed on.
+
+If you want to play with it, here is what you need:
+
+ - The latest anita tarball from <http://www.gson.org/netbsd/anita/>
+
+ - NetBSD-current from August 7, 2006 or newer (otherwise you will run
+   into a kernel bug which causes some of the serial console output to
+   be dropped on its way from qemu to pexpect; see kern/34129).  Note
+   that this requirement concerns the host system (the one you run
+   anita on), not the target system (the one being installed in the
+   virtual machine)
+
+ - pkgsrc/emulators/qemu.  Unfortunately, qemu doesn't build
+   out of the box on -current, creating a bit of a catch-22
+   with respect to the previous requirement.  Someone please
+   fix this.
+
+ - pkgsrc/devel/py-pexpect
+
+ - A network connection for downloading installation file sets
+
+ - About a gigabyte of free disk space
+
+You should now be able to download and install a NetBSD daily build in
+a virtual machine like this:
+
+   $ python
+   >>> import anita
+   >>> ver = anita.DailyBuild("4", "200608280000Z")
+   >>> ver.install()
+
+Anita will cache the distribution sets, boot floppies, and a hard disk
+image in a directory "netbsd-4-200608280000Z" under the current
+working directory, effectively turning the install() method a no-op if
+it is invoked again without first removing the cached files.  If you
+remove just the hard disk image (wd0.img), install() will recreate it
+from the cached distribution files.
+
+To boot the newly installed hard disk image and get a login prompt,
+type
+
+   >>> ver.interact()
+
+To kill the virtual machine and return to Python, type control-a x.
+
+Anita runs qemu with the "-snapshot" flag, so if you log in and make
+changes to the system, they will not be saved to the disk image file
+by default.
+
+To install an official NetBSD release, you can do:
+
+   >>> ver = anita.Release("3.0.1")
+   >>> ver.install()
+
+I have tested anita with the 2.1 and 3.0.1 releases and a couple of
+daily builds.  With the 2.1 and 3.0.1 releases, the installation part
+works, but for some unknown reason, booting the resulting hard disk
+image doesn't work (it hangs after the "root on ffs" message).
+Perhaps someone can clue me in as to why this happens.  Newer versions
+boot just fine.
+
+Please send any comments, bug reports, or patches to gson@gson.org.
