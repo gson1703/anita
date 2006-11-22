@@ -18,13 +18,15 @@ import re
 netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 #netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
 
-# Helper function to run a shell command safely and with error
-# checking
+# Run a shell command safely and with error checking
 
 def spawn(command, args):
     ret = os.spawnvp(os.P_WAIT, command, args)
     if ret != 0:
         raise RuntimeError("could not run " + command)
+
+# FTP a file, cleaning up the partial file if the transfer
+# fails or is aborted before completion.
 
 def ftp_file(file, url):
     try:
@@ -116,6 +118,8 @@ class Version:
             return
         spawn("makefs", ["makefs", "-t", "cd9660", "-o", "rockridge", \
             self.iso_path(), self.ftp_local_dir()])
+
+    # Install this version of NetBSD
 
     def _install(self):
         # Get the install ISO
@@ -234,6 +238,8 @@ class Version:
         child.send("halt\n")
         child.expect("halted by root")
         os.unlink(self.iso_path())
+
+    # Install this version of NetBSD if not installed already
 
     def install(self):
         # Already installed?
