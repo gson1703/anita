@@ -134,7 +134,8 @@ class Version:
         # Get the install ISO
         self.make_iso()
 
-        floppy_paths = [ os.path.join(self.floppy_dir(), f) for f in self.floppies() ]
+        floppy_paths = [ os.path.join(self.floppy_dir(), f) \
+            for f in self.floppies() ]
 
         spawn("qemu-img", ["qemu-img", "create", self.wd0_path(), "512M"])
         child = pexpect.spawn("qemu", ["qemu", "-m", "32", \
@@ -286,15 +287,18 @@ class Release(Version):
 # A daily build
 
 class DailyBuild(Version):
-    def __init__(self, ver, timestamp):
+    def __init__(self, branch, timestamp):
+        ver = re.sub("^netbsd-", "", branch)
         Version.__init__(self, ver)
         self.timestamp = timestamp
     def base_dir(self):
         return Version.base_dir(self) + "-" + self.timestamp
     def dist_url(self):
-        dash_ver = re.sub("[\\._]", "-", self.ver)
-        return "http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-" + \
-            dash_ver + "/" + self.timestamp + "/"
+        branch = re.sub("[\\._]", "-", self.ver)
+        if re.match("^[0-9]", branch):
+            branch = "netbsd-" + branch
+        return "http://ftp.netbsd.org/pub/NetBSD-daily/" + \
+            branch + "/" + self.timestamp + "/"
 
 # A local build
 
