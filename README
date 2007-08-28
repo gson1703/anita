@@ -8,7 +8,7 @@ automated fashion.  It's fun to watch, and it has already played a
 part in finding several bugs in NetBSD.
 
 Anita is written in Python and uses the pexpect module to "screen
-scrape" the sysinst output (over an emulated serial console) and
+scrape" the sysinst output over an emulated serial console and
 script the installation procedure.
 
 Anita is still a work in progress.  Currently, only NetBSD/i386 is
@@ -19,7 +19,8 @@ from the virtual machine being installed on.
 
 If you want to play with it, here is what you need:
 
- - The latest anita tarball from <http://www.gson.org/netbsd/anita/>
+ - The latest anita tarball from
+   <http://www.gson.org/netbsd/anita/download/>
 
  - NetBSD-current from August 7, 2006 or newer (otherwise you will run
    into a kernel bug which causes some of the serial console output to
