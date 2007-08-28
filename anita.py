@@ -137,7 +137,7 @@ class Version:
         floppy_paths = [ os.path.join(self.floppy_dir(), f) \
             for f in self.floppies() ]
 
-        spawn("qemu-img", ["qemu-img", "create", self.wd0_path(), "512M"])
+        spawn("qemu-img", ["qemu-img", "create", self.wd0_path(), "1024M"])
         child = pexpect.spawn("qemu", ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
             "-fda", floppy_paths[0], "-cdrom", self.iso_path(), \
