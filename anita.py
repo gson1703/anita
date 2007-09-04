@@ -227,11 +227,21 @@ class Version:
         # Handle both cases.
         child.expect(re.compile("([cx]): Continue"))
         child.send(child.match.group(1) + "\n")
+        # Hmm, we are sometimes asked to press enter after
+        # the following, and sometimes not, why?
+        #     Status: Finished
+        #     Command: /sbin/mount -rt cd9660 /dev/cd0a /mnt2
+        #     Hit enter to continue
         child.expect("Hit enter to continue")
         child.send("\n")
+        # "The extraction of the selected sets for NetBSD-3.1 is
+        # complete.  The system is now able to boot from the selected
+        # harddisk.  To complete the installation, sysinst will give
+        # you the opportunity to configure some essential things first."
         child.expect("Hit enter to continue")
         child.send("\n")
         child.expect("Please choose the timezone")
+        # "Press 'x' followed by RETURN to quit the timezone selection"
         child.send("x\n")
         child.expect("a: DES")
         child.send("\n")
@@ -240,6 +250,12 @@ class Version:
         child.send("b\n")
         child.expect("a: /bin/sh")
         child.send("\n")
+        # "The installation of NetBSD-3.1 is now complete.  The system
+        # should boot from hard disk.  Follow the instructions in the
+        # INSTALL document about final configuration of your system.
+        # The afterboot(8) manpage is another recommended reading; it
+        # contains a list of things to be checked after the first
+        # complete boot."
         child.expect("Hit enter to continue")
         child.send("\n")
         child.expect("x: Exit")
