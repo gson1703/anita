@@ -57,8 +57,8 @@ version (using any naming scheme you like) and the RELEASEDIR, as in:
 
 If you can find a daily binary snapshot for i386 on releng.netbsd.org
 (unfortuately, they are not always available), you can install it by
-calling anita.DailyBuild with the branch (e.g., "3.0" or "HEAD") and
-the timestamp identifying the specific snapshot, as in:
+calling anita.DailyBuild with the branch (e.g., "3.0", "4", "4-0-RC1",
+or "HEAD") and the timestamp identifying the specific snapshot, as in:
 
    >>> ver = anita.DailyBuild("4", "200608280000Z")
    >>> ver.install()
@@ -86,6 +86,7 @@ a number of recent daily binary snapshots and local builds.  With the
 releases, the installation part works, but for some unknown reason,
 booting the resulting hard disk image doesn't work (it hangs after the
 "root on ffs" message).  Perhaps someone can figure out why this
-happens, or even fix it.  Booting a NetBSD-current image works fine.
+happens, or even fix it.  Booting NetBSD-current or 4.0_RC1 works
+fine.
 
 Please send any comments, bug reports, or patches to gson@gson.org.
