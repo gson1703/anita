@@ -227,20 +227,29 @@ class Version:
         # Handle both cases.
         child.expect(re.compile("([cx]): Continue"))
         child.send(child.match.group(1) + "\n")
-        # Hmm, we are sometimes asked to press enter after
-        # the following, and sometimes not, why?
+        # At this point, we will be asked to "Hit enter to continue"
+        # either once or twice before we get to the next real question.
+        # The first time is
+        #
         #     Status: Finished
         #     Command: /sbin/mount -rt cd9660 /dev/cd0a /mnt2
         #     Hit enter to continue
-        child.expect("Hit enter to continue")
-        child.send("\n")
-        # "The extraction of the selected sets for NetBSD-3.1 is
-        # complete.  The system is now able to boot from the selected
-        # harddisk.  To complete the installation, sysinst will give
-        # you the opportunity to configure some essential things first."
-        child.expect("Hit enter to continue")
-        child.send("\n")
-        child.expect("Please choose the timezone")
+        #
+        # but that doesn't always happen; why?  The second one is after
+        #
+        #     The extraction of the selected sets for NetBSD-3.1 is
+        #     complete.  The system is now able to boot from the selected
+        #     harddisk.  To complete the installation, sysinst will give
+        #     you the opportunity to configure some essential things first.
+        #
+        # For simplicity, we allow any number of "Hit enter to continue"
+        # prompts.
+        while True:
+            child.expect("(Hit enter to continue)|(Please choose the timezone)")
+            if child.match.group(1):
+                child.send("\n")
+            else:
+                break
         # "Press 'x' followed by RETURN to quit the timezone selection"
         child.send("x\n")
         child.expect("a: DES")
