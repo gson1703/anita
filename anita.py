@@ -5,11 +5,13 @@
 # See the file COPYRIGHT for copyright information.
 #
 
-import pexpect
-import sys
+import getopt
 import os
-import time
+import pexpect
 import re
+import subprocess
+import sys
+import time
 
 # Your preferred NetBSD FTP mirror site.
 # This is used for getting relases only, not for daily builds.
@@ -17,6 +19,12 @@ import re
 
 netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 #netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
+
+# Create a directory if missing
+
+def mkdir_p(dir):
+    if not os.path.isdir(dir):
+        os.makedirs(dir)
 
 # Run a shell command safely and with error checking
 
@@ -44,12 +52,11 @@ def ftp_file(file, url):
 
 def ftp_if_missing(urlbase, dirbase, relfile):
     url = urlbase + relfile
-    file = dirbase + "/" + relfile
+    file = os.path.join(dirbase, relfile)
     if os.path.isfile(file):
         return False
     dir = os.path.dirname(file)
-    if not os.path.isdir(dir):
-        os.makedirs(dir)
+    mkdir_p(dir)
     ftp_file(file, url)
     return True
 
@@ -63,6 +70,7 @@ def ftp_if_missing(urlbase, dirbase, relfile):
 class Version:
     def __init__(self, ver):
         self.ver = ver
+        self.tempfiles = []
 
     # The directory for files related to this release
     def base_dir(self):
@@ -96,6 +104,10 @@ class Version:
         return [f for f in self.potential_floppies() \
             if os.path.isfile(os.path.join(self.floppy_dir(), f))]
 
+    def cleanup(self):
+        for fn in self.tempfiles:
+            os.unlink(fn)
+
     # Download this release by FTP
     def ftp(self):
         # Depending on the NetBSD version, there may be two or three
@@ -103,7 +115,7 @@ class Version:
         # exist.
         for floppy in self.potential_floppies()[0:2]:
             did_download_floppies = ftp_if_missing(self.dist_url(), 
-                self.ftp_local_dir(), "i386/installation/floppy/" + floppy)
+                self.ftp_local_dir(), os.path.join("i386/installation/floppy/", floppy))
         # Then attempt to download the remining ones, but only
         # if we actually downloaded the initial ones rather
         # than finding them in the cache.
@@ -123,10 +135,10 @@ class Version:
     # Create an install ISO image to install from
     def make_iso(self):
         self.ftp()
-        if os.path.isfile(self.iso_path()):
-            return
-        spawn("makefs", ["makefs", "-t", "cd9660", "-o", "rockridge", \
-            self.iso_path(), self.ftp_local_dir()])
+        if not os.path.isfile(self.iso_path()):
+	    spawn("makefs", ["makefs", "-t", "cd9660", "-o", "rockridge", \
+		self.iso_path(), self.ftp_local_dir()])
+        self.tempfiles.append(self.iso_path())
 
     # Install this version of NetBSD
 
@@ -272,7 +284,7 @@ class Version:
         child.expect("#")  
         child.send("halt\n")
         child.expect("halted by root")
-        os.unlink(self.iso_path())
+        self.cleanup()
 
     # Install this version of NetBSD if not installed already
 
@@ -333,3 +345,77 @@ class LocalBuild(Version):
         self.release_path = release_path
     def dist_url(self):
         return "file://" + self.release_path
+
+# An ISO
+
+class ISO(Version):
+    def __init__(self, ver, iso_path):
+        Version.__init__(self, ver)
+        self.m_iso_path = iso_path
+    def iso_path(self):
+        return self.m_iso_path
+    # XXX actually version specific
+    def potential_floppies(self):
+        return ['boot-com1.fs', 'boot-com2.fs']
+    def floppies(self):
+        return ['boot-com1.fs', 'boot-com2.fs']
+
+    # We don't need to FTP sets because we already have
+    # a useable ISO.  However, we don't have a boot-com1.fs.
+    # Extract it.
+    def ftp(self):
+        mkdir_p(self.floppy_dir())
+        for floppy in self.potential_floppies():
+            fn = os.path.join(self.floppy_dir(), floppy)
+            f = open(fn, 'w')
+            subprocess.call(['isoinfo', '-R', '-i', self.iso_path(), \
+		'-x',  '/i386/installation/floppy/' + floppy], stdout=f)
+            f.close()
+        # XXX check that we have at least one
+
+#############################################################################
+#
+# The main program
+#
+
+class Usage(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+def main(argv = None):
+    if argv is None:
+        argv = sys.argv
+    try:
+        try:
+            opts, args = getopt.getopt(argv[1:], "h", ["help"])
+        except getopt.error, msg:
+             raise Usage(msg)
+        # more code, unchanged
+
+	if len(args) < 2:
+	    raise Usage("not enough arguments")
+
+
+        type = args[1]
+        if type == 'release':
+            ver = Release(args[2])
+        elif type == 'iso':
+            ver = ISO(args[2], args[3])
+        else:
+            raise Usage("unknown type: " + type)
+
+        mode = args[0]
+        if mode == 'install':
+            ver.install()
+        elif mode == 'interact':
+            ver.interact()
+        else:
+            raise Usage("unknown mode: " + mode)
+
+    except Usage, err:
+        print >>sys.stderr, err.msg
+        print >>sys.stderr, "for help use --help"
+        return 1
+
+if __name__ == "__main__":
+    main()
