@@ -29,10 +29,7 @@ If you want to play with it, here is what you need:
    anita on), not the target system (the one being installed in the
    virtual machine)
 
- - pkgsrc/emulators/qemu.  Unfortunately, qemu doesn't build
-   out of the box on -current, creating a bit of a catch-22
-   with respect to the previous requirement.  Someone please
-   fix this.
+ - pkgsrc/emulators/qemu
 
  - pkgsrc/devel/py-pexpect
 
