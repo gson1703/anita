@@ -6,6 +6,7 @@
 #
 
 import getopt
+import md5
 import os
 import pexpect
 import re
@@ -68,19 +69,9 @@ def ftp_if_missing(urlbase, dirbase, relfile):
 #                     where the version can be downloaded
 
 class Version:
-    def __init__(self, ver):
-        self.ver = ver
+    def __init__(self):
         self.tempfiles = []
 
-    # The directory for files related to this release
-    def base_dir(self):
-        return "netbsd-" + self.ver
-    # The file name of the install ISO (sans directory)
-    def iso_name(self):
-        if re.match("^[3-9]", self.ver) is not None:
-            return "i386cd-" + self.ver + ".iso"
-        else:
-            return "i386cd.iso"
     # The directory where we mirror FTP files needed for installation
     def ftp_local_dir(self):
         return self.base_dir() + "/ftp/"
@@ -312,24 +303,40 @@ class Version:
     def interact(self):
         self.boot().interact()
 
+# Subclass for versions where we pass in the version number explicitly
+
+class NumberedVersion:
+    def __init__(self, ver):
+        Version.__init__(self)
+        self.ver = ver
+    # The file name of the install ISO (sans directory)
+    def iso_name(self):
+        if re.match("^[3-9]", self.ver) is not None:
+            return "i386cd-" + self.ver + ".iso"
+        else:
+            return "i386cd.iso"
+    # The directory for files related to this release
+    def base_dir(self):
+        return "netbsd-" + self.ver
+
 # An official NetBSD release
 
-class Release(Version):
+class Release(NumberedVersion):
     def __init__(self, ver):
-        Version.__init__(self, ver)
+        NumberedVersion.__init__(self, ver)
         pass
     def dist_url(self):
         return netbsd_mirror_url + "NetBSD-" + self.ver + "/"
 
 # A daily build
 
-class DailyBuild(Version):
+class DailyBuild(NumberedVersion):
     def __init__(self, branch, timestamp):
         ver = re.sub("^netbsd-", "", branch)
-        Version.__init__(self, ver)
+        NumberedVersion.__init__(self, ver)
         self.timestamp = timestamp
     def base_dir(self):
-        return Version.base_dir(self) + "-" + self.timestamp
+        return NumberedVersion.base_dir(self) + "-" + self.timestamp
     def dist_url(self):
         branch = re.sub("[\\._]", "-", self.ver)
         if re.match("^[0-9]", branch):
@@ -339,9 +346,9 @@ class DailyBuild(Version):
 
 # A local build
 
-class LocalBuild(Version):
+class LocalBuild(NumberedVersion):
     def __init__(self, ver, release_path):
-        Version.__init__(self, ver)
+        NumberedVersion.__init__(self, ver)
         self.release_path = release_path
     def dist_url(self):
         return "file://" + self.release_path
@@ -349,8 +356,8 @@ class LocalBuild(Version):
 # An ISO
 
 class ISO(Version):
-    def __init__(self, ver, iso_path):
-        Version.__init__(self, ver)
+    def __init__(self, iso_path):
+        Version.__init__(self)
         self.m_iso_path = iso_path
     def iso_path(self):
         return self.m_iso_path
@@ -359,6 +366,8 @@ class ISO(Version):
         return ['boot-com1.fs', 'boot-com2.fs']
     def floppies(self):
         return ['boot-com1.fs', 'boot-com2.fs']
+    def base_dir(self):
+        return "netbsd-" + md5.new(self.m_iso_path).hexdigest()
 
     # We don't need to FTP sets because we already have
     # a useable ISO.  However, we don't have a boot-com1.fs.
@@ -373,6 +382,18 @@ class ISO(Version):
             f.close()
         # XXX check that we have at least one
 
+class URL(Version):
+    def __init__(self, url):
+        Version.__init__(self)
+        self.url = url
+    def dist_url(self):
+        # XXX check
+        return re.sub('/i386/', '/', self.url)
+    def iso_name(self):
+        return "install_tmp.iso"
+    def base_dir(self):
+        return "netbsd-" + md5.new(self.url).hexdigest()
+    
 #############################################################################
 #
 # The main program
@@ -400,7 +421,9 @@ def main(argv = None):
         if type == 'release':
             ver = Release(args[2])
         elif type == 'iso':
-            ver = ISO(args[2], args[3])
+            ver = ISO(args[2])
+        elif type == 'url':
+            ver = URL(args[2])
         else:
             raise Usage("unknown type: " + type)
 
