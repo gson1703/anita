@@ -69,9 +69,24 @@ def ftp_if_missing(urlbase, dirbase, relfile):
 #                     where the version can be downloaded
 
 class Version:
+    # Information about the available installation file sets.
+    # Each is a tuple of three fields: the file name, the
+    # label used by sysinst, and a flag indicating whether
+    # the set should be installed by default.
+    sets = [
+      ( 'kern-GENERIC', 'Kernel (GENERIC)', 1 ),
+      ( 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0 ),
+      ( 'base', 'Base', 1 ),
+      ( 'etc', 'System (/etc)', 1 ),
+      ( 'comp', 'Compiler Tools', 1 ),
+      ( 'games', 'Games', 0 ),
+      ( 'man', 'Online Manual Pages', 0 ),
+      ( 'misc', 'Miscellaneous', 0 ),
+      ( 'tests', 'Test programs', 1 ),
+      ( 'text', 'Text Processing Tools', 0 ),
+    ]
     def __init__(self):
         self.tempfiles = []
-
     # The directory where we mirror FTP files needed for installation
     def ftp_local_dir(self):
         return self.base_dir() + "/ftp/"
@@ -118,10 +133,11 @@ class Version:
                        "i386/installation/floppy/" + floppy)
                 except:
                     pass
-        for set in [ "base", "comp", "etc", "games", "man", "misc", \
-            "text", "kern-GENERIC" ]:
-            ftp_if_missing(self.dist_url(), self.ftp_local_dir(), \
-                "i386/binary/sets/" + set + ".tgz")
+        for set in Version.sets:
+            (fn, label, enable) = set
+            if enable:
+		ftp_if_missing(self.dist_url(), self.ftp_local_dir(), \
+		    os.path.join("i386/binary/sets", fn + ".tgz"))
 
     # Create an install ISO image to install from
     def make_iso(self):
@@ -177,12 +193,14 @@ class Version:
         # older versions.
         child.expect(re.compile("([a-z]): Custom installation"))
         child.send(child.match.group(1) + "\n")
-        print "sent " + child.match.group(1)
-        # Check the default for the comp set
-        child.expect(re.compile("([a-z]): Compiler Tools.*((Yes)|(No))"))
-        if child.match.group(2) == "No":
-            # If disabled, enable it
-            child.send(child.match.group(1) + "\n")
+        # Enable/disable sets
+        for set in Version.sets:
+            (fn, label, enable) = set
+	    child.expect(re.compile("([a-z]): " + re.escape(label) + ".*((Yes)|(No))"))
+	    if enable and child.match.group(2) == "No" or \
+               not enable and child.match.group(2) == "Yes":
+		child.send(child.match.group(1) + "\n")
+
         # Check the default for the X11 sets
         child.expect(re.compile("([a-z]): X11 sets.*((All)|(None))"))
         # If the X11 sets are selected by default, deselect them
