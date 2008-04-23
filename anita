@@ -1,0 +1,45 @@
+#!/usr/pkg/bin/python2.4
+
+import sys
+import getopt
+
+class Usage(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+def main(argv = None):
+    if argv is None:
+        argv = sys.argv
+    try:
+        try:
+            opts, args = getopt.getopt(argv[1:], "h", ["help"])
+        except getopt.error, msg:
+             raise Usage(msg)
+        # more code, unchanged
+
+	if len(args) < 2:
+	    raise Usage("not enough arguments")
+
+        dist = args[1]
+        if re.match('\.iso$', dist):
+            ver = ISO(dist)
+        elif re.match('^[a-z0-9\.0-]+:', dist):
+            ver = URL(dist)
+        else:
+            raise Usage("can't figure out " + dist)
+
+        mode = args[0]
+        if mode == 'install':
+            ver.install()
+        elif mode == 'interact':
+            ver.interact()
+        else:
+            raise Usage("unknown mode: " + mode)
+
+    except Usage, err:
+        print >>sys.stderr, err.msg
+        print >>sys.stderr, "for help use --help"
+        return 1
+
+if __name__ == "__main__":
+    main()
