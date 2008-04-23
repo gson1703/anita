@@ -1,11 +1,9 @@
 #!/usr/pkg/bin/python
 #
-# This is Anita, the Automated NetBSD Installation and Test Application.
-#
-# See the file COPYRIGHT for copyright information.
+# This is the library part of Anita, the Automated NetBSD Installation
+# and Test Application.
 #
 
-import getopt
 import md5
 import os
 import pexpect
@@ -82,7 +80,7 @@ class Version:
       ( 'games', 'Games', 0 ),
       ( 'man', 'Online Manual Pages', 0 ),
       ( 'misc', 'Miscellaneous', 0 ),
-      ( 'tests', 'Test programs', 1 ),
+      ( 'tests', 'Test programs', 0 ),
       ( 'text', 'Text Processing Tools', 0 ),
     ]
     def __init__(self):
@@ -193,18 +191,32 @@ class Version:
         # older versions.
         child.expect(re.compile("([a-z]): Custom installation"))
         child.send(child.match.group(1) + "\n")
-        # Enable/disable sets
-        for set in Version.sets:
-            (fn, label, enable) = set
-	    child.expect(re.compile("([a-z]): " + re.escape(label) + ".*((Yes)|(No))"))
-	    if enable and child.match.group(2) == "No" or \
-               not enable and child.match.group(2) == "Yes":
-		child.send(child.match.group(1) + "\n")
 
-        # Check the default for the X11 sets
-        child.expect(re.compile("([a-z]): X11 sets.*((All)|(None))"))
+        # Enable/disable sets
+        x11_choice = None
+        while True:
+            # Match a letter-label pair, like "h: Compiler Tools".
+            # The label can be separated from the "Yes/No" field
+            # either by spaces (at least two, so that there can
+            # be single spaces within the label), or by a cursor
+            # positioning escape sequence.
+	    child.expect(re.compile("([a-z]): (.+)(?:(?:\s\s)|(?:\x1b))"))
+            (letter, label) = child.match.groups()
+            if letter == 'x':
+                break
+            child.expect(re.compile("((Yes)|(No)|(All)|(None))\W"))
+            yesno = child.match.group(1)
+            if label == 'X11 sets':
+                x11_choice = yesno
+            for set in Version.sets:
+                (fn, setlabel, enable) = set
+		if label == setlabel:
+		    if enable and yesno == "No" or \
+		       not enable and yesno == "Yes":
+			child.send(letter + "\n")
+
         # If the X11 sets are selected by default, deselect them
-        if child.match.group(2) == "All":
+        if x11_choice == "All":
             child.send(child.match.group(1) + "\n")
             child.expect("a: X11 base and clients")
             # Deselect the X sets one by one.  Avoid
@@ -412,51 +424,3 @@ class URL(Version):
     def base_dir(self):
         return "netbsd-" + md5.new(self.url).hexdigest()
     
-#############################################################################
-#
-# The main program
-#
-
-class Usage(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-def main(argv = None):
-    if argv is None:
-        argv = sys.argv
-    try:
-        try:
-            opts, args = getopt.getopt(argv[1:], "h", ["help"])
-        except getopt.error, msg:
-             raise Usage(msg)
-        # more code, unchanged
-
-	if len(args) < 2:
-	    raise Usage("not enough arguments")
-
-
-        type = args[1]
-        if type == 'release':
-            ver = Release(args[2])
-        elif type == 'iso':
-            ver = ISO(args[2])
-        elif type == 'url':
-            ver = URL(args[2])
-        else:
-            raise Usage("unknown type: " + type)
-
-        mode = args[0]
-        if mode == 'install':
-            ver.install()
-        elif mode == 'interact':
-            ver.interact()
-        else:
-            raise Usage("unknown mode: " + mode)
-
-    except Usage, err:
-        print >>sys.stderr, err.msg
-        print >>sys.stderr, "for help use --help"
-        return 1
-
-if __name__ == "__main__":
-    main()
