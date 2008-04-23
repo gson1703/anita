@@ -13,9 +13,9 @@ script the installation procedure.
 
 Anita is still a work in progress.  Currently, only NetBSD/i386 is
 supported as the system to install, but it should be possible to add
-support for installing other ports, as well as cross-installation
-setups where the machine running anita is a different architecture
-from the virtual machine being installed on.
+support for installing other ports of NetBSD, as well as
+cross-installation setups where the machine running anita is a
+different architecture from the virtual machine being installed on.
 
 If you want to play with it, here is what you need:
 
@@ -33,44 +33,43 @@ If you want to play with it, here is what you need:
 
  - pkgsrc/devel/py-pexpect
 
+ - sysutils/cdrtools
+
  - A network connection for downloading installation file sets
 
  - About a gigabyte of free disk space
 
-You should now be able to download and install a NetBSD release in a
-virtual machine like this:
+Unpack the anita tarball and cd into the resulting directory.  You
+should now be able to download and install a NetBSD release in a
+virtual machine using a one-line shell command.  For example, to
+install NetBSD 4.0 from the master NetBSD FTP site, enter
 
-   $ python
-   >>> import anita
-   >>> ver = anita.Release("3.1")
-   >>> ver.install()
+   ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
-If you have built NetBSD locally using build.sh -R, you can install it
-by calling anita.LocalBuild with a string identifying the NetBSD
-version (using any naming scheme you like) and the RELEASEDIR, as in:
+Or a snapshot:
 
-   >>> ver = anita.LocalBuild("my-current", "/path/to/releasedir")
-   >>> ver.install()
+   ./anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
 
-If you can find a daily binary snapshot for i386 on releng.netbsd.org
-(unfortuately, they are not always available), you can install it by
-calling anita.DailyBuild with the branch (e.g., "3.0", "4", "4-0-RC1",
-or "HEAD") and the timestamp identifying the specific snapshot, as in:
+Or to install from an ISO image:
 
-   >>> ver = anita.DailyBuild("4", "200608280000Z")
-   >>> ver.install()
+   ./anita install i386cd-4.0.iso
+
+If you have built NetBSD locally using "build.sh -R", you can point
+Anita directly at the RELEASEDIR:
+
+  ./anita install file:///path/to/releasedir/
 
 Anita will cache the distribution sets, boot floppies, and a hard disk
-image in a directory "netbsd-<version>" under the current working
+image in a directory "netbsd-<hash>" under the current working
 directory, effectively turning the install() method a no-op if it is
 invoked again without first removing the cached files.  If you remove
 just the hard disk image (wd0.img), install() will recreate it from
 the cached distribution files.
 
 To boot the newly installed hard disk image and get a login prompt,
-type
+type "interact" instead of "install", for example:
 
-   >>> ver.interact()
+   ./anita interact i386cd-4.0.iso
 
 To kill the virtual machine and return to Python, type control-a x.
 
@@ -78,12 +77,12 @@ Anita runs qemu with the "-snapshot" flag, so if you log in and make
 changes to the system, they will not be saved to the disk image file
 by default.
 
-Anita has been tested with the NetBSD 2.1, 3.0.1, and 3.1 releases and
-a number of recent daily binary snapshots and local builds.  With the
-releases, the installation part works, but for some unknown reason,
-booting the resulting hard disk image doesn't work (it hangs after the
-"root on ffs" message).  Perhaps someone can figure out why this
-happens, or even fix it.  Booting NetBSD-current or 4.0_RC1 works
-fine.
+Anita has been tested with the NetBSD 2.1, 3.0.1, 3.1, and 4.0
+releases and a number of recent daily binary snapshots and local
+builds.  Releases prior to 4.0 will install correctly, but but for
+some unknown reason, booting the resulting hard disk image doesn't
+work (it hangs after the "root on ffs" message).  Perhaps someone can
+figure out why this happens, or even fix it.  Booting NetBSD 4.0 or
+-current works fine.
 
 Please send any comments, bug reports, or patches to gson@gson.org.
