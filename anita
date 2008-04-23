@@ -23,7 +23,7 @@ def main(argv = None):
 	    raise Usage("not enough arguments")
 
         dist = args[1]
-        if re.match('\.iso$', dist):
+        if re.search(r'\.iso$', dist):
             ver = anita.ISO(dist)
         elif re.match('^[a-z0-9\.0-]+:', dist):
             ver = anita.URL(dist)
