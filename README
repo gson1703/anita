@@ -46,7 +46,9 @@ install NetBSD 4.0 from the master NetBSD FTP site, enter
 
    ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
-Or a snapshot:
+Or a snapshot; the URL in this example will most likely have expired
+by the time you read this, but if you replace the date with a current
+one, it should work:
 
    ./anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
 
