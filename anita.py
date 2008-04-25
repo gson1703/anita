@@ -335,7 +335,7 @@ class Version:
 
 # Subclass for versions where we pass in the version number explicitly
 
-class NumberedVersion:
+class NumberedVersion(Version):
     def __init__(self, ver):
         Version.__init__(self)
         self.ver = ver
