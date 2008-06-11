@@ -192,32 +192,47 @@ class Version:
         child.expect(re.compile("([a-z]): Custom installation"))
         child.send(child.match.group(1) + "\n")
 
-        # Enable/disable sets
-        x11_choice = None
+        # Enable/disable sets.  First parse the set selection
+	# screen; it's messier than most.
+
+        setinfo = { }
+        x11_state = None
+        x11_letter = None
         while True:
             # Match a letter-label pair, like "h: Compiler Tools".
             # The label can be separated from the "Yes/No" field
             # either by spaces (at least two, so that there can
             # be single spaces within the label), or by a cursor
             # positioning escape sequence.
-	    child.expect(re.compile("([a-z]): (.+)(?:(?:\s\s)|(?:\x1b))"))
+	    child.expect(re.compile("([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s)|(?:\x1b))"))
             (letter, label) = child.match.groups()
             if letter == 'x':
                 break
             child.expect(re.compile("((Yes)|(No)|(All)|(None))\W"))
             yesno = child.match.group(1)
             if label == 'X11 sets':
-                x11_choice = yesno
+                x11_state = yesno
+                x11_letter = letter
             for set in Version.sets:
                 (fn, setlabel, enable) = set
+                # Could use RE match here fore more flexibility
 		if label == setlabel:
-		    if enable and yesno == "No" or \
-		       not enable and yesno == "Yes":
-			child.send(letter + "\n")
+                    setinfo[fn] = { 'letter': letter, 'state': yesno }
+
+        # Then make the actual selections
+        for set in Version.sets:
+            (fn, setlabel, enable) = set
+            info = setinfo.get(fn)
+            if info is None:
+                continue
+            state = info['state']
+	    if enable and state == "No" or \
+		    not enable and state == "Yes":
+		child.send(info['letter'] + "\n")
 
         # If the X11 sets are selected by default, deselect them
-        if x11_choice == "All":
-            child.send(child.match.group(1) + "\n")
+        if x11_state == "All":
+            child.send(x11_letter + "\n")
             child.expect("a: X11 base and clients")
             # Deselect the X sets one by one.  Avoid
             # "g: Deselect all the above sets" as it behaves
