@@ -1,4 +1,3 @@
-#!/usr/pkg/bin/python
 #
 # This is the library part of Anita, the Automated NetBSD Installation
 # and Test Application.
@@ -19,6 +18,13 @@ import time
 netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 #netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
 
+# External commands we rely on
+
+qemu_img = "qemu-img"
+qemu = "qemu"
+ftp = "ftp"
+makefs = "makefs"
+
 # Create a directory if missing
 
 def mkdir_p(dir):
@@ -37,7 +43,7 @@ def spawn(command, args):
 
 def ftp_file(file, url):
     try:
-        spawn("ftp", ["ftp", "-o", file, url])
+        spawn(ftp, ["ftp", "-o", file, url])
     except:
         if os.path.isfile(file):
             os.unlink(file)
@@ -141,7 +147,7 @@ class Version:
     def make_iso(self):
         self.ftp()
         if not os.path.isfile(self.iso_path()):
-	    spawn("makefs", ["makefs", "-t", "cd9660", "-o", "rockridge", \
+	    spawn(makefs, ["makefs", "-t", "cd9660", "-o", "rockridge", \
 		self.iso_path(), self.ftp_local_dir()])
         self.tempfiles.append(self.iso_path())
 
@@ -154,11 +160,14 @@ class Version:
         floppy_paths = [ os.path.join(self.floppy_dir(), f) \
             for f in self.floppies() ]
 
-        spawn("/usr/pkg/bin/qemu-img", ["qemu-img", "create", self.wd0_path(), "1024M"])
-        child = pexpect.spawn("/usr/pkg/bin/qemu", ["qemu", "-m", "32", \
+        spawn(qemu-img, ["qemu-img", "create", self.wd0_path(), "1024M"])
+        child = pexpect.spawn(qemu, ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
             "-fda", floppy_paths[0], "-cdrom", self.iso_path(), \
             "-boot", "a", "-serial", "stdio", "-nographic"])
+
+	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 needs "child.log_file"
+        child.logfile = sys.stdout
         child.log_file = sys.stdout
         child.timeout = 300
 
@@ -342,7 +351,7 @@ class Version:
 
     def boot(self):
         self.install()
-        child = pexpect.spawn("/usr/pkg/bin/qemu", ["qemu", "-m", "32", \
+        child = pexpect.spawn(qemu, ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
             "-serial", "stdio", "-nographic", "-snapshot"])
         child.log_file = sys.stdout
