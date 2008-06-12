@@ -162,18 +162,23 @@ class Version:
         child.log_file = sys.stdout
         child.timeout = 300
 
-        for i in range(1, len(floppy_paths)):
-            child.expect("insert disk %d, and press return..." % (i + 1))
+        while True:
+            child.expect("(insert disk (\d+), and press return...)|(a: Installation messages in English)")
+	    if not child.match.group(1):
+		break
+            # There is no floppy 0, hence the "- 1"
+            floppy_index = int(child.match.group(2)) - 1
+
             # Escape into qemu command mode to switch floppies
             child.send("\001c")
             child.expect('\(qemu\)')
-            child.send("change fda %s" % floppy_paths[i])
+            child.send("change fda %s" % floppy_paths[floppy_index])
             child.send("\n")
             child.expect('\(qemu\)')
             # Exit qemu command mode
             child.send("\001c\n")
 
-        child.expect("a: Installation messages in English")
+        # Confirm "Installation messages in English"
         child.send("\n")
         child.expect("Keyboard type")
         child.send("\n")
