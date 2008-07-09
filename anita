@@ -33,6 +33,8 @@ def main(argv = None):
         mode = args[0]
         if mode == 'install':
             ver.install()
+        elif mode == 'boot':
+            ver.boot()
         elif mode == 'interact':
             ver.interact()
         else:
