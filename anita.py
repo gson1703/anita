@@ -65,6 +65,18 @@ def ftp_if_missing(urlbase, dirbase, relfile):
     ftp_file(file, url)
     return True
 
+# Subclass pexpect.spawn to deal with silly cursor movement
+# commands.  Makes " " match a \[[C sequence in addition
+# to its usual meaning of matching a space, and introduce
+# the special charcter "@" meaning "\[[C or any single char".
+
+class spawn_cm(pexpect.spawn):
+    def expect(self, match_re):
+        new_re = re.sub(" ", "(?: |(?:\x1b\[C))", match_re)
+        new_re = re.sub("@", "(?:.|(?:\x1b\[C))", new_re)
+        print "%s -> %s" % (match_re, new_re)
+        return pexpect.spawn.expect(self, new_re)
+
 # A NetBSD version.
 #
 # Subclasses should define:
@@ -161,7 +173,7 @@ class Version:
             for f in self.floppies() ]
 
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "1024M"])
-        child = pexpect.spawn(qemu, ["qemu", "-m", "32", \
+        child = spawn_cm(qemu, ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
             "-fda", floppy_paths[0], "-cdrom", self.iso_path(), \
             "-boot", "a", "-serial", "stdio", "-nographic"])
@@ -203,7 +215,7 @@ class Version:
         # choice "b" in older versions
         # We could use "Minimal", but it doesn't exist in
         # older versions.
-        child.expect(re.compile("([a-z]): Custom installation"))
+        child.expect("([a-z]): Custom installation")
         child.send(child.match.group(1) + "\n")
 
         # Enable/disable sets.  First parse the set selection
@@ -218,11 +230,11 @@ class Version:
             # either by spaces (at least two, so that there can
             # be single spaces within the label), or by a cursor
             # positioning escape sequence.
-	    child.expect(re.compile("([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s)|(?:\x1b))"))
+	    child.expect("([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s)|(?:\x1b))")
             (letter, label) = child.match.groups()
             if letter == 'x':
                 break
-            child.expect(re.compile("((Yes)|(No)|(All)|(None))\W"))
+            child.expect("((Yes)|(No)|(All)|(None))\W")
             yesno = child.match.group(1)
             if label == 'X11 sets':
                 x11_state = yesno
@@ -274,7 +286,7 @@ class Version:
         child.send("\016\016\016\016\016\016\016\016\n")
         child.expect("x: Partition sizes ok")
         child.send("\n")
-        child.expect("Please enter a name for your NetBSD disk")
+        child.expect("Please @nt@r a name for your NetBSD d@sk")
         child.send("\n")
         child.expect("Shall we continue")
         child.expect("b: Yes")
@@ -287,7 +299,7 @@ class Version:
         child.send("\n")
         # In 3.0.1, you type "c" to continue,; in -current, you type "x".
         # Handle both cases.
-        child.expect(re.compile("([cx]): Continue"))
+        child.expect("([cx]): Continue")
         child.send(child.match.group(1) + "\n")
         # At this point, we will be asked to "Hit enter to continue"
         # either once or twice before we get to the next real question.
@@ -307,7 +319,7 @@ class Version:
         # For simplicity, we allow any number of "Hit enter to continue"
         # prompts.
         while True:
-            child.expect("(Hit enter to continue)|(Please choose the timezone)")
+            child.expect("(Hit enter to continue)|(Pl@ase choose the @imezon@)")
             if child.match.group(1):
                 child.send("\n")
             else:
