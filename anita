@@ -1,9 +1,9 @@
 #!/usr/pkg/bin/python2.4
 
 import sys
-import getopt
 import re
 import anita
+from optparse import OptionParser
 
 class Usage(Exception):
     def __init__(self, msg):
@@ -12,38 +12,34 @@ class Usage(Exception):
 def main(argv = None):
     if argv is None:
         argv = sys.argv
-    try:
-        try:
-            opts, args = getopt.getopt(argv[1:], "h", ["help"])
-        except getopt.error, msg:
-             raise Usage(msg)
-        # more code, unchanged
 
-	if len(args) < 2:
-	    raise Usage("not enough arguments")
+    parser = OptionParser()
+    parser.add_option("--workdir",
+		      help="store work files in DIR", metavar="DIR")
+    (options, args) = parser.parse_args()
 
-        dist = args[1]
-        if re.search(r'\.iso$', dist):
-            ver = anita.ISO(dist)
-        elif re.match('^[a-z0-9\.0-]+:', dist):
-            ver = anita.URL(dist)
-        else:
-            raise Usage("can't figure out " + dist)
+    print "WORKDIR", options.workdir
 
-        mode = args[0]
-        if mode == 'install':
-            ver.install()
-        elif mode == 'boot':
-            ver.boot()
-        elif mode == 'interact':
-            ver.interact()
-        else:
-            raise Usage("unknown mode: " + mode)
+    if len(args) < 2:
+	raise Usage("not enough arguments")
 
-    except Usage, err:
-        print >>sys.stderr, err.msg
-        print >>sys.stderr, "for help use --help"
-        return 1
+    dist = args[1]
+    if re.search(r'\.iso$', dist):
+	ver = anita.ISO(dist)
+    elif re.match('^[a-z0-9\.0-]+:', dist):
+	ver = anita.URL(dist)
+    else:
+	raise Usage("can't figure out " + dist)
+
+    mode = args[0]
+    if mode == 'install':
+	ver.install()
+    elif mode == 'boot':
+	ver.boot()
+    elif mode == 'interact':
+	ver.interact()
+    else:
+	raise Usage("unknown mode: " + mode)
 
 if __name__ == "__main__":
     main()
