@@ -46,13 +46,13 @@ install NetBSD 4.0 from the master NetBSD FTP site, enter
 
    ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
-Or a snapshot; the URL in this example will most likely have expired
-by the time you read this, but if you replace the date with a current
-one, it should work:
+To install a snapshot, use something like the following.  The URL in
+this example will have expired by the time you read this, but if you
+replace the date with a current one, it should work:
 
    ./anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
 
-Or to install from an ISO image:
+To install from an ISO image:
 
    ./anita install i386cd-4.0.iso
 
@@ -79,12 +79,11 @@ Anita runs qemu with the "-snapshot" flag, so if you log in and make
 changes to the system, they will not be saved to the disk image file
 by default.
 
-Anita has been tested with the NetBSD 2.1, 3.0.1, 3.1, and 4.0
-releases and a number of recent daily binary snapshots and local
-builds.  Releases prior to 4.0 will install correctly, but but for
-some unknown reason, booting the resulting hard disk image doesn't
-work (it hangs after the "root on ffs" message).  Perhaps someone can
-figure out why this happens, or even fix it.  Booting NetBSD 4.0 or
--current works fine.
+Anita has been tested with the NetBSD 2.1, 3.1, and 4.0 releases and a
+number of recent daily binary snapshots and local builds.  Releases
+prior to 4.0 will install correctly, but but for some unknown reason,
+booting the resulting hard disk image doesn't work (it hangs after the
+"root on ffs" message).  Perhaps someone can figure out why this
+happens, or even fix it.  Booting NetBSD 4.0 or -current works fine.
 
 Please send any comments, bug reports, or patches to gson@gson.org.
