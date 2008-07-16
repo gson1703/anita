@@ -74,7 +74,7 @@ class spawn_cm(pexpect.spawn):
     def expect(self, match_re):
         new_re = re.sub(" ", "(?: |(?:\x1b\[C))", match_re)
         new_re = re.sub("@", "(?:.|(?:\x1b\[C))", new_re)
-        print "%s -> %s" % (match_re, new_re)
+        # print "%s -> %s" % (match_re, new_re)
         return pexpect.spawn.expect(self, new_re)
 
 # A NetBSD version.
