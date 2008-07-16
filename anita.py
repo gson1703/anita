@@ -77,6 +77,8 @@ class spawn_cm(pexpect.spawn):
         # print "%s -> %s" % (match_re, new_re)
         return pexpect.spawn.expect(self, new_re)
 
+#############################################################################
+
 # A NetBSD version.
 #
 # Subclasses should define:
@@ -103,18 +105,17 @@ class Version:
     ]
     def __init__(self):
         self.tempfiles = []
+    def set_workdir(self, dir):
+        self.workdir = dir
     # The directory where we mirror FTP files needed for installation
     def ftp_local_dir(self):
-        return self.base_dir() + "/ftp/"
+        return self.workdir + "/ftp/"
     # The path to the install ISO image
     def iso_path(self):
-        return os.path.join(self.base_dir(), self.iso_name())
+        return os.path.join(self.workdir, self.iso_name())
     # The directory for the install floppy images
     def floppy_dir(self):
         return os.path.join(self.ftp_local_dir(), "i386/installation/floppy")
-    # The path to the NetBSD hard disk image
-    def wd0_path(self):
-        return os.path.join(self.base_dir(), "wd0.img")
 
     # The list of boot floppies we should try downloading;
     # not all may actually exist
@@ -130,8 +131,8 @@ class Version:
         for fn in self.tempfiles:
             os.unlink(fn)
 
-    # Download this release by FTP
-    def ftp(self):
+    # Download this release
+    def download(self):
         # Depending on the NetBSD version, there may be two or three
         # boot floppies.  First download the ones that should always
         # exist.
@@ -157,25 +158,137 @@ class Version:
 
     # Create an install ISO image to install from
     def make_iso(self):
-        self.ftp()
+        self.download()
         if not os.path.isfile(self.iso_path()):
 	    spawn(makefs, ["makefs", "-t", "cd9660", "-o", "rockridge", \
 		self.iso_path(), self.ftp_local_dir()])
         self.tempfiles.append(self.iso_path())
 
-    # Install this version of NetBSD
+    # Backwards compatibility with Anita 1.2 and older
+    def install(self):
+        Anita(dist = self).install()
+    def boot(self):
+        Anita(dist = self).boot()
+    def interact(self):
+        Anita(dist = self).interact()
+
+# Subclass for versions where we pass in the version number explicitly
+
+class NumberedVersion(Version):
+    def __init__(self, ver):
+        Version.__init__(self)
+        self.ver = ver
+    # The file name of the install ISO (sans directory)
+    def iso_name(self):
+        if re.match("^[3-9]", self.ver) is not None:
+            return "i386cd-" + self.ver + ".iso"
+        else:
+            return "i386cd.iso"
+    # The directory for files related to this release
+    def default_workdir(self):
+        return "netbsd-" + self.ver
+
+# An official NetBSD release
+
+class Release(NumberedVersion):
+    def __init__(self, ver):
+        NumberedVersion.__init__(self, ver)
+        pass
+    def dist_url(self):
+        return netbsd_mirror_url + "NetBSD-" + self.ver + "/"
+
+# A daily build
+
+class DailyBuild(NumberedVersion):
+    def __init__(self, branch, timestamp):
+        ver = re.sub("^netbsd-", "", branch)
+        NumberedVersion.__init__(self, ver)
+        self.timestamp = timestamp
+    def default_workdir(self):
+        return NumberedVersion.default_workdir(self) + "-" + self.timestamp
+    def dist_url(self):
+        branch = re.sub("[\\._]", "-", self.ver)
+        if re.match("^[0-9]", branch):
+            branch = "netbsd-" + branch
+        return "http://ftp.netbsd.org/pub/NetBSD-daily/" + \
+            branch + "/" + self.timestamp + "/"
+
+# A local build
+
+class LocalBuild(NumberedVersion):
+    def __init__(self, ver, release_path):
+        NumberedVersion.__init__(self, ver)
+        self.release_path = release_path
+    def dist_url(self):
+        return "file://" + self.release_path
+
+# An ISO
+
+class ISO(Version):
+    def __init__(self, iso_path):
+        Version.__init__(self)
+        self.m_iso_path = iso_path
+    def iso_path(self):
+        return self.m_iso_path
+    # XXX actually version specific
+    def potential_floppies(self):
+        return ['boot-com1.fs', 'boot-com2.fs']
+    def floppies(self):
+        return ['boot-com1.fs', 'boot-com2.fs']
+    def default_workdir(self):
+        return "netbsd-" + md5.new(self.m_iso_path).hexdigest()
+
+    # We don't need to FTP sets because we already have
+    # a useable ISO.  However, we don't have a boot-com1.fs.
+    # Extract it.
+    def download(self):
+        mkdir_p(self.floppy_dir())
+        for floppy in self.potential_floppies():
+            fn = os.path.join(self.floppy_dir(), floppy)
+            f = open(fn, 'w')
+            subprocess.call(['isoinfo', '-R', '-i', self.iso_path(), \
+		'-x',  '/i386/installation/floppy/' + floppy], stdout=f)
+            f.close()
+        # XXX check that we have at least one
+
+class URL(Version):
+    def __init__(self, url):
+        Version.__init__(self)
+        self.url = url
+    def dist_url(self):
+        # XXX check
+        return re.sub('/i386/', '/', self.url)
+    def iso_name(self):
+        return "install_tmp.iso"
+    def default_workdir(self):
+        return "netbsd-" + md5.new(self.url).hexdigest()
+
+#############################################################################
+
+class Anita:
+    def __init__(self, dist, workdir = None):
+        self.dist = dist
+        if workdir:
+           self.workdir = workdir
+        else:
+            self.workdir = dist.default_workdir()
+
+    # The path to the NetBSD hard disk image
+    def wd0_path(self):
+        return os.path.join(self.workdir, "wd0.img")
 
     def _install(self):
         # Get the install ISO
-        self.make_iso()
+        self.dist.set_workdir(self.workdir)
+        self.dist.make_iso()
 
-        floppy_paths = [ os.path.join(self.floppy_dir(), f) \
-            for f in self.floppies() ]
+        floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
+            for f in self.dist.floppies() ]
 
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "1024M"])
         child = spawn_cm(qemu, ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
-            "-fda", floppy_paths[0], "-cdrom", self.iso_path(), \
+            "-fda", floppy_paths[0], "-cdrom", self.dist.iso_path(), \
             "-boot", "a", "-serial", "stdio", "-nographic"])
 
 	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 needs "child.log_file"
@@ -346,7 +459,7 @@ class Version:
         child.expect("#")  
         child.send("halt\n")
         child.expect("halted by root")
-        self.cleanup()
+        self.dist.cleanup()
 
     # Install this version of NetBSD if not installed already
 
@@ -374,94 +487,4 @@ class Version:
     def interact(self):
         self.boot().interact()
 
-# Subclass for versions where we pass in the version number explicitly
-
-class NumberedVersion(Version):
-    def __init__(self, ver):
-        Version.__init__(self)
-        self.ver = ver
-    # The file name of the install ISO (sans directory)
-    def iso_name(self):
-        if re.match("^[3-9]", self.ver) is not None:
-            return "i386cd-" + self.ver + ".iso"
-        else:
-            return "i386cd.iso"
-    # The directory for files related to this release
-    def base_dir(self):
-        return "netbsd-" + self.ver
-
-# An official NetBSD release
-
-class Release(NumberedVersion):
-    def __init__(self, ver):
-        NumberedVersion.__init__(self, ver)
-        pass
-    def dist_url(self):
-        return netbsd_mirror_url + "NetBSD-" + self.ver + "/"
-
-# A daily build
-
-class DailyBuild(NumberedVersion):
-    def __init__(self, branch, timestamp):
-        ver = re.sub("^netbsd-", "", branch)
-        NumberedVersion.__init__(self, ver)
-        self.timestamp = timestamp
-    def base_dir(self):
-        return NumberedVersion.base_dir(self) + "-" + self.timestamp
-    def dist_url(self):
-        branch = re.sub("[\\._]", "-", self.ver)
-        if re.match("^[0-9]", branch):
-            branch = "netbsd-" + branch
-        return "http://ftp.netbsd.org/pub/NetBSD-daily/" + \
-            branch + "/" + self.timestamp + "/"
-
-# A local build
-
-class LocalBuild(NumberedVersion):
-    def __init__(self, ver, release_path):
-        NumberedVersion.__init__(self, ver)
-        self.release_path = release_path
-    def dist_url(self):
-        return "file://" + self.release_path
-
-# An ISO
-
-class ISO(Version):
-    def __init__(self, iso_path):
-        Version.__init__(self)
-        self.m_iso_path = iso_path
-    def iso_path(self):
-        return self.m_iso_path
-    # XXX actually version specific
-    def potential_floppies(self):
-        return ['boot-com1.fs', 'boot-com2.fs']
-    def floppies(self):
-        return ['boot-com1.fs', 'boot-com2.fs']
-    def base_dir(self):
-        return "netbsd-" + md5.new(self.m_iso_path).hexdigest()
-
-    # We don't need to FTP sets because we already have
-    # a useable ISO.  However, we don't have a boot-com1.fs.
-    # Extract it.
-    def ftp(self):
-        mkdir_p(self.floppy_dir())
-        for floppy in self.potential_floppies():
-            fn = os.path.join(self.floppy_dir(), floppy)
-            f = open(fn, 'w')
-            subprocess.call(['isoinfo', '-R', '-i', self.iso_path(), \
-		'-x',  '/i386/installation/floppy/' + floppy], stdout=f)
-            f.close()
-        # XXX check that we have at least one
-
-class URL(Version):
-    def __init__(self, url):
-        Version.__init__(self)
-        self.url = url
-    def dist_url(self):
-        # XXX check
-        return re.sub('/i386/', '/', self.url)
-    def iso_name(self):
-        return "install_tmp.iso"
-    def base_dir(self):
-        return "netbsd-" + md5.new(self.url).hexdigest()
-    
+#############################################################################
