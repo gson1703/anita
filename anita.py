@@ -285,16 +285,17 @@ class Anita:
         floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
             for f in self.dist.floppies() ]
 
-        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "1024M"])
+        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "384M"])
         child = spawn_cm(qemu, ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
             "-fda", floppy_paths[0], "-cdrom", self.dist.iso_path(), \
             "-boot", "a", "-serial", "stdio", "-nographic"])
 
-	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 needs "child.log_file"
+	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 usess "child.log_file"
         child.logfile = sys.stdout
         child.log_file = sys.stdout
         child.timeout = 300
+        child.setecho(False)
 
         while True:
             child.expect("(insert disk (\d+), and press return...)|(a: Installation messages in English)")
@@ -324,6 +325,7 @@ class Anita:
         child.expect("I found only one disk")
         child.expect("Hit enter to continue")
         child.send("\n")
+
         # Custom installation is choice "c" in -current,
         # choice "b" in older versions
         # We could use "Minimal", but it doesn't exist in
@@ -394,9 +396,12 @@ class Anita:
         child.send("\n")
         child.send("\n")
         child.expect("Accept partition sizes")
-        # Press control-N enough times to get to the end of the list,
-        # then enter to continue
-        child.send("\016\016\016\016\016\016\016\016\n")
+        # Press cursor-down enough times to get to the end of the list,
+        # then enter to continue.  Previously, we used control-N ("\016"), 
+        # but if it gets echoed (which has happened), it is interpreted by
+        # the terminal as "enable line drawing character set", leaving the
+        # terminal in an unusable state.
+        child.send("\033[B" * 8 + "\n")
         child.expect("x: Partition sizes ok")
         child.send("\n")
         child.expect("Please @nt@r a name for your NetBSD d@sk")
@@ -459,6 +464,7 @@ class Anita:
         child.expect("#")  
         child.send("halt\n")
         child.expect("halted by root")
+        child.close()
         self.dist.cleanup()
 
     # Install this version of NetBSD if not installed already
@@ -478,13 +484,36 @@ class Anita:
         self.install()
         child = pexpect.spawn(qemu, ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
-            "-serial", "stdio", "-nographic", "-snapshot"])
+            "-serial", "stdio", "-nographic", "-snapshot", \
+            "-no-acpi", "-net", "nic,model=ne2k_pci", "-net", "user"])
+
+	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file"
+        child.logfile = sys.stdout
         child.log_file = sys.stdout
         child.timeout = 300
+        child.setecho(False)
         child.expect("login:")
+        # Can't close child here because we still need it if called from interact()
         return child
 
     def interact(self):
-        self.boot().interact()
+        child = self.boot()
+        # We need this in pexpect 2.x or everything will be printed twice
+        child.logfile = None
+        child.interact()
+
+def login(child):
+    child.send("\n")
+    child.expect("login:")
+    child.send("root\n")
+    child.expect("\n# ")
+
+def net_setup(child):
+    child.send("dhclient ne2\n")
+    child.expect("bound to.*\n# ")
+
+def shell_cmd(child, cmd):
+    child.send(cmd + "\n")
+    child.expect("\n# ")
 
 #############################################################################
