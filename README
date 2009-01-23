@@ -22,12 +22,9 @@ If you want to play with it, here is what you need:
  - The latest anita tarball from
    <http://www.gson.org/netbsd/anita/download/>
 
- - A system running NetBSD-current.  NetBSD 4.0 should also work, but
-   has not been tested by the author.  Versions older than August 7,
-   2006 will not work due to the bug reported in kern/34129.  Note
-   that this requirement concerns the host system (the one you run
-   anita on), not the target system (the one being installed in the
-   virtual machine)
+ - A suitable host system to run anita on.  NetBSD-4, NetBSD-current,
+   or Linux should work.  NetBSD versions older than August 7, 2006
+   will not work due to the bug reported in kern/34129.
 
  - pkgsrc/emulators/qemu
 
@@ -39,18 +36,25 @@ If you want to play with it, here is what you need:
 
  - About a gigabyte of free disk space
 
-Unpack the anita tarball and cd into the resulting directory.  You
-should now be able to download and install a NetBSD release in a
+Unpack the anita tarball and cd into the resulting directory.  Then
+install anita by running
+
+   sudo python2.4 setup.py install
+
+(if you have another version of python installed, change the
+version number as appropriate).
+
+You should now be able to download and install a NetBSD release in a
 virtual machine using a one-line shell command.  For example, to
 install NetBSD 4.0 from the master NetBSD FTP site, enter
 
-   ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
+   anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
 To install a snapshot, use something like the following.  The URL in
 this example will have expired by the time you read this, but if you
 replace the date with a current one, it should work:
 
-   ./anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
+   anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
 
 To install from an ISO image:
 
@@ -59,7 +63,7 @@ To install from an ISO image:
 If you have built NetBSD locally using "build.sh -R", you can point
 Anita directly at the RELEASEDIR:
 
-  ./anita install file:///path/to/releasedir/
+  anita install file:///path/to/releasedir/
 
 Anita will cache the distribution sets, boot floppies, and a hard disk
 image in a directory "netbsd-<hash>" under the current working
@@ -71,7 +75,7 @@ the cached distribution files.
 To boot the newly installed hard disk image and get a login prompt,
 type "interact" instead of "install", for example:
 
-   ./anita interact i386cd-4.0.iso
+   anita interact i386cd-4.0.iso
 
 To kill the virtual machine and return to Python, type control-a x.
 

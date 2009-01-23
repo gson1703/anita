@@ -22,8 +22,12 @@ netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 
 qemu_img = "qemu-img"
 qemu = "qemu"
-ftp = "ftp"
-makefs = "makefs"
+if os.uname()[0] == 'NetBSD':
+    download_command = ["ftp", "-o"]
+    makefs = ["makefs", "-t", "cd9660", "-o", "rockridge"]
+else:
+    download_command = ["wget", "-O"]
+    makefs = ["genisoimage", "-r", "-o"]
 
 # Create a directory if missing
 
@@ -38,22 +42,22 @@ def spawn(command, args):
     if ret != 0:
         raise RuntimeError("could not run " + command)
 
-# FTP a file, cleaning up the partial file if the transfer
+# Download a file, cleaning up the partial file if the transfer
 # fails or is aborted before completion.
 
 def download_file(file, url):
     try:
-        spawn(ftp, ["ftp", "-o", file, url])
+        spawn(download_command[0], download_command + [file, url])
     except:
         if os.path.exists(file):
             os.unlink(file)
         raise
 
-# FTP a file from the FTP directory tree rooted at "urlbase"
-# into a mirror tree rooted at "dirbase".  The file name to
-# FTP is "relfile", which is relative to both roots.
-# If the file already exists locally, do nothing.
-# Return true iff we actually downloaded the file.
+# Download a file from the download directory tree rooted at "urlbase"
+# into a mirror tree rooted at "dirbase".  The file name to download
+# is "relfile", which is relative to both roots.  If the file already
+# exists locally, do nothing.  Return true iff we actually downloaded
+# the file.
 
 def download_if_missing(urlbase, dirbase, relfile):
     url = urlbase + relfile
@@ -83,7 +87,7 @@ class spawn_cm(pexpect.spawn):
 #
 # Subclasses should define:
 #
-#    dist_url(self) - the URL for the top of the FTP tree
+#    dist_url(self) - the URL for the top of the download tree
 #                     where the version can be downloaded
 
 class Version:
@@ -107,7 +111,7 @@ class Version:
         self.tempfiles = []
     def set_workdir(self, dir):
         self.workdir = dir
-    # The directory where we mirror FTP files needed for installation
+    # The directory where we mirror files needed for installation
     def download_local_dir(self):
         return self.workdir + "/download/"
     # The path to the install ISO image
@@ -160,8 +164,8 @@ class Version:
     def make_iso(self):
         self.download()
         if not os.path.exists(self.iso_path()):
-	    spawn(makefs, ["makefs", "-t", "cd9660", "-o", "rockridge", \
-		self.iso_path(), self.download_local_dir()])
+	    spawn(makefs[0], makefs + \
+		[self.iso_path(), self.download_local_dir()])
         self.tempfiles.append(self.iso_path())
 
     # Backwards compatibility with Anita 1.2 and older
@@ -238,7 +242,7 @@ class ISO(Version):
     def default_workdir(self):
         return "netbsd-" + md5.new(self.m_iso_path).hexdigest()
 
-    # We don't need to FTP sets because we already have
+    # We don't need to download sets because we already have
     # a useable ISO.  However, we don't have a boot-com1.fs.
     # Extract it.
     def download(self):
@@ -415,6 +419,7 @@ class Anita:
         child.send("\n")
         child.expect("a: CD-ROM")
         child.send("\n")
+
         # In 3.0.1, you type "c" to continue,; in -current, you type "x".
         # Handle both cases.
         child.expect("([cx]): Continue")
