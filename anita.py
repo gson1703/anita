@@ -45,7 +45,7 @@ def ftp_file(file, url):
     try:
         spawn(ftp, ["ftp", "-o", file, url])
     except:
-        if os.path.isfile(file):
+        if os.path.exists(file):
             os.unlink(file)
         raise
 
@@ -58,7 +58,7 @@ def ftp_file(file, url):
 def ftp_if_missing(urlbase, dirbase, relfile):
     url = urlbase + relfile
     file = os.path.join(dirbase, relfile)
-    if os.path.isfile(file):
+    if os.path.exists(file):
         return False
     dir = os.path.dirname(file)
     mkdir_p(dir)
@@ -125,7 +125,7 @@ class Version:
     # The list of boot floppies we actually have
     def floppies(self):
         return [f for f in self.potential_floppies() \
-            if os.path.isfile(os.path.join(self.floppy_dir(), f))]
+            if os.path.exists(os.path.join(self.floppy_dir(), f))]
 
     def cleanup(self):
         for fn in self.tempfiles:
@@ -159,7 +159,7 @@ class Version:
     # Create an install ISO image to install from
     def make_iso(self):
         self.download()
-        if not os.path.isfile(self.iso_path()):
+        if not os.path.exists(self.iso_path()):
 	    spawn(makefs, ["makefs", "-t", "cd9660", "-o", "rockridge", \
 		self.iso_path(), self.ftp_local_dir()])
         self.tempfiles.append(self.iso_path())
@@ -471,12 +471,12 @@ class Anita:
 
     def install(self):
         # Already installed?
-        if os.path.isfile(self.wd0_path()):
+        if os.path.exists(self.wd0_path()):
             return
         try:
             self._install()
         except:
-            if os.path.isfile(self.wd0_path()):
+            if os.path.exists(self.wd0_path()):
                 os.unlink(self.wd0_path())
             raise
 
