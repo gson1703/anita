@@ -11,20 +11,20 @@ Anita is written in Python and uses the pexpect module to "screen
 scrape" the sysinst output over an emulated serial console and
 script the installation procedure.
 
-Anita is still a work in progress.  Currently, only NetBSD/i386 is
-supported as the system to install, but it should be possible to add
-support for installing other ports of NetBSD, as well as
-cross-installation setups where the machine running anita is a
-different architecture from the virtual machine being installed on.
+Anita is still a work in progress.  Currently, it only knows how to
+install the i386 port of NetBSD, but it should be possible to add
+support for installing other ports, as well as cross-installation
+setups where the machine running anita is a different architecture
+from the virtual machine being installed on.
 
 If you want to play with it, here is what you need:
 
  - The latest anita tarball from
    <http://www.gson.org/netbsd/anita/download/>
 
- - NetBSD-current from August 7, 2006 or newer (otherwise you will run
-   into a kernel bug which causes some of the serial console output to
-   be dropped on its way from qemu to pexpect; see kern/34129).  Note
+ - A system running NetBSD-current.  NetBSD 4.0 should also work, but
+   has not been tested by the author.  Versions older than August 7,
+   2006 will not work due to the bug reported in kern/34129.  Note
    that this requirement concerns the host system (the one you run
    anita on), not the target system (the one being installed in the
    virtual machine)
@@ -79,11 +79,11 @@ Anita runs qemu with the "-snapshot" flag, so if you log in and make
 changes to the system, they will not be saved to the disk image file
 by default.
 
-Anita has been tested with the NetBSD 2.1, 3.1, and 4.0 releases and a
-number of recent daily binary snapshots and local builds.  Releases
-prior to 4.0 will install correctly, but but for some unknown reason,
-booting the resulting hard disk image doesn't work (it hangs after the
-"root on ffs" message).  Perhaps someone can figure out why this
-happens, or even fix it.  Booting NetBSD 4.0 or -current works fine.
+Anita has successfully installed the NetBSD 2.1, 3.1, and 4.0 releases
+and a number of recent daily binary snapshots and local builds.
+Releases prior to 4.0 will install correctly, but for some unknown
+reason, booting the resulting hard disk image doesn't work (it hangs
+after the "root on ffs" message).  Perhaps someone can figure out why
+this happens, or even fix it.  Booting NetBSD 4.0 or -current works.
 
 Please send any comments, bug reports, or patches to gson@gson.org.
