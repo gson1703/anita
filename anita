@@ -13,7 +13,7 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    parser = OptionParser()
+    parser = OptionParser(usage = "usage: %prog [options] install|boot|interact distribution")
     parser.add_option("--workdir",
 		      help="store work files in DIR", metavar="DIR")
     (options, args) = parser.parse_args()
@@ -42,4 +42,9 @@ def main(argv = None):
 	raise Usage("unknown mode: " + mode)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Usage, err:
+        print >>sys.stderr, err.msg
+        print >>sys.stderr, "for help use --help"
+        sys.exit(1)
