@@ -41,7 +41,7 @@ def spawn(command, args):
 # FTP a file, cleaning up the partial file if the transfer
 # fails or is aborted before completion.
 
-def ftp_file(file, url):
+def download_file(file, url):
     try:
         spawn(ftp, ["ftp", "-o", file, url])
     except:
@@ -55,14 +55,14 @@ def ftp_file(file, url):
 # If the file already exists locally, do nothing.
 # Return true iff we actually downloaded the file.
 
-def ftp_if_missing(urlbase, dirbase, relfile):
+def download_if_missing(urlbase, dirbase, relfile):
     url = urlbase + relfile
     file = os.path.join(dirbase, relfile)
     if os.path.exists(file):
         return False
     dir = os.path.dirname(file)
     mkdir_p(dir)
-    ftp_file(file, url)
+    download_file(file, url)
     return True
 
 # Subclass pexpect.spawn to deal with silly cursor movement
@@ -108,14 +108,14 @@ class Version:
     def set_workdir(self, dir):
         self.workdir = dir
     # The directory where we mirror FTP files needed for installation
-    def ftp_local_dir(self):
-        return self.workdir + "/ftp/"
+    def download_local_dir(self):
+        return self.workdir + "/download/"
     # The path to the install ISO image
     def iso_path(self):
         return os.path.join(self.workdir, self.iso_name())
     # The directory for the install floppy images
     def floppy_dir(self):
-        return os.path.join(self.ftp_local_dir(), "i386/installation/floppy")
+        return os.path.join(self.download_local_dir(), "i386/installation/floppy")
 
     # The list of boot floppies we should try downloading;
     # not all may actually exist
@@ -137,23 +137,23 @@ class Version:
         # boot floppies.  First download the ones that should always
         # exist.
         for floppy in self.potential_floppies()[0:2]:
-            did_download_floppies = ftp_if_missing(self.dist_url(), 
-                self.ftp_local_dir(), os.path.join("i386/installation/floppy/", floppy))
+            did_download_floppies = download_if_missing(self.dist_url(), 
+                self.download_local_dir(), os.path.join("i386/installation/floppy/", floppy))
         # Then attempt to download the remining ones, but only
         # if we actually downloaded the initial ones rather
         # than finding them in the cache.
         if did_download_floppies:
             for floppy in self.potential_floppies()[2:]:
                 try:
-                    ftp_if_missing(self.dist_url(),
-                       self.ftp_local_dir(),
+                    download_if_missing(self.dist_url(),
+                       self.download_local_dir(),
                        "i386/installation/floppy/" + floppy)
                 except:
                     pass
         for set in Version.sets:
             (fn, label, enable) = set
             if enable:
-		ftp_if_missing(self.dist_url(), self.ftp_local_dir(), \
+		download_if_missing(self.dist_url(), self.download_local_dir(), \
 		    os.path.join("i386/binary/sets", fn + ".tgz"))
 
     # Create an install ISO image to install from
@@ -161,7 +161,7 @@ class Version:
         self.download()
         if not os.path.exists(self.iso_path()):
 	    spawn(makefs, ["makefs", "-t", "cd9660", "-o", "rockridge", \
-		self.iso_path(), self.ftp_local_dir()])
+		self.iso_path(), self.download_local_dir()])
         self.tempfiles.append(self.iso_path())
 
     # Backwards compatibility with Anita 1.2 and older
