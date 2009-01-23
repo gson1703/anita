@@ -485,7 +485,8 @@ class Anita:
         child = pexpect.spawn(qemu, ["qemu", "-m", "32", \
             "-hda", self.wd0_path(), \
             "-serial", "stdio", "-nographic", "-snapshot", \
-            "-no-acpi", "-net", "nic,model=ne2k_pci", "-net", "user"])
+            "-no-acpi"])
+        # "-net", "nic,model=ne2k_pci", "-net", "user"
 
 	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file"
         child.logfile = sys.stdout
