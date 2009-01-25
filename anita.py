@@ -290,7 +290,7 @@ class Anita:
             for f in self.dist.floppies() ]
 
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "384M"])
-        child = spawn_cm(qemu, ["qemu", "-m", "32", \
+        child = spawn_cm(qemu, ["-m", "32", \
             "-hda", self.wd0_path(), \
             "-fda", floppy_paths[0], "-cdrom", self.dist.iso_path(), \
             "-boot", "a", "-serial", "stdio", "-nographic"])
@@ -487,7 +487,7 @@ class Anita:
 
     def boot(self):
         self.install()
-        child = pexpect.spawn(qemu, ["qemu", "-m", "32", \
+        child = pexpect.spawn(qemu, ["-m", "32", \
             "-hda", self.wd0_path(), \
             "-serial", "stdio", "-nographic", "-snapshot", \
             "-no-acpi"])
