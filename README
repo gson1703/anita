@@ -2,42 +2,48 @@ This is the documentation for Anita, an Automated NetBSD Installation
 and Test Application.
 
 Anita is an experimental tool for automated testing of the NetBSD/i386
-installation procedure.  Using anita, you can download a NetBSD/i386
+installation procedure.  Using Anita, you can download a NetBSD/i386
 distribution and install it in a qemu virtual machine in a fully
-automated fashion.  It's fun to watch, and it has already played a
-part in finding several bugs in NetBSD.
+automated fashion.  It's fun to watch, and it's useful for automated
+testing; Anita has already helped find several bugs in NetBSD.
 
-Anita is written in Python and uses the pexpect module to "screen
-scrape" the sysinst output over an emulated serial console and
-script the installation procedure.
+Anita works by "screen scraping" the sysinst output over an emulated
+serial console and scripting the installation procedure.  Anita is
+written in Python using the pexpect module.
 
 Anita is still a work in progress.  Currently, it only knows how to
 install the i386 port of NetBSD, but it should be possible to add
 support for installing other ports, as well as cross-installation
-setups where the machine running anita is a different architecture
+setups where the machine running Anita is a different architecture
 from the virtual machine being installed on.
 
-If you want to play with it, here is what you need:
+If you want to play with Anita, here is what you need:
 
- - The latest anita tarball from
+ - The latest Anita tarball from
    <http://www.gson.org/netbsd/anita/download/>
 
- - A suitable host system to run anita on.  NetBSD-4, NetBSD-current,
-   or Linux should work.  NetBSD versions older than August 7, 2006
-   will not work due to the bug reported in kern/34129.
+ - A suitable NetBSD host system to run Anita on.  NetBSD-4 or
+   NetBSD-current should work. NetBSD versions older than
+   August 7, 2006 will not work due to the bug reported in kern/34129.
+   The following pkgsrc packages are required:
 
- - pkgsrc/emulators/qemu
+     - emulators/qemu
+     - devel/py-pexpect
+     - sysutils/cdrtools
 
- - pkgsrc/devel/py-pexpect
+   Alternatively, a Linux system may be used as a host.
+   In the case of Ubuntu, the following packages are required:
 
- - sysutils/cdrtools
+     - qemu
+     - python-pexpect
 
- - A network connection for downloading installation file sets
+ - A network connection for downloading installation file sets,
+   or some local release ISOs or builds
 
  - About a gigabyte of free disk space
 
-Unpack the anita tarball and cd into the resulting directory.  Then
-install anita by running
+Unpack the Anita tarball and cd into the resulting directory.  Then
+install Anita by running
 
    sudo python2.4 setup.py install
 
@@ -52,7 +58,8 @@ install NetBSD 4.0 from the master NetBSD FTP site, enter
 
 To install a snapshot, use something like the following.  The URL in
 this example will have expired by the time you read this, but if you
-replace the date with a current one, it should work:
+replace the date with that of a recent successful daily build,
+it should work:
 
    anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
 
@@ -67,10 +74,13 @@ Anita directly at the RELEASEDIR:
 
 Anita will cache the distribution sets, boot floppies, and a hard disk
 image in a directory "netbsd-<hash>" under the current working
-directory, effectively turning the install() method a no-op if it is
-invoked again without first removing the cached files.  If you remove
-just the hard disk image (wd0.img), install() will recreate it from
-the cached distribution files.
+directory.  Files that already exist in the cache directory will not
+be re-downloaded or rebuilt; this means that if you run "anita
+install" with the same URL twice in a row, the second run will
+effectively be a no-op.  To force things to be redone, simply remove
+the cache directory.  If you remove just the hard disk image
+(wd0.img), "anita install" will recreate it from the cached
+distribution files.
 
 To boot the newly installed hard disk image and get a login prompt,
 type "interact" instead of "install", for example:
