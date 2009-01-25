@@ -1,6 +1,8 @@
 exec >testsuite.log 2>&1
 
-./anita install /usr/build/20080708-1545/release/iso/i386cd.iso
+set -x
+
+#./anita install /usr/build/20080708-1545/release/iso/i386cd.iso
 ./anita install http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-3.1/i386/
 ./anita boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 # 1.2 compatibility
