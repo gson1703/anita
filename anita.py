@@ -255,6 +255,8 @@ class ISO(Version):
             f.close()
         # XXX check that we have at least one
 
+# The top-level URL of a release tree
+
 class URL(Version):
     def __init__(self, url):
         Version.__init__(self)
