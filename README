@@ -65,7 +65,7 @@ it should work:
 
 To install from an ISO image:
 
-   ./anita install i386cd-4.0.iso
+   anita install i386cd-4.0.iso
 
 If you have built NetBSD locally using "build.sh -R", you can point
 Anita directly at the RELEASEDIR:
