@@ -22,20 +22,17 @@ If you want to play with Anita, here is what you need:
  - The latest Anita tarball from
    <http://www.gson.org/netbsd/anita/download/>
 
- - A suitable NetBSD host system to run Anita on.  NetBSD-4 or
-   NetBSD-current should work. NetBSD versions older than
-   August 7, 2006 will not work due to the bug reported in kern/34129.
+ - A suitable NetBSD host system to run Anita on.  NetBSD-4.0
+   is known to work; -current may or may not work depending
+   on the source date.  Versions of -current older than
+   August 7, 2006 will not work due to the bug reported
+   in kern/34129.
+
    The following pkgsrc packages are required:
 
      - emulators/qemu
      - devel/py-pexpect
      - sysutils/cdrtools
-
-   Alternatively, a Linux system may be used as a host.
-   In the case of Ubuntu, the following packages are required:
-
-     - qemu
-     - python-pexpect
 
  - A network connection for downloading installation file sets,
    or some local release ISOs or builds
@@ -59,7 +56,7 @@ install NetBSD 4.0 from the master NetBSD FTP site, enter
 To install a snapshot, use something like the following.  The URL in
 this example will have expired by the time you read this, but if you
 replace the date with that of a recent successful daily build,
-it should work:
+it should work (modulo bugs in the snapshot itself):
 
    anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
 
@@ -72,14 +69,20 @@ Anita directly at the RELEASEDIR:
 
   anita install file:///path/to/releasedir/
 
-Anita will cache the distribution sets, boot floppies, and a hard disk
-image in a directory "netbsd-<hash>" under the current working
-directory.  Files that already exist in the cache directory will not
-be re-downloaded or rebuilt; this means that if you run "anita
-install" with the same URL twice in a row, the second run will
-effectively be a no-op.  To force things to be redone, simply remove
-the cache directory.  If you remove just the hard disk image
-(wd0.img), "anita install" will recreate it from the cached
+Anita will create a subdirectory under the current working directory
+and cache the distribution sets, boot floppies, and a hard disk image
+in it.  The directory will be called something like
+"netbsd-268faf13a6a489f6d893da3dc419157b"; the part after the dash is
+the MD5 hash of the URL or ISO image name.
+
+When you rerun Anita with the same URL or ISO image name, files that
+already exist in the cache directory will not be re-downloaded or
+rebuilt, so if you run you "anita install" with the same URL twice in
+a row, the second run will effectively be a no-op, and if you rerun
+"anita interact", the system will be booted from the existing disk
+image, skipping the installation stage.  To force things to be redone,
+simply remove the cache directory.  If you remove just the hard disk
+image (wd0.img), "anita install" will recreate it from the cached
 distribution files.
 
 To boot the newly installed hard disk image and get a login prompt,
@@ -98,6 +101,7 @@ and a number of recent daily binary snapshots and local builds.
 Releases prior to 4.0 will install correctly, but for some unknown
 reason, booting the resulting hard disk image doesn't work (it hangs
 after the "root on ffs" message).  Perhaps someone can figure out why
-this happens, or even fix it.  Booting NetBSD 4.0 or -current works.
+this happens, or even fix it.  Booting NetBSD 4.0 works, as does
+-current (when it isn't broken).
 
 Please send any comments, bug reports, or patches to gson@gson.org.
