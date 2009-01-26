@@ -166,7 +166,7 @@ class Version:
         if not os.path.exists(self.iso_path()):
 	    spawn(makefs[0], makefs + \
 		[self.iso_path(), self.download_local_dir()])
-        self.tempfiles.append(self.iso_path())
+            self.tempfiles.append(self.iso_path())
 
     # Backwards compatibility with Anita 1.2 and older
     def install(self):
