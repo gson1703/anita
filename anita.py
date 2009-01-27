@@ -30,31 +30,6 @@ else:
     download_command = ["wget", "-O"]
     makefs = ["genisoimage", "-r", "-o"]
 
-# Get the version number of of the installed qemu
-
-def get_qemu_version():
-    proc = subprocess.Popen([qemu, '-h'], stdout=subprocess.PIPE)
-    lines = proc.stdout.readlines()
-    m = re.search(r"version ([0-9\.]+)", lines[0])
-    if not m:
-	raise RuntimeError("could not determine qemu version")
-    proc.wait()
-    return m.group(1)
-
-# Convert a version number like "0.9.1" into a form that
-# can be correctly compared using lexicographic string
-# comparison
-
-def lexversion(v):
-    return "".join([string.zfill(d, 8) for d in v.split(".")])
-
-qemu_version = get_qemu_version()
-
-if lexversion(qemu_version) >= lexversion("0.9.1"):
-    qemu_floppy0_name = "floppy0"    
-else:
-    qemu_floppy0_name = "fda"
-    
 # Create a directory if missing
 
 def mkdir_p(dir):
@@ -329,6 +304,8 @@ class Anita:
         child.timeout = 300
         child.setecho(False)
 
+        # Do the floppy swapping dance
+        floppy0_name = None
         while True:
             child.expect("(insert disk (\d+), and press return...)|(a: Installation messages in English)")
 	    if not child.match.group(1):
@@ -340,8 +317,15 @@ class Anita:
             child.send("\001c")
 	    # We used to wait for a (qemu) prompt here, but qemu 0.9.1 no longer prints it
             # child.expect('\(qemu\)')
-            child.send("change %s %s\n" % (qemu_floppy0_name, floppy_paths[floppy_index]))
-            child.expect('\(qemu\)')
+            if not floppy0_name:
+                # Between qemu 0.9.0 and 0.9.1, the name of the floppy device
+                # accepted by the "change" command changed from "fda" to "floppy0"
+                # without any provision for backwards compatibility.  Deal with it.
+                child.send("info block\n")
+                child.expect(r'\n(\w+): type=floppy')
+                floppy0_name = child.match.group(1)
+            # Now we chan change the floppy
+            child.send("change %s %s\n" % (floppy0_name, floppy_paths[floppy_index]))
             # Exit qemu command mode
             child.send("\001c\n")
 
