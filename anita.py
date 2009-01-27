@@ -27,6 +27,7 @@ if os.uname()[0] == 'NetBSD':
     download_command = ["ftp", "-o"]
     makefs = ["makefs", "-t", "cd9660", "-o", "rockridge"]
 else:
+    # For Linux, and maybe others
     download_command = ["wget", "-O"]
     makefs = ["genisoimage", "-r", "-o"]
 
@@ -74,6 +75,11 @@ def download_if_missing(urlbase, dirbase, relfile):
 # commands.  Makes " " match a \[[C sequence in addition
 # to its usual meaning of matching a space, and introduce
 # the special charcter "@" meaning "\[[C or any single char".
+#
+# This is needed to install systems suffering from the bug
+# reported in PR lib/39175.  Thankfully, the bug has now been 
+# fixed, but the workaround remains so that we can install the
+# affected historic version.
 
 class spawn_cm(pexpect.spawn):
     def expect(self, match_re):
