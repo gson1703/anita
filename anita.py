@@ -7,6 +7,7 @@ import md5
 import os
 import pexpect
 import re
+import string
 import subprocess
 import sys
 import time
@@ -20,8 +21,8 @@ netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 
 # External commands we rely on
 
-qemu_img = "qemu-img"
 qemu = "qemu"
+qemu_img = "qemu-img"
 if os.uname()[0] == 'NetBSD':
     download_command = ["ftp", "-o"]
     makefs = ["makefs", "-t", "cd9660", "-o", "rockridge"]
@@ -29,6 +30,33 @@ else:
     download_command = ["wget", "-O"]
     makefs = ["genisoimage", "-r", "-o"]
 
+# Get the version number of of the installed qemu
+
+def get_qemu_version():
+    proc = subprocess.Popen([qemu, '-h'], stdout=subprocess.PIPE)
+    lines = proc.stdout.readlines()
+    m = re.search(r"version ([0-9\.]+)", lines[0])
+    if not m:
+	raise RuntimeError("could not determine qemu version")
+    proc.wait()
+    return m.group(1)
+
+# Convert a version number like "0.9.1" into a form that
+# can be correctly compared using lexicographic string
+# comparison
+
+def lexversion(v):
+    return "".join([string.zfill(d, 8) for d in v.split(".")])
+
+qemu_version = get_qemu_version()
+
+if lexversion(qemu_version) >= lexversion("0.9.1"):
+    qemu_command_mode_switch = "\001c\n"
+    qemu_floppy0_name = "floppy0"    
+else:
+    qemu_command_mode_switch = "\001c"
+    qemu_floppy0_name = "fda"
+    
 # Create a directory if missing
 
 def mkdir_p(dir):
@@ -311,9 +339,9 @@ class Anita:
             floppy_index = int(child.match.group(2)) - 1
 
             # Escape into qemu command mode to switch floppies
-            child.send("\001c")
+            child.send(qemu_command_mode_switch)
             child.expect('\(qemu\)')
-            child.send("change fda %s" % floppy_paths[floppy_index])
+            child.send("change %s %s" % (qemu_floppy0_name, floppy_paths[floppy_index]))
             child.send("\n")
             child.expect('\(qemu\)')
             # Exit qemu command mode
