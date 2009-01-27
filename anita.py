@@ -51,10 +51,8 @@ def lexversion(v):
 qemu_version = get_qemu_version()
 
 if lexversion(qemu_version) >= lexversion("0.9.1"):
-    qemu_command_mode_switch = "\001c\n"
     qemu_floppy0_name = "floppy0"    
 else:
-    qemu_command_mode_switch = "\001c"
     qemu_floppy0_name = "fda"
     
 # Create a directory if missing
@@ -339,10 +337,10 @@ class Anita:
             floppy_index = int(child.match.group(2)) - 1
 
             # Escape into qemu command mode to switch floppies
-            child.send(qemu_command_mode_switch)
-            child.expect('\(qemu\)')
-            child.send("change %s %s" % (qemu_floppy0_name, floppy_paths[floppy_index]))
-            child.send("\n")
+            child.send("\001c")
+	    # We used to wait for a (qemu) prompt here, but qemu 0.9.1 no longer prints it
+            # child.expect('\(qemu\)')
+            child.send("change %s %s\n" % (qemu_floppy0_name, floppy_paths[floppy_index]))
             child.expect('\(qemu\)')
             # Exit qemu command mode
             child.send("\001c\n")
