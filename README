@@ -90,7 +90,7 @@ type "interact" instead of "install", for example:
 
    anita interact i386cd-4.0.iso
 
-To kill the virtual machine and return to Python, type control-a x.
+To kill the virtual machine, type control-a x.
 
 Anita runs qemu with the "-snapshot" flag, so if you log in and make
 changes to the system, they will not be saved to the disk image file
