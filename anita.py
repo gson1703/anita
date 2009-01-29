@@ -282,7 +282,7 @@ class Anita:
     def __init__(self, dist, workdir = None):
         self.dist = dist
         if workdir:
-           self.workdir = workdir
+            self.workdir = workdir
         else:
             self.workdir = dist.default_workdir()
 
