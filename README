@@ -61,7 +61,7 @@ it should work (modulo bugs in the snapshot itself):
    anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
 
 If you have built NetBSD locally using "build.sh -R", you can point
-Anita directly at the RELEASEDIR:
+Anita directly at the RELEASEDIR using a file: URL:
 
   anita install file:///path/to/releasedir/
 
@@ -96,7 +96,7 @@ and a number of recent daily binary snapshots and local builds.
 Releases prior to 4.0 will install correctly, but for some unknown
 reason, booting the resulting hard disk image doesn't work (it hangs
 after the "root on ffs" message).  Perhaps someone can figure out why
-this happens, or even fix it.  Booting NetBSD 4.0 works, as does
--current (when it isn't broken).
+this happens, or even fix qemu to deal with it.  Booting NetBSD 4.0
+works, as does -current (when it isn't broken).
 
 Please send any comments, bug reports, or patches to gson@gson.org.
