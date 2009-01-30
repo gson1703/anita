@@ -13,7 +13,7 @@ import sys
 import time
 
 # Your preferred NetBSD FTP mirror site.
-# This is used for getting relases only, not for daily builds.
+# This is used only when getting releases by number, not by URL.
 # See http://www.netbsd.org/mirrors/#ftp for the complete list.
 
 netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
