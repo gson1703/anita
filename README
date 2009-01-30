@@ -35,7 +35,7 @@ If you want to play with Anita, here is what you need:
      - sysutils/cdrtools
 
  - A network connection for downloading installation file sets,
-   or some local release ISOs or builds
+   or a local release build tree
 
  - About a gigabyte of free disk space
 
@@ -60,10 +60,6 @@ it should work (modulo bugs in the snapshot itself):
 
    anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
 
-To install from an ISO image:
-
-   anita install i386cd-4.0.iso
-
 If you have built NetBSD locally using "build.sh -R", you can point
 Anita directly at the RELEASEDIR:
 
@@ -73,22 +69,21 @@ Anita will create a subdirectory under the current working directory
 and cache the distribution sets, boot floppies, and a hard disk image
 in it.  The directory will be called something like
 "netbsd-268faf13a6a489f6d893da3dc419157b"; the part after the dash is
-the MD5 hash of the URL or ISO image name.
+the MD5 hash of the URL.
 
-When you rerun Anita with the same URL or ISO image name, files that
-already exist in the cache directory will not be re-downloaded or
-rebuilt, so if you run you "anita install" with the same URL twice in
-a row, the second run will effectively be a no-op, and if you rerun
-"anita interact", the system will be booted from the existing disk
-image, skipping the installation stage.  To force things to be redone,
-simply remove the cache directory.  If you remove just the hard disk
-image (wd0.img), "anita install" will recreate it from the cached
-distribution files.
+When you rerun Anita with the same URL, files that already exist in
+the cache directory will not be re-downloaded or rebuilt, so if you
+run you "anita install" with the same URL twice in a row, the second
+run will effectively be a no-op, and if you rerun "anita interact",
+the system will be booted from the existing disk image, skipping the
+installation stage.  To force things to be redone, simply remove the
+cache directory.  If you remove just the hard disk image (wd0.img),
+"anita install" will recreate it from the cached distribution files.
 
 To boot the newly installed hard disk image and get a login prompt,
 type "interact" instead of "install", for example:
 
-   anita interact i386cd-4.0.iso
+   anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
 To kill the virtual machine, type control-a x.
 

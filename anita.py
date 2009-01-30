@@ -233,35 +233,6 @@ class LocalBuild(NumberedVersion):
     def dist_url(self):
         return "file://" + self.release_path
 
-# An ISO
-
-class ISO(Version):
-    def __init__(self, iso_path):
-        Version.__init__(self)
-        self.m_iso_path = iso_path
-    def iso_path(self):
-        return self.m_iso_path
-    # XXX actually version specific
-    def potential_floppies(self):
-        return ['boot-com1.fs', 'boot-com2.fs']
-    def floppies(self):
-        return ['boot-com1.fs', 'boot-com2.fs']
-    def default_workdir(self):
-        return "netbsd-" + md5.new(self.m_iso_path).hexdigest()
-
-    # We don't need to download sets because we already have
-    # a useable ISO.  However, we don't have a boot-com1.fs.
-    # Extract it.
-    def download(self):
-        mkdir_p(self.floppy_dir())
-        for floppy in self.potential_floppies():
-            fn = os.path.join(self.floppy_dir(), floppy)
-            f = open(fn, 'w')
-            subprocess.call(['isoinfo', '-R', '-i', self.iso_path(), \
-		'-x',  '/i386/installation/floppy/' + floppy], stdout=f)
-            f.close()
-        # XXX check that we have at least one
-
 # The top-level URL of a release tree
 
 class URL(Version):

@@ -22,12 +22,10 @@ def main(argv = None):
 	raise Usage("not enough arguments")
 
     distarg = args[1]
-    if re.search(r'\.iso$', distarg):
-	dist = anita.ISO(distarg)
-    elif re.match('^[a-z0-9\.0-]+:', distarg):
+    if re.match('^[a-z0-9\.0-]+:', distarg):
 	dist = anita.URL(distarg)
     else:
-	raise Usage("can't figure out " + distarg)
+	raise Usage("expected distribution URL, got " + distarg)
 
     a = anita.Anita(dist, workdir = options.workdir)
 
