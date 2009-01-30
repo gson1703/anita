@@ -1,5 +1,5 @@
-COPYRIGHT
-README
-anita
-anita.py
-setup.py
+include COPYRIGHT
+include README
+include anita
+include anita.py
+include setup.py
