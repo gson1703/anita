@@ -94,8 +94,12 @@ class spawn_cm(pexpect.spawn):
 #
 # Subclasses should define:
 #
-#    dist_url(self) - the URL for the top of the download tree
-#                     where the version can be downloaded
+#    dist_url(self)
+#	the URL for the top of the download tree where the version can be downloaded
+#
+#    default_workdir(self)
+#        a file name component identifying the version, for use in constructing a unique,
+#        version-specific working directory
 
 class Version:
     # Information about the available installation file sets.
@@ -119,14 +123,16 @@ class Version:
     def set_workdir(self, dir):
         self.workdir = dir
     # The directory where we mirror files needed for installation
-    def download_local_dir(self):
+    def download_local_mi_dir(self):
         return self.workdir + "/download/"
+    def download_local_arch_dir(self):
+        return self.download_local_mi_dir() + "i386/"
     # The path to the install ISO image
     def iso_path(self):
         return os.path.join(self.workdir, self.iso_name())
     # The directory for the install floppy images
     def floppy_dir(self):
-        return os.path.join(self.download_local_dir(), "i386/installation/floppy")
+        return os.path.join(self.download_local_arch_dir(), "installation/floppy")
 
     # The list of boot floppies we should try downloading;
     # not all may actually exist
@@ -149,7 +155,7 @@ class Version:
         # exist.
         for floppy in self.potential_floppies()[0:2]:
             did_download_floppies = download_if_missing(self.dist_url(), 
-                self.download_local_dir(), os.path.join("i386/installation/floppy/", floppy))
+                self.download_local_arch_dir(), os.path.join("installation/floppy/", floppy))
         # Then attempt to download the remining ones, but only
         # if we actually downloaded the initial ones rather
         # than finding them in the cache.
@@ -157,22 +163,22 @@ class Version:
             for floppy in self.potential_floppies()[2:]:
                 try:
                     download_if_missing(self.dist_url(),
-                       self.download_local_dir(),
-                       "i386/installation/floppy/" + floppy)
+                       self.download_local_arch_dir(),
+                       "installation/floppy/" + floppy)
                 except:
                     pass
         for set in Version.sets:
             (fn, label, enable) = set
             if enable:
-		download_if_missing(self.dist_url(), self.download_local_dir(), \
-		    os.path.join("i386/binary/sets", fn + ".tgz"))
+		download_if_missing(self.dist_url(), self.download_local_arch_dir(), \
+		    os.path.join("binary/sets", fn + ".tgz"))
 
     # Create an install ISO image to install from
     def make_iso(self):
         self.download()
         if not os.path.exists(self.iso_path()):
 	    spawn(makefs[0], makefs + \
-		[self.iso_path(), self.download_local_dir()])
+		[self.iso_path(), self.download_local_mi_dir()])
             self.tempfiles.append(self.iso_path())
 
     # Backwards compatibility with Anita 1.2 and older
@@ -206,7 +212,7 @@ class Release(NumberedVersion):
         NumberedVersion.__init__(self, ver)
         pass
     def dist_url(self):
-        return netbsd_mirror_url + "NetBSD-" + self.ver + "/"
+        return netbsd_mirror_url + "NetBSD-" + self.ver + "/i386/"
 
 # A daily build
 
@@ -222,7 +228,7 @@ class DailyBuild(NumberedVersion):
         if re.match("^[0-9]", branch):
             branch = "netbsd-" + branch
         return "http://ftp.netbsd.org/pub/NetBSD-daily/" + \
-            branch + "/" + self.timestamp + "/"
+            branch + "/" + self.timestamp + "/i386/"
 
 # A local build
 
@@ -231,7 +237,7 @@ class LocalBuild(NumberedVersion):
         NumberedVersion.__init__(self, ver)
         self.release_path = release_path
     def dist_url(self):
-        return "file://" + self.release_path
+        return "file://" + self.release_path + "/i386/"
 
 # The top-level URL of a release tree
 
@@ -240,8 +246,7 @@ class URL(Version):
         Version.__init__(self)
         self.url = url
     def dist_url(self):
-        # XXX check
-        return re.sub('/i386/', '/', self.url)
+        return self.url
     def iso_name(self):
         return "install_tmp.iso"
     def default_workdir(self):
