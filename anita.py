@@ -155,7 +155,7 @@ class Version:
         # exist.
         for floppy in self.potential_floppies()[0:2]:
             did_download_floppies = download_if_missing(self.dist_url(), 
-                self.download_local_arch_dir(), os.path.join("installation/floppy/", floppy))
+                os.path.join(self.floppy_dir(), floppy))
         # Then attempt to download the remining ones, but only
         # if we actually downloaded the initial ones rather
         # than finding them in the cache.
@@ -163,8 +163,7 @@ class Version:
             for floppy in self.potential_floppies()[2:]:
                 try:
                     download_if_missing(self.dist_url(),
-                       self.download_local_arch_dir(),
-                       "installation/floppy/" + floppy)
+                        os.path.join(self.floppy_dir(), floppy))
                 except:
                     pass
         for set in Version.sets:
