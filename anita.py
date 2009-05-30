@@ -11,6 +11,7 @@ import string
 import subprocess
 import sys
 import time
+import urllib
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only when getting releases by number, not by URL.
@@ -24,11 +25,10 @@ netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 qemu = "qemu"
 qemu_img = "qemu-img"
 if os.uname()[0] == 'NetBSD':
-    download_command = ["ftp", "-o"]
     makefs = ["makefs", "-t", "cd9660", "-o", "rockridge"]
 else:
     # For Linux, and maybe others
-    download_command = ["wget", "-O"]
+    # On Ubuntu, this is in the "genisoimage" package
     makefs = ["genisoimage", "-r", "-o"]
 
 # Create a directory if missing
@@ -49,7 +49,7 @@ def spawn(command, args):
 
 def download_file(file, url):
     try:
-        spawn(download_command[0], download_command + [file, url])
+        urllib.urlretrieve(url, file)
     except:
         if os.path.exists(file):
             os.unlink(file)
