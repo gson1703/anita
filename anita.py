@@ -514,6 +514,9 @@ def net_setup(child):
 
 def shell_cmd(child, cmd):
     child.send(cmd + "\n")
-    child.expect("\n# ")
+    child.expect("# ")
+    child.send("echo $?\n") 
+    child.expect("(\d+)")
+    return int(child.match.group(1))
 
 #############################################################################
