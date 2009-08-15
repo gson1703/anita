@@ -71,6 +71,16 @@ def download_if_missing(urlbase, dirbase, relfile):
     download_file(file, url)
     return True
 
+def url2dir(url):
+    # return "netbsd-" + md5.new(url).hexdigest()
+    tail = []
+    def munge(match):
+        index = string.find("/:+-", match.group())
+        if index != 0:
+            tail.append(chr(0x60 + index) + str(match.start()))
+        return "-"
+    return "work-" + re.sub("[/:+-]", munge, url) + "+" + "".join(tail)
+
 # Subclass pexpect.spawn to deal with silly cursor movement
 # commands.  Makes " " match a \[[C sequence in addition
 # to its usual meaning of matching a space, and introduce
@@ -250,7 +260,7 @@ class URL(Version):
     def iso_name(self):
         return "install_tmp.iso"
     def default_workdir(self):
-        return "netbsd-" + md5.new(self.url).hexdigest()
+        return url2dir(self.url)
 
 #############################################################################
 
