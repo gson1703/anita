@@ -419,9 +419,11 @@ class Anita:
         child.send("b\n")
         child.expect("b: Use serial port com0")
         child.send("bx\n")
-        child.expect("a: Progress bar")
-        child.send("\n")
-        child.expect("a: CD-ROM")
+        # The extraction verbosity menu was removed on 2009/08/23 21:16:17
+        child.expect("(a: Progress bar)|(a: CD-ROM)")
+        if child.match.group(1):
+            child.send("\n")
+            child.expect("a: CD-ROM")
         child.send("\n")
 
         # In 3.0.1, you type "c" to continue,; in -current, you type "x".
