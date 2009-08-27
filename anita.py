@@ -49,6 +49,7 @@ def spawn(command, args):
 
 def download_file(file, url):
     try:
+        print "Downloading", url, "..."
         urllib.urlretrieve(url, file)
     except:
         if os.path.exists(file):
