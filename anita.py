@@ -71,6 +71,9 @@ def download_if_missing(urlbase, dirbase, relfile):
     download_file(file, url)
     return True
 
+# Map a URL to a directory name.  No two URLs should map to the same
+# directory.
+
 def url2dir(url):
     # return "netbsd-" + md5.new(url).hexdigest()
     tail = []
