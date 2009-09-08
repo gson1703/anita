@@ -85,6 +85,28 @@ def url2dir(url):
         return "-"
     return "work-" + re.sub("[/:+-]", munge, url) + "+" + "".join(tail)
 
+# Inverse of the above; not used, but included just to show that the
+# mapping is invertible and therefore collision-free
+
+class InvalidDir(Exception):
+    pass
+
+def dir2url(dir):
+    match = re.match(r"(work-)(.*)\+(.*)", dir)
+    work, s, tail = match.groups()
+    if work != 'work-':
+        raise InvalidDir()
+    s = re.sub("-", "/", s)
+    chars = list(s)
+    while True:
+        m = re.match(r"([a-z])([0-9]+)", tail)
+        if not m:
+            break
+        c, i = m.groups()
+	chars[int(i)] = "/:+-"[ord(c) - 0x60]
+        tail = tail[m.end():]        
+    return "".join(chars)
+
 # Subclass pexpect.spawn to deal with silly cursor movement
 # commands.  Makes " " match a \[[C sequence in addition
 # to its usual meaning of matching a space, and introduce
