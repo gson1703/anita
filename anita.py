@@ -3,7 +3,6 @@
 # and Test Application.
 #
 
-import md5
 import os
 import pexpect
 import re
@@ -76,7 +75,6 @@ def download_if_missing(urlbase, dirbase, relfile):
 # directory.
 
 def url2dir(url):
-    # return "netbsd-" + md5.new(url).hexdigest()
     tail = []
     def munge(match):
         index = string.find("/:+-", match.group())
