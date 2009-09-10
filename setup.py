@@ -7,4 +7,5 @@ setup(name='anita',
       url='http://www.gson.org/netbsd/anita/',
       py_modules=['anita'],
       scripts=['anita'],
+      data_files=[('man/man1', ['anita.1'])],
       )
