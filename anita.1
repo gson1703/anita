@@ -1,0 +1,115 @@
+.Dd September 10, 2009
+.Dt ANITA 1
+.Os
+.Sh NAME
+.Nm anita
+.Nd Automated NetBSD Installation and Test Application
+.Sh SYNOPSIS
+.Nm
+.Op Fl -workdir Ar working_directory
+.Ar install | boot | interact
+.Ar URL
+.Sh DESCRIPTION
+.Nm
+is an experimental tool for automated testing of the NetBSD/i386
+installation procedure.  Using 
+.Nm , 
+you can fully automate the process of downloading a NetBSD/i386
+distribution, installing it in a
+.Ic qemu 
+virtual machine, and booting the installed system.
+.Pp
+.Sh EXAMPLES
+To install NetBSD 5.0.1 from the master NetBSD FTP site, enter
+.Pp
+.Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.1/i386/
+.Pp
+To boot the newly installed hard disk image and get a login prompt,
+replace
+.Ar install
+with
+.Ar interact :
+.Pp
+.Dl anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.1/i386/
+.Pp
+To kill the virtual machine, type control-a x.
+.Pp
+To install a snapshot, use something like the following (adjusting
+the URL to point to a current snapshot):
+.Pp
+.Dl anita install http://ftp.netbsd.org/pub/NetBSD-daily/netbsd-4/200802140000Z/i386/
+.Pp
+If you have built NetBSD locally using 
+.Ic "build.sh -R" , 
+you can point
+.Nm
+directly at the RELEASEDIR using a "file:" URL:
+.Pp
+.Dl anita install file:///path/to/releasedir/i386/
+.Pp
+.Sh HOW IT WORKS
+.Nm
+works by "screen scraping" the sysinst output over an emulated
+serial console, recognizing sysinst prompts and sending canned
+responses.
+.Pp
+.Nm
+will create a subdirectory under the current working directory
+and cache the distribution sets, boot floppies, and a hard disk image
+in it.  The directory name will be a unique name generated from the
+URL, for example,
+.Pp
+.Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-5.0.1-i386-+a4c39
+.Pp
+To put the cache directory somewhere other than your current working
+directory, use the
+.Fl -workdir
+option.
+.Pp
+When you rerun 
+.Nm
+with the same URL, files that already exist in
+the cache directory will not be re-downloaded or rebuilt, so if you
+run you 
+.Ic "anita install"
+with the same URL twice in a row, the second
+run will effectively be a no-op, and if you rerun 
+.Ic "anita interact" ,
+the system will be booted from the existing disk image, skipping the
+installation stage.  To force things to be redone, simply remove the
+cache directory.  If you remove just the hard disk image file
+.Pa wd0.img ,
+.Ic "anita install" 
+will recreate it from the cached distribution files.
+.Nm
+runs 
+.Ic qemu
+with the 
+.Fl snapshot
+option, so if you log in and make changes to the system, they will not
+be saved to the disk image file.
+.Sh BUGS
+.Nm
+is still a work in progress.  Currently, 
+.Nm 
+only knows how to install
+NetBSD/i386, but it should be possible to add support for installing
+other ports, as well as cross-installation setups where the machine
+running Anita is a different architecture from the virtual machine
+being installed on.
+.Pp
+.Nm
+is likely to break whenever any significant change is made to
+the sysinst user interface.
+.Pp
+The
+.Nm
+cache directories take a lot of disk space.  Figure about a
+gigabyte per installed NetBSD version.
+.Pp
+Installing NetBSD releases older than 2.1 has not been tested.
+.Pp
+NetBSD releases older than 4.0 will install, but when booting
+the installed image, they hang after the "root on ffs" message.
+This is presumed to be a bug in 
+.Ic qemu .
