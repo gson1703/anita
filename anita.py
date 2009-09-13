@@ -143,6 +143,7 @@ class Version:
     sets = [
       ( 'kern-GENERIC', 'Kernel (GENERIC)', 1 ),
       ( 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0 ),
+      ( 'modules', 'Kernel Modules', 1 ),
       ( 'base', 'Base', 1 ),
       ( 'etc', 'System (/etc)', 1 ),
       ( 'comp', 'Compiler Tools', 1 ),
