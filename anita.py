@@ -210,7 +210,7 @@ class Version:
         # boot floppies.  Treat any floppies past the first two as
         # optional files.
         i = 0
-        for floppy in self.potential_floppies()[0:2]:
+        for floppy in self.potential_floppies():
             download_if_missing(self.dist_url(), 
                 self.download_local_arch_dir(),
                 os.path.join("installation/floppy/", floppy),
