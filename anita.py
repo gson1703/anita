@@ -43,13 +43,23 @@ def spawn(command, args):
     if ret != 0:
         raise RuntimeError("could not run " + command)
 
+# Subclass urllib.FancyURLopener so that we can catch
+# HTTP 404 errors
+
+class MyURLopener(urllib.FancyURLopener):
+    def http_error_default(self, url, fp, errcode, errmsg, headers):
+        raise IOError, 'HTTP error code %d' % errcode
+            
+def my_urlretrieve(url, filename):
+    return MyURLopener().retrieve(url, filename)
+            
 # Download a file, cleaning up the partial file if the transfer
 # fails or is aborted before completion.
 
 def download_file(file, url):
     try:
         print "Downloading", url, "..."
-        urllib.urlretrieve(url, file)
+        my_urlretrieve(url, file)
     except:
         if os.path.exists(file):
             os.unlink(file)
@@ -137,21 +147,23 @@ class spawn_cm(pexpect.spawn):
 
 class Version:
     # Information about the available installation file sets.
-    # Each is a tuple of three fields: the file name, the
-    # label used by sysinst, and a flag indicating whether
-    # the set should be installed by default.
+    # Each is a tuple of four fields:
+    #   - the file name
+    #   - the label used by sysinst
+    #   - a flag indicating that the set should be installed by default
+    #   - a flag indicating that the set is not present in all versions
     sets = [
-      ( 'kern-GENERIC', 'Kernel (GENERIC)', 1 ),
-      ( 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0 ),
-      ( 'modules', 'Kernel Modules', 1 ),
-      ( 'base', 'Base', 1 ),
-      ( 'etc', 'System (/etc)', 1 ),
-      ( 'comp', 'Compiler Tools', 1 ),
-      ( 'games', 'Games', 0 ),
-      ( 'man', 'Online Manual Pages', 0 ),
-      ( 'misc', 'Miscellaneous', 0 ),
-      ( 'tests', 'Test programs', 0 ),
-      ( 'text', 'Text Processing Tools', 0 ),
+      ( 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ),
+      ( 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0, 1 ),
+      ( 'modules', 'Kernel Modules', 1, 1 ),
+      ( 'base', 'Base', 1, 0 ),
+      ( 'etc', 'System (/etc)', 1, 0 ),
+      ( 'comp', 'Compiler Tools', 1, 0 ),
+      ( 'games', 'Games', 0, 0 ),
+      ( 'man', 'Online Manual Pages', 0, 0 ),
+      ( 'misc', 'Miscellaneous', 0, 0 ),
+      ( 'tests', 'Test programs', 0, 0 ),
+      ( 'text', 'Text Processing Tools', 0, 0 ),
     ]
     def __init__(self):
         self.tempfiles = []
@@ -203,10 +215,14 @@ class Version:
                 except:
                     pass
         for set in Version.sets:
-            (fn, label, enable) = set
+            (fn, label, enable, optional) = set
             if enable:
-		download_if_missing(self.dist_url(), self.download_local_arch_dir(), \
-		    os.path.join("binary/sets", fn + ".tgz"))
+                try:
+                    download_if_missing(self.dist_url(), self.download_local_arch_dir(), \
+                        os.path.join("binary/sets", fn + ".tgz"))
+                except:
+                    if not optional:
+                        raise
 
     # Create an install ISO image to install from
     def make_iso(self):
@@ -388,14 +404,14 @@ class Anita:
                 x11_state = yesno
                 x11_letter = letter
             for set in Version.sets:
-                (fn, setlabel, enable) = set
+                (fn, setlabel, enable, optional) = set
                 # Could use RE match here fore more flexibility
 		if label == setlabel:
                     setinfo[fn] = { 'letter': letter, 'state': yesno }
 
         # Then make the actual selections
         for set in Version.sets:
-            (fn, setlabel, enable) = set
+            (fn, setlabel, enable, optional) = set
             info = setinfo.get(fn)
             if info is None:
                 continue
