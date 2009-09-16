@@ -68,18 +68,27 @@ def download_file(file, url):
 # Download a file from the download directory tree rooted at "urlbase"
 # into a mirror tree rooted at "dirbase".  The file name to download
 # is "relfile", which is relative to both roots.  If the file already
-# exists locally, do nothing.  Return true iff we actually downloaded
-# the file.
+# exists locally, do nothing.  If "optional" is true, ignore download
+# failures and cache the absence of a missing file by creating a marker
+# file with the extension ".MISSING".
 
-def download_if_missing(urlbase, dirbase, relfile):
+def download_if_missing(urlbase, dirbase, relfile, optional = False):
     url = urlbase + relfile
     file = os.path.join(dirbase, relfile)
     if os.path.exists(file):
-        return False
+        return
+    if os.path.exists(file + ".MISSING"):
+        return
     dir = os.path.dirname(file)
     mkdir_p(dir)
-    download_file(file, url)
-    return True
+    try:
+        download_file(file, url)
+    except:
+        if optional:
+            f = open(file + ".MISSING", "w")
+            f.close()
+        else:
+            raise
 
 # Map a URL to a directory name.  No two URLs should map to the same
 # directory.
@@ -162,7 +171,7 @@ class Version:
       ( 'games', 'Games', 0, 0 ),
       ( 'man', 'Online Manual Pages', 0, 0 ),
       ( 'misc', 'Miscellaneous', 0, 0 ),
-      ( 'tests', 'Test programs', 0, 0 ),
+      ( 'tests', 'Test programs', 1, 1 ),
       ( 'text', 'Text Processing Tools', 0, 0 ),
     ]
     def __init__(self):
@@ -198,31 +207,23 @@ class Version:
     # Download this release
     def download(self):
         # Depending on the NetBSD version, there may be two or three
-        # boot floppies.  First download the ones that should always
-        # exist.
+        # boot floppies.  Treat any floppies past the first two as
+        # optional files.
+        i = 0
         for floppy in self.potential_floppies()[0:2]:
-            did_download_floppies = download_if_missing(self.dist_url(), 
-                self.download_local_arch_dir(), os.path.join("installation/floppy/", floppy))
-        # Then attempt to download the remining ones, but only
-        # if we actually downloaded the initial ones rather
-        # than finding them in the cache.
-        if did_download_floppies:
-            for floppy in self.potential_floppies()[2:]:
-                try:
-                    download_if_missing(self.dist_url(),
-                       self.download_local_arch_dir(),
-                       "installation/floppy/" + floppy)
-                except:
-                    pass
+            download_if_missing(self.dist_url(), 
+                self.download_local_arch_dir(),
+                os.path.join("installation/floppy/", floppy),
+                i >= 2)
+            i = i + 1
+
         for set in Version.sets:
             (fn, label, enable, optional) = set
             if enable:
-                try:
-                    download_if_missing(self.dist_url(), self.download_local_arch_dir(), \
-                        os.path.join("binary/sets", fn + ".tgz"))
-                except:
-                    if not optional:
-                        raise
+                download_if_missing(self.dist_url(),
+                                    self.download_local_arch_dir(), \
+                                    os.path.join("binary/sets", fn + ".tgz"),
+                                    optional)
 
     # Create an install ISO image to install from
     def make_iso(self):
