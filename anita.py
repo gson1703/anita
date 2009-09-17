@@ -304,6 +304,13 @@ class URL(Version):
     def default_workdir(self):
         return url2dir(self.url)
 
+# A local release directory
+
+class LocalDirectory(URL):
+    def __init__(self, dir):
+        # This could be optimized to avoid copying the files
+        URL.__init__(self, "file://" + dir)
+
 #############################################################################
 
 class Anita:
@@ -332,7 +339,7 @@ class Anita:
             "-fda", floppy_paths[0], "-cdrom", self.dist.iso_path(), \
             "-boot", "a", "-serial", "stdio", "-nographic"])
 
-	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 usess "child.log_file"
+	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file"
         child.logfile = sys.stdout
         child.log_file = sys.stdout
         child.timeout = 300
