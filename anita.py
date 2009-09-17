@@ -573,4 +573,8 @@ def shell_cmd(child, cmd):
     child.expect("(\d+)")
     return int(child.match.group(1))
 
+def test(child):
+    login(child)
+    return shell_cmd(child, "cd /usr/tests && atf-run | atf-report")
+
 #############################################################################

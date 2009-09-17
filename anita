@@ -38,6 +38,9 @@ def main(argv = None):
 	a.boot()
     elif mode == 'interact':
 	a.interact()
+    elif mode == 'test':
+	child = a.boot()
+	anita.test(child)
     else:
 	raise Usage("unknown mode: " + mode)
 
