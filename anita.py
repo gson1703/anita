@@ -124,23 +124,6 @@ def dir2url(dir):
         tail = tail[m.end():]        
     return "".join(chars)
 
-# Subclass pexpect.spawn to deal with silly cursor movement
-# commands.  Makes " " match a \[[C sequence in addition
-# to its usual meaning of matching a space, and introduce
-# the special charcter "@" meaning "\[[C or any single char".
-#
-# This is needed to install systems suffering from the bug
-# reported in PR lib/39175.  Thankfully, the bug has now been 
-# fixed, but the workaround remains so that we can install the
-# affected historic version.
-
-class spawn_cm(pexpect.spawn):
-    def expect(self, match_re):
-        new_re = re.sub(" ", "(?: |(?:\x1b\[C))", match_re)
-        new_re = re.sub("@", "(?:.|(?:\x1b\[C))", new_re)
-        # print "%s -> %s" % (match_re, new_re)
-        return pexpect.spawn.expect(self, new_re)
-
 #############################################################################
 
 # A NetBSD version.
@@ -334,7 +317,7 @@ class Anita:
             for f in self.dist.floppies() ]
 
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "384M"])
-        child = spawn_cm(qemu, ["-m", "32", \
+        child = pexpect.spawn(qemu, ["-m", "32", \
             "-hda", self.wd0_path(), \
             "-fda", floppy_paths[0], "-cdrom", self.dist.iso_path(), \
             "-boot", "a", "-serial", "stdio", "-nographic"])
@@ -461,7 +444,7 @@ class Anita:
         child.send("\033[B" * 8 + "\n")
         child.expect("x: Partition sizes ok")
         child.send("\n")
-        child.expect("Please @nt@r a name for your NetBSD d@sk")
+        child.expect("Please enter a name for your NetBSD disk")
         child.send("\n")
         child.expect("Shall we continue")
         child.expect("b: Yes")
@@ -497,7 +480,7 @@ class Anita:
         # For simplicity, we allow any number of "Hit enter to continue"
         # prompts.
         while True:
-            child.expect("(Hit enter to continue)|(Pl@ase choose the @imezon@)")
+            child.expect("(Hit enter to continue)|(Please choose the timezone)")
             if child.match.group(1):
                 child.send("\n")
             else:
