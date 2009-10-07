@@ -6,8 +6,10 @@ set -x
 
 #./anita install /usr/build/20080708-1545/release/iso/i386cd.iso
 #./anita install http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-3.1/i386/  - no longer at funet
+
 $python ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-3.0.1/i386/
 $python ./anita boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
+$python ./anita boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.1/i386/
 
 # 1.2 compatibility.  This no longer works because files have been moved under NetBSD-archive/
 #$python <<END
