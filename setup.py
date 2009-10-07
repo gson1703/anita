@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(name='anita',
-      version='1.6',
+      version='1.7',
       description='Automated NetBSD Installation and Test Application',
       author='Andreas Gustafsson',
       author_email='gson@gson.org',
