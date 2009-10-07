@@ -1,0 +1,15 @@
+
+- 1.7 released -
+
+Remove workaround for lib/39175, which broke the installation
+of the "comp" set
+
+Add "test" command for running the ATF tests
+
+Accept a local distribution directory path in place of a URL
+
+Check for missing slash at end of distribution directory URL
+
+Detect HTTP 404 errors
+
+- 1.6 released -
