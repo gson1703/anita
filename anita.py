@@ -308,6 +308,20 @@ class Anita:
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
 
+    def start_qemu(qemu_args):
+        child = pexpect.spawn(qemu, ["-m", "32", \
+            "-hda", self.wd0_path(), \
+            "-boot", "a", \
+            "-serial", "stdio", "-nographic"
+            ] + qemu_args)
+	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file",
+        # so we set both variables for portability
+        child.logfile = sys.stdout
+        child.log_file = sys.stdout
+        child.timeout = 300
+        child.setecho(False)
+        return child
+        
     def _install(self):
         # Get the install ISO
         self.dist.set_workdir(self.workdir)
@@ -317,16 +331,11 @@ class Anita:
             for f in self.dist.floppies() ]
 
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "384M"])
-        child = pexpect.spawn(qemu, ["-m", "32", \
-            "-hda", self.wd0_path(), \
-            "-fda", floppy_paths[0], "-cdrom", self.dist.iso_path(), \
-            "-boot", "a", "-serial", "stdio", "-nographic"])
 
-	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file"
-        child.logfile = sys.stdout
-        child.log_file = sys.stdout
-        child.timeout = 300
-        child.setecho(False)
+
+        child = start_qemu(["-fda", floppy_paths[0], \
+                            "-cdrom", self.dist.iso_path(), \
+                            "-boot", "a"])
 
         # Do the floppy swapping dance
         floppy0_name = None
@@ -525,17 +534,8 @@ class Anita:
 
     def boot(self):
         self.install()
-        child = pexpect.spawn(qemu, ["-m", "32", \
-            "-hda", self.wd0_path(), \
-            "-serial", "stdio", "-nographic", "-snapshot", \
-            "-no-acpi"])
+        child = start_qemu(["-snapshot", "-no-acpi"])
         # "-net", "nic,model=ne2k_pci", "-net", "user"
-
-	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file"
-        child.logfile = sys.stdout
-        child.log_file = sys.stdout
-        child.timeout = 300
-        child.setecho(False)
         child.expect("login:")
         # Can't close child here because we still need it if called from interact()
         return child
