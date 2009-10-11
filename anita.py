@@ -332,7 +332,6 @@ class Anita:
 
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "384M"])
 
-
         child = start_qemu(["-fda", floppy_paths[0], \
                             "-cdrom", self.dist.iso_path(), \
                             "-boot", "a"])
@@ -488,8 +487,12 @@ class Anita:
         #
         # For simplicity, we allow any number of "Hit enter to continue"
         # prompts.
+        #
+        # We specify a longer timeout than the default here, because the
+        # set extraction can take a long time on slower machines.
+        #
         while True:
-            child.expect("(Hit enter to continue)|(Please choose the timezone)")
+            child.expect("(Hit enter to continue)|(Please choose the timezone)", 1200)
             if child.match.group(1):
                 child.send("\n")
             else:
@@ -556,15 +559,15 @@ def net_setup(child):
     child.send("dhclient ne2\n")
     child.expect("bound to.*\n# ")
 
-def shell_cmd(child, cmd):
+def shell_cmd(child, cmd, timeout = -1):
     child.send(cmd + "\n")
-    child.expect("# ")
+    child.expect("# ", timeout)
     child.send("echo $?\n") 
     child.expect("(\d+)")
     return int(child.match.group(1))
 
 def test(child):
     login(child)
-    return shell_cmd(child, "cd /usr/tests && atf-run | atf-report")
+    return shell_cmd(child, "cd /usr/tests && atf-run | atf-report", 3600)
 
 #############################################################################
