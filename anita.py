@@ -308,7 +308,7 @@ class Anita:
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
 
-    def start_qemu(qemu_args):
+    def start_qemu(self, qemu_args):
         child = pexpect.spawn(qemu, ["-m", "32", \
             "-hda", self.wd0_path(), \
             "-boot", "a", \
@@ -320,6 +320,7 @@ class Anita:
         child.log_file = sys.stdout
         child.timeout = 300
         child.setecho(False)
+        print child
         return child
         
     def _install(self):
@@ -332,9 +333,9 @@ class Anita:
 
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "384M"])
 
-        child = start_qemu(["-fda", floppy_paths[0], \
-                            "-cdrom", self.dist.iso_path(), \
-                            "-boot", "a"])
+        child = self.start_qemu(["-fda", floppy_paths[0], \
+                                 "-cdrom", self.dist.iso_path(), \
+                                 "-boot", "a"])
 
         # Do the floppy swapping dance
         floppy0_name = None
@@ -537,7 +538,7 @@ class Anita:
 
     def boot(self):
         self.install()
-        child = start_qemu(["-snapshot", "-no-acpi"])
+        child = self.start_qemu(["-snapshot", "-no-acpi"])
         # "-net", "nic,model=ne2k_pci", "-net", "user"
         child.expect("login:")
         # Can't close child here because we still need it if called from interact()
