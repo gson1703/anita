@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar working_directory
-.Ar install | boot | interact
+.Ar install | boot | test | interact
 .Ar URL
 .Sh DESCRIPTION
 .Nm
@@ -32,7 +32,12 @@ with
 .Pp
 .Dl anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.1/i386/
 .Pp
-To kill the virtual machine, type control-a x.
+When you are done interacting with the virtual machine, you can kill it by
+typing control-a x.
+.Pp
+To run the NetBSD regression test suite on the installed system, use
+.Pp
+.Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.1/i386/
 .Pp
 To install a snapshot, use something like the following (adjusting
 the URL to point to a current snapshot):
@@ -47,6 +52,9 @@ directly at the RELEASEDIR using a "file:" URL:
 .Pp
 .Dl anita install file:///path/to/releasedir/i386/
 .Pp
+or simply use an absolute pathname as shorthand for the above:
+.Pp
+.Dl anita install /path/to/releasedir/i386/
 .Sh HOW IT WORKS
 .Nm
 works by "screen scraping" the sysinst output over an emulated
