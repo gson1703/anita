@@ -567,6 +567,10 @@ def shell_cmd(child, cmd, timeout = -1):
 
 def test(child):
     login(child)
-    return shell_cmd(child, "cd /usr/tests && atf-run | atf-report", 3600)
+    # We go through some contortions here to return the meaningful exit status
+    # from atf-run rather than the meaningless one from atf-report.
+    return shell_cmd(child, "cd /usr/tests && " +
+        "{ atf-run && :>/tmp/test.ok; } | atf-report && test -f /tmp/test.ok",
+        3600)
 
 #############################################################################
