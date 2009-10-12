@@ -311,7 +311,6 @@ class Anita:
     def start_qemu(self, qemu_args):
         child = pexpect.spawn(qemu, ["-m", "32", \
             "-hda", self.wd0_path(), \
-            "-boot", "a", \
             "-serial", "stdio", "-nographic"
             ] + qemu_args)
 	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file",
@@ -320,7 +319,6 @@ class Anita:
         child.log_file = sys.stdout
         child.timeout = 300
         child.setecho(False)
-        print child
         return child
         
     def _install(self):
