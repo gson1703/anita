@@ -498,8 +498,8 @@ class Anita:
                 break
         # "Press 'x' followed by RETURN to quit the timezone selection"
         child.send("x\n")
-        child.expect("a: DES")
-        child.send("\n")
+        child.expect("([a-z]): DES")
+        child.send(child.match.group(1) + "\n")	
         child.expect("root password")
         child.expect("b: No")
         child.send("b\n")
