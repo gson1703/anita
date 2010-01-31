@@ -536,7 +536,7 @@ class Anita:
 
     def boot(self):
         self.install()
-        child = self.start_qemu(["-snapshot", "-no-acpi"])
+        child = self.start_qemu(["-snapshot"])
         # "-net", "nic,model=ne2k_pci", "-net", "user"
         child.expect("login:")
         # Can't close child here because we still need it if called from interact()
