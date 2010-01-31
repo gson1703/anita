@@ -16,6 +16,8 @@ def main(argv = None):
     parser = OptionParser(usage = "usage: %prog [options] install|boot|interact distribution")
     parser.add_option("--workdir",
 		      help="store work files in DIR", metavar="DIR")
+    parser.add_option("--qemu-args",
+		      help="pass ARGS as extra arguments to qemu", metavar="ARGS")
     (options, args) = parser.parse_args()
 
     if len(args) < 2:
@@ -33,7 +35,12 @@ def main(argv = None):
     else:
 	raise Usage("expected distribution URL or directory, got " + distarg)
 
-    a = anita.Anita(dist, workdir = options.workdir)
+    if options.qemu_args:
+        qemu_args = options.qemu_args.split()
+    else:
+        qemu_args = []
+
+    a = anita.Anita(dist, workdir = options.workdir, qemu_args = qemu_args)
 
     mode = args[0]
     if mode == 'install':

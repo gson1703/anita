@@ -297,12 +297,16 @@ class LocalDirectory(URL):
 #############################################################################
 
 class Anita:
-    def __init__(self, dist, workdir = None):
+    def __init__(self, dist, workdir = None, qemu_args = None):
         self.dist = dist
         if workdir:
             self.workdir = workdir
         else:
             self.workdir = dist.default_workdir()
+
+        if qemu_args is None:
+            qemu_args = []
+        self.extra_qemu_args = qemu_args
 
     # The path to the NetBSD hard disk image
     def wd0_path(self):
@@ -312,7 +316,7 @@ class Anita:
         child = pexpect.spawn(qemu, ["-m", "32", \
             "-hda", self.wd0_path(), \
             "-serial", "stdio", "-nographic"
-            ] + qemu_args)
+            ] + qemu_args + self.extra_qemu_args)
 	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file",
         # so we set both variables for portability
         child.logfile = sys.stdout

@@ -1,4 +1,4 @@
-.Dd September 10, 2009
+.Dd January 31, 2010
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -7,6 +7,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar working_directory
+.Op Fl -qemu-args qemu_arguments
 .Ar install | boot | test | interact
 .Ar URL
 .Sh DESCRIPTION
@@ -96,6 +97,18 @@ with the
 .Fl snapshot
 option, so if you log in and make changes to the system, they will not
 be saved to the disk image file.
+.Pp
+The following command line options are supported:
+.Bl -tag -width indent
+.It Fl -workdir Ar directory
+The directory where
+the cache directories are stored.  The default is ".".
+.It Fl -qemu-args Ar string
+Additional arguments to pass to qemu.  The arguments are given
+as a single string, which may contain multiple arguments separated
+by whitespace.  There is no way to pass qemu an argument containing
+whitespace.
+.El
 .Sh BUGS
 .Nm
 is still a work in progress.  Currently, 
