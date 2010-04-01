@@ -1,3 +1,8 @@
+- 1.10 released -
+
+Deal with recent sysinst changes: sysinst no longer displays a dialog
+to select the CD-ROM device path, etc.
+
 New command line option "--qemu-args".
 
 Anita no longer passes the "-no-acpi" option to qemu by default,
