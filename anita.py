@@ -468,9 +468,8 @@ class Anita:
         # Versions older than 2009/08/23 21:16:17 will display a menu
 	# for choosing the extraction verbosity
 	#
-	# Versions older than 2010/03/30 20:09:25 will display a menu for choosing
-	# where to get the sets (newer versions will automatically choose
-	# the CD-ROM when present)
+	# Versions older than 2010/03/30 20:09:25 will display a menu for
+	# choosing the CD-ROM device (newer versions will choose automatically)
 	#
 	# At various points, we may or may not get "Hit enter to continue"
 	# prompts (and some of them seem to appear nondeterministically)
@@ -479,20 +478,24 @@ class Anita:
         #
         # We specify a longer timeout than the default here, because the
         # set extraction can take a long time on slower machines.
-        #
         while True:
-	    child.expect("(a: Progress bar)|(a: CD-ROM)|(Hit enter to continue)|(Please choose the timezone)", 1200)
+	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|(Hit enter to continue)|(Please choose the timezone)", 1200)
 	    if child.match.group(1):
+	        # (a: Progress bar)
 		child.send("\n")
 	    elif child.match.group(2):
+	        # (a: CD-ROM)
 		child.send("\n")
+            elif child.match.group(3):
+	        # (([cx]): Continue)
 		# In 3.0.1, you type "c" to continue, whereas in -current, you type "x".
 		# Handle both cases.
-		child.expect("([cx]): Continue")
-		child.send(child.match.group(1) + "\n")
-	    elif child.match.group(3):
+		child.send(child.match.group(4) + "\n")
+	    elif child.match.group(5):
+	        # (Hit enter to continue)
 		child.send("\n")
 	    else:
+	        # (Please choose the timezone)
 		break
 
         # "Press 'x' followed by RETURN to quit the timezone selection"
