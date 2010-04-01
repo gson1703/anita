@@ -21,9 +21,9 @@ distribution, installing it in a
 virtual machine, and booting the installed system.
 .Pp
 .Sh EXAMPLES
-To install NetBSD 5.0.1 from the master NetBSD FTP site, enter
+To install NetBSD 5.0.2 from the master NetBSD FTP site, enter
 .Pp
-.Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.1/i386/
+.Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 .Pp
 To boot the newly installed hard disk image and get a login prompt,
 replace
@@ -31,14 +31,14 @@ replace
 with
 .Ar interact :
 .Pp
-.Dl anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.1/i386/
+.Dl anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 .Pp
 When you are done interacting with the virtual machine, you can kill it by
 typing control-a x.
 .Pp
 To run the NetBSD regression test suite on the installed system, use
 .Pp
-.Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.1/i386/
+.Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 .Pp
 To install a snapshot, use something like the following (adjusting
 the URL to point to a current snapshot):
@@ -68,7 +68,7 @@ and cache the distribution sets, boot floppies, and a hard disk image
 in it.  The directory name will be a unique name generated from the
 URL, for example,
 .Pp
-.Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-5.0.1-i386-+a4c39
+.Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-5.0.2-i386-+a4c39
 .Pp
 To put the cache directory somewhere other than your current working
 directory, use the
