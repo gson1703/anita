@@ -134,3 +134,16 @@ NetBSD releases older than 4.0 will install, but when booting
 the installed image, they hang after the "root on ffs" message.
 This is presumed to be a bug in 
 .Ic qemu .
+.Pp
+NetBSD versions older than 2009-06-13 13:35:11 fail to find 
+any PCI buses when run under qemu; see PRs 38729 and 42681.
+.Pp
+When
+.Nm
+is run under Linux, using a version of qemu that enables the
+"kvm" kernel-mode virtualization by default, the emulated
+NetBSD system hangs while probing the floppy drive.  This can be
+worked around by passing Anita the command line option
+.Fl -qemu-args 
+.Ar --no-kvm .
+
