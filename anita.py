@@ -462,44 +462,39 @@ class Anita:
         child.send("b\n")
         child.expect("b: Use serial port com0")
         child.send("bx\n")
-        # The extraction verbosity menu was removed on 2009/08/23 21:16:17
-        child.expect("(a: Progress bar)|(a: CD-ROM)")
-        if child.match.group(1):
-            child.send("\n")
-            child.expect("a: CD-ROM")
-        child.send("\n")
 
-        # In 3.0.1, you type "c" to continue,; in -current, you type "x".
-        # Handle both cases.
-        child.expect("([cx]): Continue")
-        child.send(child.match.group(1) + "\n")
-        # At this point, we will be asked to "Hit enter to continue"
-        # either once or twice before we get to the next real question.
-        # The first time is
-        #
-        #     Status: Finished
-        #     Command: /sbin/mount -rt cd9660 /dev/cd0a /mnt2
-        #     Hit enter to continue
-        #
-        # but that doesn't always happen; why?  The second one is after
-        #
-        #     The extraction of the selected sets for NetBSD-3.1 is
-        #     complete.  The system is now able to boot from the selected
-        #     harddisk.  To complete the installation, sysinst will give
-        #     you the opportunity to configure some essential things first.
-        #
-        # For simplicity, we allow any number of "Hit enter to continue"
-        # prompts.
+	# Many different things can happen at this point:
+        #	
+        # Versions older than 2009/08/23 21:16:17 will display a menu
+	# for choosing the extraction verbosity
+	#
+	# Versions older than 2010/03/30 20:09:25 will display a menu for choosing
+	# where to get the sets (newer versions will automatically choose
+	# the CD-ROM when present)
+	#
+	# At various points, we may or may not get "Hit enter to continue"
+	# prompts (and some of them seem to appear nondeterministically)
+	#
+	# Try to deal with all of the possible options.
         #
         # We specify a longer timeout than the default here, because the
         # set extraction can take a long time on slower machines.
         #
         while True:
-            child.expect("(Hit enter to continue)|(Please choose the timezone)", 1200)
-            if child.match.group(1):
-                child.send("\n")
-            else:
-                break
+	    child.expect("(a: Progress bar)|(a: CD-ROM)|(Hit enter to continue)|(Please choose the timezone)", 1200)
+	    if child.match.group(1):
+		child.send("\n")
+	    elif child.match.group(2):
+		child.send("\n")
+		# In 3.0.1, you type "c" to continue, whereas in -current, you type "x".
+		# Handle both cases.
+		child.expect("([cx]): Continue")
+		child.send(child.match.group(1) + "\n")
+	    elif child.match.group(3):
+		child.send("\n")
+	    else:
+		break
+
         # "Press 'x' followed by RETURN to quit the timezone selection"
         child.send("x\n")
         child.expect("([a-z]): DES")
