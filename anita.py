@@ -315,7 +315,7 @@ class Anita:
     def start_qemu(self, qemu_args):
         child = pexpect.spawn(qemu, ["-m", "32", \
             "-hda", self.wd0_path(), \
-            "-serial", "stdio", "-nographic"
+            "-nographic"
             ] + qemu_args + self.extra_qemu_args)
 	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file",
         # so we set both variables for portability
