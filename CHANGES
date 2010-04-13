@@ -1,3 +1,9 @@
+- 1.11 released -
+
+Remove '-serial stdio' from qemu argument list.  It's not actually
+needed when the '-nographic' option is present, and it confuses
+qemu 0.12.
+
 - 1.10 released -
 
 Deal with recent sysinst changes: sysinst no longer displays a dialog
