@@ -21,7 +21,6 @@ netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 
 # External commands we rely on
 
-qemu = "qemu"
 qemu_img = "qemu-img"
 if os.uname()[0] == 'NetBSD':
     makefs = ["makefs", "-t", "cd9660", "-o", "rockridge"]
@@ -136,6 +135,9 @@ def dir2url(dir):
 #    default_workdir(self)
 #        a file name component identifying the version, for use in constructing a unique,
 #        version-specific working directory
+#
+#    arch(self)
+#        the name of the machine architecture the version is for
 
 class Version:
     # Information about the available installation file sets.
@@ -165,7 +167,7 @@ class Version:
     def download_local_mi_dir(self):
         return self.workdir + "/download/"
     def download_local_arch_dir(self):
-        return self.download_local_mi_dir() + "i386/"
+        return self.download_local_mi_dir() + self.arch() + "/"
     # The path to the install ISO image
     def iso_path(self):
         return os.path.join(self.workdir, self.iso_name())
@@ -174,9 +176,10 @@ class Version:
         return os.path.join(self.download_local_arch_dir(), "installation/floppy")
 
     # The list of boot floppies we should try downloading;
-    # not all may actually exist
+    # not all may actually exist.  amd64 currently has four,
+    # i386 has three, and older versions may have fewer.
     def potential_floppies(self):
-        return ['boot-com1.fs', 'boot2.fs', 'boot3.fs']
+        return ['boot-com1.fs', 'boot2.fs', 'boot3.fs', 'boot4.fs']
 
     # The list of boot floppies we actually have
     def floppies(self):
@@ -215,6 +218,11 @@ class Version:
 	    spawn(makefs[0], makefs + \
 		[self.iso_path(), self.download_local_mi_dir()])
             self.tempfiles.append(self.iso_path())
+
+    # Get the architecture name.  This is a hardcoded default for use
+    # by the obsolete subclasses; the "URL" class overrides it.
+    def arch(self):
+        return "i386"
 
     # Backwards compatibility with Anita 1.2 and older
     def install(self):
@@ -280,12 +288,18 @@ class URL(Version):
     def __init__(self, url):
         Version.__init__(self)
         self.url = url
+	match = re.search(r'/([^/]+)/$', url)
+	if match is None:
+            raise RuntimeError("could not extract port name from URL '%s'" % url)
+        self.arch_name = match.group(1)
     def dist_url(self):
         return self.url
     def iso_name(self):
         return "install_tmp.iso"
     def default_workdir(self):
         return url2dir(self.url)
+    def arch(self):
+        return self.arch_name
 
 # A local release directory
 
@@ -304,6 +318,14 @@ class Anita:
         else:
             self.workdir = dist.default_workdir()
 
+	arch_qemu_map = {
+	    'i386': 'qemu',
+	    'amd64': 'qemu-system-x86_64',
+	}
+	self.qemu = arch_qemu_map.get(dist.arch())
+	if self.qemu is None:
+            raise RuntimeError("NetBSD port '%s' is not supported" % dist.arch())
+
         if qemu_args is None:
             qemu_args = []
         self.extra_qemu_args = qemu_args
@@ -313,7 +335,7 @@ class Anita:
         return os.path.join(self.workdir, "wd0.img")
 
     def start_qemu(self, qemu_args):
-        child = pexpect.spawn(qemu, ["-m", "32", \
+        child = pexpect.spawn(self.qemu, ["-m", "32", \
             "-hda", self.wd0_path(), \
             "-nographic"
             ] + qemu_args + self.extra_qemu_args)
@@ -333,7 +355,8 @@ class Anita:
         floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
             for f in self.dist.floppies() ]
 
-        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "384M"])
+	# 384M is sufficient for i386 but not for amd64.
+        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "512M"])
 
         child = self.start_qemu(["-fda", floppy_paths[0], \
                                  "-cdrom", self.dist.iso_path(), \

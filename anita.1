@@ -1,4 +1,4 @@
-.Dd January 31, 2010
+.Dd August 25, 2010
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -12,16 +12,16 @@
 .Ar URL
 .Sh DESCRIPTION
 .Nm
-is an experimental tool for automated testing of the NetBSD/i386
+is an experimental tool for automated testing of the NetBSD
 installation procedure.  Using 
 .Nm , 
 you can fully automate the process of downloading a NetBSD/i386
-distribution, installing it in a
+or NetBSD/amd64 distribution, installing it in a
 .Ic qemu 
 virtual machine, and booting the installed system.
 .Pp
 .Sh EXAMPLES
-To install NetBSD 5.0.2 from the master NetBSD FTP site, enter
+To install NetBSD 5.0.2/i386 from the master NetBSD FTP site, enter
 .Pp
 .Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 .Pp
@@ -113,11 +113,12 @@ whitespace.
 .Nm
 is still a work in progress.  Currently, 
 .Nm 
-only knows how to install
-NetBSD/i386, but it should be possible to add support for installing
-other ports, as well as cross-installation setups where the machine
-running Anita is a different architecture from the virtual machine
-being installed on.
+only knows how to install the i386 and amd64 ports, and amd64
+has not been extensively tested.  It should be possible to add 
+support for installing other ports - patches are welcome.  
+Cross-installation setups where the machine running Anita is a
+different architecture from the virtual machine being installed on
+should work.
 .Pp
 .Nm
 is likely to break whenever any significant change is made to
@@ -146,4 +147,16 @@ NetBSD system hangs while probing the floppy drive.  This can be
 worked around by passing Anita the command line option
 .Fl -qemu-args 
 .Ar -no-kvm .
-
+.Pp
+Running multithreaded programs (such as the ATF test suite) on the
+emulated NetBSD system requires qemu patches that are in pkgsrc
+beginning with qemu 0.12.3nb3, but are not yet in any official qemu
+release.  See PR 42158 and https://bugs.launchpad.net/bugs/569760
+for details.
+.Pp
+Installing most versions of NetBSD takes a long time with recent
+versions of qemu because the bootloader countdown runs at 1/20 the
+normal speed, and there is a long delay between loading the kernel and
+the kernel printing its first console ouput, which can easily be
+mistaken for a hang.  Please be patient. This issue is fixed in
+NetBSD-current; see PR 43156 for details.
