@@ -24,7 +24,10 @@ def main(argv = None):
 	raise Usage("not enough arguments")
 
     distarg = args[1]
-    if re.match(r'/', distarg):
+
+    if re.search(r'\.iso$', distarg):
+        dist = anita.ISO(distarg)
+    elif re.match(r'/', distarg):
 	if not re.search(r'/$', distarg):
 	    raise Usage("distribution directory should end in a slash")
 	dist = anita.LocalDirectory(distarg)

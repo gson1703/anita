@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 import urllib
+import urlparse
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only when getting releases by number, not by URL.
@@ -64,16 +65,12 @@ def download_file(file, url):
             os.unlink(file)
         raise
 
-# Download a file from the download directory tree rooted at "urlbase"
-# into a mirror tree rooted at "dirbase".  The file name to download
-# is "relfile", which is relative to both roots.  If the file already
+# Download "url" to the local file "file".  If the file already
 # exists locally, do nothing.  If "optional" is true, ignore download
 # failures and cache the absence of a missing file by creating a marker
 # file with the extension ".MISSING".
 
-def download_if_missing(urlbase, dirbase, relfile, optional = False):
-    url = urlbase + relfile
-    file = os.path.join(dirbase, relfile)
+def download_if_missing_2(url, file, optional = False):
     if os.path.exists(file):
         return
     if os.path.exists(file + ".MISSING"):
@@ -88,6 +85,15 @@ def download_if_missing(urlbase, dirbase, relfile, optional = False):
             f.close()
         else:
             raise
+
+# As above, but download a file from the download directory tree
+# rooted at "urlbase" into a mirror tree rooted at "dirbase".  The
+# file name to download is "relfile", which is relative to both roots.
+
+def download_if_missing(urlbase, dirbase, relfile, optional = False):
+    url = urlbase + relfile
+    file = os.path.join(dirbase, relfile)
+    return download_is_missing_2(url, file, optional)
 
 # Map a URL to a directory name.  No two URLs should map to the same
 # directory.
@@ -282,6 +288,31 @@ class LocalBuild(NumberedVersion):
     def dist_url(self):
         return "file://" + self.release_path + "/i386/"
 
+# An ISO
+
+class ISO(Version):
+    def __init__(self, iso_url):
+        Version.__init__(self)
+        self.m_iso_url = iso_url
+	# We can't determine the final ISO file name yet because the working
+	# directory is not known at this point, but we can precalculate the
+	# basename of it.
+	self.m_iso_basename = os.path.basename(urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
+	m = re.match("(.*)cd-.*iso", self.m_iso_basename)
+	if m is None:
+            raise RuntimeError("cannot guess architecture from ISO name '%s'" % self.m_iso_basename)
+	self.m_arch = m.group(1)
+    def iso_path(self):
+        return os.path.join(self.download_local_arch_dir(), self.m_iso_basename)
+    def default_workdir(self):
+         return url2dir(self.m_iso_url)
+    def make_iso(self):
+        self.download()
+    def download(self):
+        download_if_missing_2(self.m_iso_url, self.iso_path())
+    def arch(self):
+        return self.m_arch
+
 # The top-level URL of a release tree
 
 class URL(Version):
@@ -291,7 +322,7 @@ class URL(Version):
 	match = re.search(r'/([^/]+)/$', url)
 	if match is None:
             raise RuntimeError("could not extract port name from URL '%s'" % url)
-        self.arch_name = match.group(1)
+        self.m_arch = match.group(1)
     def dist_url(self):
         return self.url
     def iso_name(self):
@@ -299,7 +330,7 @@ class URL(Version):
     def default_workdir(self):
         return url2dir(self.url)
     def arch(self):
-        return self.arch_name
+        return self.m_arch
 
 # A local release directory
 
@@ -321,6 +352,9 @@ class Anita:
 	arch_qemu_map = {
 	    'i386': 'qemu',
 	    'amd64': 'qemu-system-x86_64',
+	    'sparc': 'qemu-system-sparc',
+	    'sparc64': 'qemu-system-sparc64',
+	    'macppc': 'qemu-system-ppc',
 	}
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -352,50 +386,77 @@ class Anita:
         self.dist.set_workdir(self.workdir)
         self.dist.make_iso()
 
-        floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
-            for f in self.dist.floppies() ]
+	arch = self.dist.arch()
+	boot_from_floppy = (arch == 'i386' or arch == 'amd64')
 
+	# Create a disk image file
 	# 384M is sufficient for i386 but not for amd64.
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "512M"])
 
-        child = self.start_qemu(["-fda", floppy_paths[0], \
-                                 "-cdrom", self.dist.iso_path(), \
-                                 "-boot", "a"])
+        qemu_args = ["-cdrom", self.dist.iso_path()]
 
-        # Do the floppy swapping dance
-        floppy0_name = None
-        while True:
-            child.expect("(insert disk (\d+), and press return...)|(a: Installation messages in English)")
-	    if not child.match.group(1):
-		break
-            # There is no floppy 0, hence the "- 1"
-            floppy_index = int(child.match.group(2)) - 1
+        if boot_from_floppy:
+	    floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
+		for f in self.dist.floppies() ]
+            qemu_args += ["-fda", floppy_paths[0], "-boot", "a"]
+	else:
+	    qemu_args += ["-boot", "d"]
+        
+        child = self.start_qemu(qemu_args)
 
-            # Escape into qemu command mode to switch floppies
-            child.send("\001c")
-	    # We used to wait for a (qemu) prompt here, but qemu 0.9.1 no longer prints it
-            # child.expect('\(qemu\)')
-            if not floppy0_name:
-                # Between qemu 0.9.0 and 0.9.1, the name of the floppy device
-                # accepted by the "change" command changed from "fda" to "floppy0"
-                # without any provision for backwards compatibility.  Deal with it.
-                child.send("info block\n")
-                child.expect(r'\n(\w+): type=floppy')
-                floppy0_name = child.match.group(1)
-            # Now we chan change the floppy
-            child.send("change %s %s\n" % (floppy0_name, floppy_paths[floppy_index]))
-            # Exit qemu command mode
-            child.send("\001c\n")
+        if boot_from_floppy:
+	    # Do the floppy swapping dance
+	    floppy0_name = None
+	    while True:
+		child.expect("(insert disk (\d+), and press return...)|(a: Installation messages in English)")
+		if not child.match.group(1):
+		    break
+		# There is no floppy 0, hence the "- 1"
+		floppy_index = int(child.match.group(2)) - 1
+
+		# Escape into qemu command mode to switch floppies
+		child.send("\001c")
+		# We used to wait for a (qemu) prompt here, but qemu 0.9.1 no longer prints it
+		# child.expect('\(qemu\)')
+		if not floppy0_name:
+		    # Between qemu 0.9.0 and 0.9.1, the name of the floppy device
+		    # accepted by the "change" command changed from "fda" to "floppy0"
+		    # without any provision for backwards compatibility.  Deal with it.
+		    child.send("info block\n")
+		    child.expect(r'\n(\w+): type=floppy')
+		    floppy0_name = child.match.group(1)
+		# Now we chan change the floppy
+		child.send("change %s %s\n" % (floppy0_name, floppy_paths[floppy_index]))
+		# Exit qemu command mode
+		child.send("\001c\n")
+        else:
+	    if self.dist.arch() == 'sparc':
+	        child.expect("Installation medium to load the additional utilities from: ")
+		child.send("cdrom\n")
+	        child.expect("CD-ROM device to use")
+		child.send("\n")
+	        child.expect("Path to instfs.tgz")
+		child.send("\n")
+	        child.expect("Terminal type")
+		child.send("\n")
+	        child.expect("nstall/Upgrade")
+		child.send("I\n")
+	    child.expect("a: Installation messages in English")
 
         # Confirm "Installation messages in English"
         child.send("\n")
-        child.expect("Keyboard type")
-        child.send("\n")
-        child.expect("a: Install NetBSD to hard disk")
-        child.send("\n")
-        child.expect("Shall we continue")
-        child.expect("b: Yes")
-        child.send("b\n")
+	# i386 and amd64 ask for keyboard type here; sparc doesn't
+	while True:
+            child.expect("(Keyboard type)|(a: Install NetBSD to hard disk)|(Shall we continue)")
+            if child.match.group(1) or child.match.group(2):
+	        child.send("\n")
+	    elif child.match.group(3):
+                child.expect("b: Yes")
+	        child.send("b\n")
+	        break
+            else:
+	        raise AssertionError
+
         child.expect("I found only one disk")
         child.expect("Hit enter to continue")
         child.send("\n")
@@ -461,21 +522,29 @@ class Anita:
             child.send("x\n")
         # Exit the main set selection menu
         child.send("x\n")
-        child.expect("a: This is the correct geometry")
-        child.send("\n")
-        child.expect("b: Use the entire disk")
-        child.send("b\n")
-        child.expect("Do you want to install the NetBSD bootcode")
-        child.expect("a: Yes")
-        child.send("\n")
-        child.send("\n")
+
+	if arch == 'i386' or arch == 'amd64':
+	    child.expect("a: This is the correct geometry")
+	    child.send("\n")
+	    child.expect("b: Use the entire disk")
+	    child.send("b\n")
+	    child.expect("Do you want to install the NetBSD bootcode")
+	    child.expect("a: Yes")
+	    child.send("\n")
+	    child.send("\n")
+        else: # sparc, maybe others
+	    child.expect("a: Set sizes of NetBSD partitions")
+	    child.send("a\n")
+
         child.expect("Accept partition sizes")
         # Press cursor-down enough times to get to the end of the list,
-        # then enter to continue.  Previously, we used control-N ("\016"), 
+	# to the "Accept partition sizes" entry, then press
+        # enter to continue.  Previously, we used control-N ("\016"), 
         # but if it gets echoed (which has happened), it is interpreted by
         # the terminal as "enable line drawing character set", leaving the
         # terminal in an unusable state.
         child.send("\033[B" * 8 + "\n")
+
         child.expect("x: Partition sizes ok")
         child.send("\n")
         child.expect("Please enter a name for your NetBSD disk")
@@ -483,11 +552,9 @@ class Anita:
         child.expect("Shall we continue")
         child.expect("b: Yes")
         child.send("b\n")
-        child.expect("b: Use serial port com0")
-        child.send("bx\n")
 
 	# Many different things can happen at this point:
-        #	
+        #
         # Versions older than 2009/08/23 21:16:17 will display a menu
 	# for choosing the extraction verbosity
 	#
@@ -497,12 +564,14 @@ class Anita:
 	# At various points, we may or may not get "Hit enter to continue"
 	# prompts (and some of them seem to appear nondeterministically)
 	#
+	# i386/amd64 can ask what to use as the console
+        #
 	# Try to deal with all of the possible options.
         #
         # We specify a longer timeout than the default here, because the
         # set extraction can take a long time on slower machines.
         while True:
-	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|(Hit enter to continue)|(Please choose the timezone)", 1200)
+	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|(Hit enter to continue)|(b: Use serial port com0)|(Please choose the timezone)", 1200)
 	    if child.match.group(1):
 	        # (a: Progress bar)
 		child.send("\n")
@@ -517,9 +586,14 @@ class Anita:
 	    elif child.match.group(5):
 	        # (Hit enter to continue)
 		child.send("\n")
-	    else:
+            elif child.match.group(6):
+	        # (b: Use serial port com0)
+                child.send("bx\n")
+	    elif child.match.group(7):
 	        # (Please choose the timezone)
 		break
+	    else:
+	        raise AssertionError
 
         # "Press 'x' followed by RETURN to quit the timezone selection"
         child.send("x\n")
@@ -540,9 +614,11 @@ class Anita:
         child.send("\n")
         child.expect("x: Exit")
         child.send("x\n")
-        child.expect("#")  
-        child.send("halt\n")
-        child.expect("halted by root")
+	# On i386 and amd64, you get a root shell; sparc halts.
+        child.expect("(#)|(halting machine)")
+	if child.match.group(1):
+	    child.send("halt\n")
+	    child.expect("halted by root")
         child.close()
         self.dist.cleanup()
 
