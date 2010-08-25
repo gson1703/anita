@@ -1,3 +1,5 @@
+Add support for the amd64 port.
+
 - 1.11 released -
 
 Remove '-serial stdio' from qemu argument list.  It's not actually
