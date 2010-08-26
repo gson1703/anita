@@ -138,6 +138,11 @@ def dir2url(dir):
         tail = tail[m.end():]        
     return "".join(chars)
 
+def check_arch_supported(arch):
+    if arch_qemu_map.get(arch) is None:
+        raise RuntimeError(("'%s' is not the name of a " + \
+        "supported NetBSD port") % arch)
+
 #############################################################################
 
 # A NetBSD version.
@@ -305,13 +310,10 @@ class URL(Version):
         self.url = url
 	match = re.search(r'/([^/]+)/$', url)
 	if match is None:
-            raise RuntimeError("URL '%s' does not appar to refer to a " + \
-	    "NetBSD distribution" % url)
+            raise RuntimeError(("URL '%s' doesn't look like the URL of a " + \
+	    "NetBSD distribution") % url)
         self.m_arch = match.group(1)
-        if arch_qemu_map.get(self.m_arch) is None:
-            raise RuntimeError("URL component '%s' is not the name of a " + \
-	    "supported NetBSD port" % self.m_arch)
-	
+	check_arch_supported(self.m_arch)	
     def dist_url(self):
         return self.url
     def iso_name(self):
@@ -347,6 +349,7 @@ class ISO(Version):
 	if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'" % self.m_iso_basename)
 	self.m_arch = m.group(1)
+	check_arch_supported(self.m_arch)
     def iso_path(self):
         if self.m_iso_path is not None:
 	    return self.m_iso_path
