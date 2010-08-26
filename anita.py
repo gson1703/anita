@@ -345,7 +345,7 @@ class ISO(Version):
 	# directory is not known at this point, but we can precalculate the
 	# basename of it.
 	self.m_iso_basename = os.path.basename(urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
-	m = re.match("(.*)cd-.*iso", self.m_iso_basename)
+	m = re.match("(.*)cd.*iso", self.m_iso_basename)
 	if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'" % self.m_iso_basename)
 	self.m_arch = m.group(1)
