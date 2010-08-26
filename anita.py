@@ -288,31 +288,6 @@ class LocalBuild(NumberedVersion):
     def dist_url(self):
         return "file://" + self.release_path + "/i386/"
 
-# An ISO
-
-class ISO(Version):
-    def __init__(self, iso_url):
-        Version.__init__(self)
-        self.m_iso_url = iso_url
-	# We can't determine the final ISO file name yet because the working
-	# directory is not known at this point, but we can precalculate the
-	# basename of it.
-	self.m_iso_basename = os.path.basename(urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
-	m = re.match("(.*)cd-.*iso", self.m_iso_basename)
-	if m is None:
-            raise RuntimeError("cannot guess architecture from ISO name '%s'" % self.m_iso_basename)
-	self.m_arch = m.group(1)
-    def iso_path(self):
-        return os.path.join(self.download_local_arch_dir(), self.m_iso_basename)
-    def default_workdir(self):
-         return url2dir(self.m_iso_url)
-    def make_iso(self):
-        self.download()
-    def download(self):
-        download_if_missing_2(self.m_iso_url, self.iso_path())
-    def arch(self):
-        return self.m_arch
-
 # The top-level URL of a release tree
 
 class URL(Version):
@@ -339,6 +314,40 @@ class LocalDirectory(URL):
         # This could be optimized to avoid copying the files
         URL.__init__(self, "file://" + dir)
 
+# An URL or local file name pointing at an ISO image
+
+class ISO(Version):
+    def __init__(self, iso_url):
+        Version.__init__(self)
+        if re.match(r'/', iso_url):
+	    self.m_iso_url = "file://" + iso_url
+	    self.m_iso_path = iso_url
+	else:
+            self.m_iso_url = iso_url
+	    self.m_iso_path = None
+	# We can't determine the final ISO file name yet because the work
+	# directory is not known at this point, but we can precalculate the
+	# basename of it.
+	self.m_iso_basename = os.path.basename(urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
+	m = re.match("(.*)cd-.*iso", self.m_iso_basename)
+	if m is None:
+            raise RuntimeError("cannot guess architecture from ISO name '%s'" % self.m_iso_basename)
+	self.m_arch = m.group(1)
+    def iso_path(self):
+        if self.m_iso_path is not None:
+	    return self.m_iso_path
+	else:
+            return os.path.join(self.download_local_arch_dir(), self.m_iso_basename)
+    def default_workdir(self):
+         return url2dir(self.m_iso_url)
+    def make_iso(self):
+        self.download()
+    def download(self):
+        if self.m_iso_path is None:
+            download_if_missing_2(self.m_iso_url, self.iso_path())
+    def arch(self):
+        return self.m_arch
+
 #############################################################################
 
 class Anita:
@@ -353,6 +362,7 @@ class Anita:
 	    'i386': 'qemu',
 	    'amd64': 'qemu-system-x86_64',
 	    'sparc': 'qemu-system-sparc',
+	     # The following ones don't actually work
 	    'sparc64': 'qemu-system-sparc64',
 	    'macppc': 'qemu-system-ppc',
 	}
