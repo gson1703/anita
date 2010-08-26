@@ -138,10 +138,14 @@ def dir2url(dir):
         tail = tail[m.end():]        
     return "".join(chars)
 
-def check_arch_supported(arch):
+def check_arch_supported(arch, dist_type):
     if arch_qemu_map.get(arch) is None:
         raise RuntimeError(("'%s' is not the name of a " + \
         "supported NetBSD port") % arch)
+    if (arch == 'i386' or arch == 'amd64') and dist_type != 'reltree':
+        raise RuntimeError("NetBSD/%s must be installd from a release tree, not an ISO" % arch)
+    if (arch == 'sparc') and dist_type != 'iso':
+        raise RuntimeError("NetBSD/%s must be installd from an ISO, not a release tree" % arch)
 
 #############################################################################
 
@@ -194,6 +198,9 @@ class Version:
     # The directory for the install floppy images
     def floppy_dir(self):
         return os.path.join(self.download_local_arch_dir(), "installation/floppy")
+
+    def boot_from_floppy(self):
+        return True
 
     # The list of boot floppies we should try downloading;
     # not all may actually exist.  amd64 currently has four,
@@ -313,7 +320,7 @@ class URL(Version):
             raise RuntimeError(("URL '%s' doesn't look like the URL of a " + \
 	    "NetBSD distribution") % url)
         self.m_arch = match.group(1)
-	check_arch_supported(self.m_arch)	
+	check_arch_supported(self.m_arch, 'reltree')
     def dist_url(self):
         return self.url
     def iso_name(self):
@@ -349,7 +356,7 @@ class ISO(Version):
 	if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'" % self.m_iso_basename)
 	self.m_arch = m.group(1)
-	check_arch_supported(self.m_arch)
+	check_arch_supported(self.m_arch, 'iso')
     def iso_path(self):
         if self.m_iso_path is not None:
 	    return self.m_iso_path
@@ -362,8 +369,12 @@ class ISO(Version):
     def download(self):
         if self.m_iso_path is None:
             download_if_missing_2(self.m_iso_url, self.iso_path())
+	else:
+	    mkdir_p(self.workdir)
     def arch(self):
         return self.m_arch
+    def boot_from_floppy(self):
+        return False
 
 #############################################################################
 
@@ -406,7 +417,7 @@ class Anita:
         self.dist.make_iso()
 
 	arch = self.dist.arch()
-	boot_from_floppy = (arch == 'i386' or arch == 'amd64')
+	boot_from_floppy = self.dist.boot_from_floppy()
 
 	# Create a disk image file
 	# 384M is sufficient for i386 but not for amd64.
@@ -417,6 +428,8 @@ class Anita:
         if boot_from_floppy:
 	    floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
 		for f in self.dist.floppies() ]
+	    if len(floppy_paths) == 0:
+	        raise RuntimeError("found no boot floppies")
             qemu_args += ["-fda", floppy_paths[0], "-boot", "a"]
 	else:
 	    qemu_args += ["-boot", "d"]
