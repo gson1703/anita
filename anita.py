@@ -20,6 +20,15 @@ import urlparse
 netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 #netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
 
+arch_qemu_map = {
+    'i386': 'qemu',
+    'amd64': 'qemu-system-x86_64',
+    'sparc': 'qemu-system-sparc',
+     # The following ones don't actually work
+    'sparc64': 'qemu-system-sparc64',
+    'macppc': 'qemu-system-ppc',
+}
+
 # External commands we rely on
 
 qemu_img = "qemu-img"
@@ -296,8 +305,13 @@ class URL(Version):
         self.url = url
 	match = re.search(r'/([^/]+)/$', url)
 	if match is None:
-            raise RuntimeError("could not extract port name from URL '%s'" % url)
+            raise RuntimeError("URL '%s' does not appar to refer to a " + \
+	    "NetBSD distribution" % url)
         self.m_arch = match.group(1)
+        if arch_qemu_map.get(self.m_arch) is None:
+            raise RuntimeError("URL component '%s' is not the name of a " + \
+	    "supported NetBSD port" % self.m_arch)
+	
     def dist_url(self):
         return self.url
     def iso_name(self):
@@ -358,14 +372,6 @@ class Anita:
         else:
             self.workdir = dist.default_workdir()
 
-	arch_qemu_map = {
-	    'i386': 'qemu',
-	    'amd64': 'qemu-system-x86_64',
-	    'sparc': 'qemu-system-sparc',
-	     # The following ones don't actually work
-	    'sparc64': 'qemu-system-sparc64',
-	    'macppc': 'qemu-system-ppc',
-	}
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
             raise RuntimeError("NetBSD port '%s' is not supported" % dist.arch())
