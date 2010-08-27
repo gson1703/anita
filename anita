@@ -18,6 +18,9 @@ def main(argv = None):
 		      help="store work files in DIR", metavar="DIR")
     parser.add_option("--qemu-args",
 		      help="pass ARGS as extra arguments to qemu", metavar="ARGS")
+    parser.add_option("--disk-size",
+		      help="use a virtual disk of SIZE bytes (k/M/G/T suffix accecpted)",
+		      metavar="SIZE")
     (options, args) = parser.parse_args()
 
     if len(args) < 2:
@@ -43,7 +46,8 @@ def main(argv = None):
     else:
         qemu_args = []
 
-    a = anita.Anita(dist, workdir = options.workdir, qemu_args = qemu_args)
+    a = anita.Anita(dist, workdir = options.workdir, qemu_args = qemu_args,
+        disk_size = options.disk_size)
 
     status = 0
     mode = args[0]

@@ -102,7 +102,7 @@ def download_if_missing_2(url, file, optional = False):
 def download_if_missing(urlbase, dirbase, relfile, optional = False):
     url = urlbase + relfile
     file = os.path.join(dirbase, relfile)
-    return download_is_missing_2(url, file, optional)
+    return download_if_missing_2(url, file, optional)
 
 # Map a URL to a directory name.  No two URLs should map to the same
 # directory.
@@ -379,12 +379,15 @@ class ISO(Version):
 #############################################################################
 
 class Anita:
-    def __init__(self, dist, workdir = None, qemu_args = None):
+    def __init__(self, dist, workdir = None, qemu_args = None, disk_size = None):
         self.dist = dist
         if workdir:
             self.workdir = workdir
         else:
             self.workdir = dist.default_workdir()
+
+        if disk_size is None:
+	    disk_size = "512M"
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -421,7 +424,7 @@ class Anita:
 
 	# Create a disk image file
 	# 384M is sufficient for i386 but not for amd64.
-        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), "512M"])
+        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), disksize])
 
         qemu_args = ["-cdrom", self.dist.iso_path()]
 
@@ -581,9 +584,13 @@ class Anita:
         child.send("\n")
         child.expect("Please enter a name for your NetBSD disk")
         child.send("\n")
+
+        # "This is your last chance to quit this process..."
         child.expect("Shall we continue")
         child.expect("b: Yes")
         child.send("b\n")
+
+	# newfs is run at this point
 
 	# Many different things can happen at this point:
         #
@@ -596,14 +603,27 @@ class Anita:
 	# At various points, we may or may not get "Hit enter to continue"
 	# prompts (and some of them seem to appear nondeterministically)
 	#
-	# i386/amd64 can ask what to use as the console
+	# i386/amd64 can ask whether to use normal or serial console bootblocks
         #
 	# Try to deal with all of the possible options.
         #
         # We specify a longer timeout than the default here, because the
         # set extraction can take a long time on slower machines.
+	#
+        # It has happened (at least with NetBSD 3.0.1) that sysinst paints the
+	# screen twice.  This can cause problem because we will then respond
+	# twice, and the second response will be interpreted as a response to
+	# a subsequent prompt.  Therefore, we check whether the match is the
+	# same as the previous one and ignore it if so.
+	#
+	prevmatch = []
         while True:
 	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|(Hit enter to continue)|(b: Use serial port com0)|(Please choose the timezone)", 1200)
+            print "GROUPS", child.match.groups()
+	    if child.match.groups() == prevmatch:
+	        print "PREVMATCH"
+	        continue
+	    prevmatch = child.match.groups()
 	    if child.match.group(1):
 	        # (a: Progress bar)
 		child.send("\n")
@@ -611,6 +631,7 @@ class Anita:
 	        # (a: CD-ROM)
 		child.send("\n")
             elif child.match.group(3):
+	        # CDROM device selection
 	        # (([cx]): Continue)
 		# In 3.0.1, you type "c" to continue, whereas in -current, you type "x".
 		# Handle both cases.

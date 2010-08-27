@@ -1,4 +1,10 @@
-Add support for the NetBSD/amd64 port as a target.
+
+Add support for the amd64 and sparc ports as targets.
+
+Improve error reporting for common types of unsuitable URLs.
+
+Avoid sending multiple responses to the NetBSD 3.0.1 sysinst
+which prints menus multiple times.
 
 - 1.11 released -
 
