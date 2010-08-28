@@ -20,9 +20,9 @@ $python ./anita boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 rm -f work-http---ftp.netbsd.org-pub-NetBSD-iso-5.0.2-sparccd-5.0.2.iso+a4c50/wd0.img
 $python ./anita boot http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso
 
-# 1.2 compatibility.  This no longer works because files have been moved under NetBSD-archive/
-#$python <<END
-#import anita
-#ver = anita.Release("2.1")
-#ver.install()
-#END
+# Anita 1.2 compatibility.  This no longer works because files have been moved under NetBSD-archive/
+$python <<END
+import anita
+ver = anita.Release("5.0.2")
+ver.install()
+END
