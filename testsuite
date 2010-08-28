@@ -8,16 +8,16 @@ set -x
 #./anita install /usr/build/20080708-1545/release/iso/i386cd.iso
 #./anita install http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-3.1/i386/  - no longer at funet
 
-rm work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-archive-NetBSD-3.0.1-i386-+a4c39c54/wd0.img # XXX
+rm -f work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-archive-NetBSD-3.0.1-i386-+a4c39c54/wd0.img # XXX
 $python ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-3.0.1/i386/
 
-rm work-http---ftp.fi.netbsd.org-pub-NetBSD-NetBSD-4.0-i386-+a4c42/wd0.img
+rm -f work-http---ftp.fi.netbsd.org-pub-NetBSD-NetBSD-4.0-i386-+a4c42/wd0.img
 $python ./anita boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
-rm work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-5.0.2-i386-+a4c39/wd0.img
+rm -f work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-5.0.2-i386-+a4c39/wd0.img
 $python ./anita boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 
-rm work-http---ftp.netbsd.org-pub-NetBSD-iso-5.0.2-sparccd-5.0.2.iso+a4c50/download/sparc/wd0.img
+rm -f work-http---ftp.netbsd.org-pub-NetBSD-iso-5.0.2-sparccd-5.0.2.iso+a4c50/wd0.img
 $python ./anita boot http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso
 
 # 1.2 compatibility.  This no longer works because files have been moved under NetBSD-archive/
