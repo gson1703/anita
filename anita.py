@@ -14,7 +14,8 @@ import urllib
 import urlparse
 
 # Your preferred NetBSD FTP mirror site.
-# This is used only when getting releases by number, not by URL.
+# This is used only by the obsolete code for getting releases
+# by number, not by the recommended method of getting them by URL.
 # See http://www.netbsd.org/mirrors/#ftp for the complete list.
 
 netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
