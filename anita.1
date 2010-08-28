@@ -7,7 +7,8 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar working_directory
-.Op Fl -qemu-args qemu_arguments
+.Op Fl -qemu-args Ar qemu_arguments
+.Op Fl -disk-size Ar size
 .Ar install | boot | test | interact
 .Ar URL
 .Sh DESCRIPTION
@@ -122,6 +123,12 @@ Additional arguments to pass to qemu.  The arguments are given
 as a single string, which may contain multiple arguments separated
 by whitespace.  There is no way to pass qemu an argument containing
 whitespace.
+.It Fl -disk-size Ar size
+The size of the virtual disk NetBSD gets installed on.  The default
+is large enough to hold the OS installation itself, but if you need
+additional space, you can specify a larger size.  The size is given in
+bytes, or a suffix of k, M, G, or T can be used for kilo-, mega-,
+giga-, or terabytes.
 .El
 .Sh BUGS
 .Nm
@@ -169,5 +176,5 @@ Installing most versions of NetBSD takes a long time with recent
 versions of qemu because the bootloader countdown runs at 1/20 the
 normal speed, and there is a long delay between loading the kernel and
 the kernel printing its first console ouput, which can easily be
-mistaken for a hang.  Please be patient. This issue is fixed in
-NetBSD-current; see PR 43156 for details.
+mistaken for a hang.  Please be patient. This issue has been worked
+around in NetBSD-current; see PR 43156 for details.
