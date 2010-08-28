@@ -394,8 +394,11 @@ class Anita:
         else:
             self.workdir = dist.default_workdir()
 
+	# Set the default disk size if none was given.
+	# 384M is sufficient for i386 but not for amd64.
         if disk_size is None:
 	    disk_size = "512M"
+	self.disk_size = disk_size
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -432,8 +435,7 @@ class Anita:
 	boot_from_floppy = self.dist.boot_from_floppy()
 
 	# Create a disk image file
-	# 384M is sufficient for i386 but not for amd64.
-        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), disksize])
+        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), self.disk_size])
 
         qemu_args = ["-cdrom", self.dist.iso_path()]
 
