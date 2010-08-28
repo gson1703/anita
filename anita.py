@@ -58,10 +58,10 @@ def spawn(command, args):
 class MyURLopener(urllib.FancyURLopener):
     def http_error_default(self, url, fp, errcode, errmsg, headers):
         raise IOError, 'HTTP error code %d' % errcode
-            
+
 def my_urlretrieve(url, filename):
     return MyURLopener().retrieve(url, filename)
-            
+
 # Download a file, cleaning up the partial file if the transfer
 # fails or is aborted before completion.
 
@@ -135,7 +135,7 @@ def dir2url(dir):
             break
         c, i = m.groups()
 	chars[int(i)] = "/:+-"[ord(c) - 0x60]
-        tail = tail[m.end():]        
+        tail = tail[m.end():]
     return "".join(chars)
 
 def check_arch_supported(arch, dist_type):
@@ -143,9 +143,11 @@ def check_arch_supported(arch, dist_type):
         raise RuntimeError(("'%s' is not the name of a " + \
         "supported NetBSD port") % arch)
     if (arch == 'i386' or arch == 'amd64') and dist_type != 'reltree':
-        raise RuntimeError("NetBSD/%s must be installd from a release tree, not an ISO" % arch)
+        raise RuntimeError(("NetBSD/%s must be installed from " +
+	    "a release tree, not an ISO") % arch)
     if (arch == 'sparc') and dist_type != 'iso':
-        raise RuntimeError("NetBSD/%s must be installd from an ISO, not a release tree" % arch)
+        raise RuntimeError(("NetBSD/%s must be installd from " +
+	"an ISO, not a release tree") % arch)
 
 #############################################################################
 
@@ -154,11 +156,12 @@ def check_arch_supported(arch, dist_type):
 # Subclasses should define:
 #
 #    dist_url(self)
-#	the URL for the top of the download tree where the version can be downloaded
+#	the URL for the top of the download tree where the version
+#       can be downloaded
 #
 #    default_workdir(self)
-#        a file name component identifying the version, for use in constructing a unique,
-#        version-specific working directory
+#        a file name component identifying the version, for use in
+#        constructing a unique, version-specific working directory
 #
 #    arch(self)
 #        the name of the machine architecture the version is for
@@ -197,7 +200,8 @@ class Version:
         return os.path.join(self.workdir, self.iso_name())
     # The directory for the install floppy images
     def floppy_dir(self):
-        return os.path.join(self.download_local_arch_dir(), "installation/floppy")
+        return os.path.join(self.download_local_arch_dir(),
+	    "installation/floppy")
 
     def boot_from_floppy(self):
         return True
@@ -224,7 +228,7 @@ class Version:
         # optional files.
         i = 0
         for floppy in self.potential_floppies():
-            download_if_missing(self.dist_url(), 
+            download_if_missing(self.dist_url(),
                 self.download_local_arch_dir(),
                 os.path.join("installation/floppy/", floppy),
                 i >= 2)
@@ -351,17 +355,20 @@ class ISO(Version):
 	# We can't determine the final ISO file name yet because the work
 	# directory is not known at this point, but we can precalculate the
 	# basename of it.
-	self.m_iso_basename = os.path.basename(urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
+	self.m_iso_basename = os.path.basename(
+	    urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
 	m = re.match("(.*)cd.*iso", self.m_iso_basename)
 	if m is None:
-            raise RuntimeError("cannot guess architecture from ISO name '%s'" % self.m_iso_basename)
+            raise RuntimeError("cannot guess architecture from ISO name '%s'"
+	        % self.m_iso_basename)
 	self.m_arch = m.group(1)
 	check_arch_supported(self.m_arch, 'iso')
     def iso_path(self):
         if self.m_iso_path is not None:
 	    return self.m_iso_path
 	else:
-            return os.path.join(self.download_local_arch_dir(), self.m_iso_basename)
+            return os.path.join(self.download_local_arch_dir(),
+	        self.m_iso_basename)
     def default_workdir(self):
          return url2dir(self.m_iso_url)
     def make_iso(self):
@@ -379,7 +386,8 @@ class ISO(Version):
 #############################################################################
 
 class Anita:
-    def __init__(self, dist, workdir = None, qemu_args = None, disk_size = None):
+    def __init__(self, dist, workdir = None, qemu_args = None,
+        disk_size = None):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -391,7 +399,8 @@ class Anita:
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
-            raise RuntimeError("NetBSD port '%s' is not supported" % dist.arch())
+            raise RuntimeError("NetBSD port '%s' is not supported" %
+	        dist.arch())
 
         if qemu_args is None:
             qemu_args = []
@@ -406,14 +415,14 @@ class Anita:
             "-hda", self.wd0_path(), \
             "-nographic"
             ] + qemu_args + self.extra_qemu_args)
-	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses "child.log_file",
-        # so we set both variables for portability
+	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
+	# "child.log_file", so we set both variables for portability
         child.logfile = sys.stdout
         child.log_file = sys.stdout
         child.timeout = 300
         child.setecho(False)
         return child
-        
+
     def _install(self):
         # Get the install ISO
         self.dist.set_workdir(self.workdir)
@@ -436,14 +445,15 @@ class Anita:
             qemu_args += ["-fda", floppy_paths[0], "-boot", "a"]
 	else:
 	    qemu_args += ["-boot", "d"]
-        
+
         child = self.start_qemu(qemu_args)
 
         if boot_from_floppy:
 	    # Do the floppy swapping dance
 	    floppy0_name = None
 	    while True:
-		child.expect("(insert disk (\d+), and press return...)|(a: Installation messages in English)")
+		child.expect("(insert disk (\d+), and press return...)|" +
+		    "(a: Installation messages in English)")
 		if not child.match.group(1):
 		    break
 		# There is no floppy 0, hence the "- 1"
@@ -451,22 +461,26 @@ class Anita:
 
 		# Escape into qemu command mode to switch floppies
 		child.send("\001c")
-		# We used to wait for a (qemu) prompt here, but qemu 0.9.1 no longer prints it
+		# We used to wait for a (qemu) prompt here, but qemu 0.9.1
+		# no longer prints it
 		# child.expect('\(qemu\)')
 		if not floppy0_name:
-		    # Between qemu 0.9.0 and 0.9.1, the name of the floppy device
-		    # accepted by the "change" command changed from "fda" to "floppy0"
-		    # without any provision for backwards compatibility.  Deal with it.
+		    # Between qemu 0.9.0 and 0.9.1, the name of the floppy
+		    # device accepted by the "change" command changed from
+		    # "fda" to "floppy0" without any provision for backwards
+		    # compatibility.  Deal with it.
 		    child.send("info block\n")
 		    child.expect(r'\n(\w+): type=floppy')
 		    floppy0_name = child.match.group(1)
 		# Now we chan change the floppy
-		child.send("change %s %s\n" % (floppy0_name, floppy_paths[floppy_index]))
+		child.send("change %s %s\n" %
+		    (floppy0_name, floppy_paths[floppy_index]))
 		# Exit qemu command mode
 		child.send("\001c\n")
         else:
 	    if self.dist.arch() == 'sparc':
-	        child.expect("Installation medium to load the additional utilities from: ")
+	        child.expect("Installation medium to load the " +
+		    "additional utilities from: ")
 		child.send("cdrom\n")
 	        child.expect("CD-ROM device to use")
 		child.send("\n")
@@ -482,7 +496,8 @@ class Anita:
         child.send("\n")
 	# i386 and amd64 ask for keyboard type here; sparc doesn't
 	while True:
-            child.expect("(Keyboard type)|(a: Install NetBSD to hard disk)|(Shall we continue)")
+            child.expect("(Keyboard type)|(a: Install NetBSD to hard disk)|" +
+	        "(Shall we continue)")
             if child.match.group(1) or child.match.group(2):
 	        child.send("\n")
 	    elif child.match.group(3):
@@ -515,7 +530,8 @@ class Anita:
             # either by spaces (at least two, so that there can
             # be single spaces within the label), or by a cursor
             # positioning escape sequence.
-	    child.expect("([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s)|(?:\x1b))")
+	    child.expect(
+	        "([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s)|(?:\x1b))")
             (letter, label) = child.match.groups()
             if letter == 'x':
                 break
@@ -574,7 +590,7 @@ class Anita:
         child.expect("Accept partition sizes")
         # Press cursor-down enough times to get to the end of the list,
 	# to the "Accept partition sizes" entry, then press
-        # enter to continue.  Previously, we used control-N ("\016"), 
+        # enter to continue.  Previously, we used control-N ("\016"),
         # but if it gets echoed (which has happened), it is interpreted by
         # the terminal as "enable line drawing character set", leaving the
         # terminal in an unusable state.
@@ -618,7 +634,9 @@ class Anita:
 	#
 	prevmatch = []
         while True:
-	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|(Hit enter to continue)|(b: Use serial port com0)|(Please choose the timezone)", 1200)
+	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|" +
+	        "(Hit enter to continue)|(b: Use serial port com0)|" +
+		"(Please choose the timezone)", 1200)
             print "GROUPS", child.match.groups()
 	    if child.match.groups() == prevmatch:
 	        print "PREVMATCH"
@@ -633,8 +651,8 @@ class Anita:
             elif child.match.group(3):
 	        # CDROM device selection
 	        # (([cx]): Continue)
-		# In 3.0.1, you type "c" to continue, whereas in -current, you type "x".
-		# Handle both cases.
+		# In 3.0.1, you type "c" to continue, whereas in -current,
+		# you type "x".  Handle both cases.
 		child.send(child.match.group(4) + "\n")
 	    elif child.match.group(5):
 	        # (Hit enter to continue)
@@ -651,7 +669,7 @@ class Anita:
         # "Press 'x' followed by RETURN to quit the timezone selection"
         child.send("x\n")
         child.expect("([a-z]): DES")
-        child.send(child.match.group(1) + "\n")	
+        child.send(child.match.group(1) + "\n")
         child.expect("root password")
         child.expect("b: No")
         child.send("b\n")
@@ -693,7 +711,8 @@ class Anita:
         child = self.start_qemu(["-snapshot"])
         # "-net", "nic,model=ne2k_pci", "-net", "user"
         child.expect("login:")
-        # Can't close child here because we still need it if called from interact()
+        # Can't close child here because we still need it if called from
+	# interact()
         return child
 
     def interact(self):
@@ -715,7 +734,7 @@ def net_setup(child):
 def shell_cmd(child, cmd, timeout = -1):
     child.send(cmd + "\n")
     child.expect("# ", timeout)
-    child.send("echo $?\n") 
+    child.send("echo $?\n")
     child.expect("(\d+)")
     return int(child.match.group(1))
 
