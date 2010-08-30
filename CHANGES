@@ -1,4 +1,6 @@
 
+- 1.13 released -
+
 When installing NetBSD/sparc, use a terminal type of "xterm" rather
 than "sun", as anita is more likely run from an xterm or other
 ANSI-like terminal than from a sun console.
