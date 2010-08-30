@@ -136,7 +136,7 @@ is still a work in progress.  Currently,
 .Nm 
 only knows how to install the i386, amd64, and sparc ports, and
 only i386 has been extensively tested.  It should be possible to add 
-support for installing other ports - partches are welcom.
+support for installing other ports - patches are welcome.
 .Pp
 .Nm
 is likely to break whenever any significant change is made to
@@ -149,12 +149,12 @@ gigabyte per installed NetBSD version.
 .Pp
 Installing NetBSD releases older than 2.1 has not been tested.
 .Pp
-NetBSD releases older than 4.0 will install, but when booting
+NetBSD/i386 releases older than 4.0 will install, but when booting
 the installed image, they hang after the "root on ffs" message.
 This is presumed to be a bug in 
 .Ic qemu .
 .Pp
-NetBSD versions older than 2009-06-13 13:35:11 fail to find 
+NetBSD/i386 versions older than 2009-06-13 13:35:11 fail to find 
 any PCI buses when run under qemu; see PRs 38729 and 42681.
 .Pp
 When
@@ -172,9 +172,10 @@ pkgsrc beginning with qemu 0.12.3nb3, but are not yet in any official
 qemu release.  See PR 42158 and https://bugs.launchpad.net/bugs/569760
 for details.
 .Pp
-Installing most versions of NetBSD takes a long time with recent
-versions of qemu because the bootloader countdown runs at 1/20 the
-normal speed, and there is a long delay between loading the kernel and
-the kernel printing its first console ouput, which can easily be
-mistaken for a hang.  Please be patient. This issue has been worked
-around in NetBSD-current; see PR 43156 for details.
+Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
+time with recent versions of qemu because the bootloader countdown
+runs at 1/20 the normal speed, and there is a long delay between
+loading the kernel and the kernel printing its first console output,
+which can easily be mistaken for a hang.  Please be patient. This
+issue has been worked around in NetBSD-current; see PR 43156 for
+details.
