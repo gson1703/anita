@@ -490,7 +490,10 @@ class Anita:
 	        child.expect("Path to instfs.tgz")
 		child.send("\n")
 	        child.expect("Terminal type")
-		child.send("\n")
+		# The default is "sun", but anita is more likely to run
+		# in an xterm or some other ansi-like terminal than on
+		# a sun console.
+		child.send("xterm\n")
 	        child.expect("nstall/Upgrade")
 		child.send("I\n")
 	    child.expect("a: Installation messages in English")
@@ -597,7 +600,15 @@ class Anita:
         # but if it gets echoed (which has happened), it is interpreted by
         # the terminal as "enable line drawing character set", leaving the
         # terminal in an unusable state.
-        child.send("\033[B" * 8 + "\n")
+	if arch == 'sparc':
+	    # For unknown reasons, when using a terminal type of "xterm",
+	    # sysinst puts the terminal in "application mode", causing the
+	    # cursor keys to send a different escape sequence than the default.
+	    cursor_down = "\033OB"
+	else:
+	    # Use the default ANSI cursor-down escape sequence
+	    cursor_down = "\033[B"
+        child.send(cursor_down * 8 + "\n")
 
         child.expect("x: Partition sizes ok")
         child.send("\n")
