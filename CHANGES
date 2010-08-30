@@ -1,3 +1,13 @@
+
+When installing NetBSD/sparc, use a terminal type of "xterm" rather
+than "sun", as anita is more likely run from an xterm or other
+ANSI-like terminal than from a sun console.
+
+In the BUGS section of the man page, mention the specific NetBSD ports
+affected.
+
+Fix typos in the man page.
+
 - 1.12 released -
 
 Add support for the amd64 and sparc ports as targets.
