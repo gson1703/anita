@@ -212,7 +212,7 @@ class Version:
     # i386 has three, and older versions may have fewer.
     # Add a couple extra to accomodate future growth.
     def potential_floppies(self):
-        return ['boot-com1.fs'] + ['boot%i.fs' % i for i in range(1, 10)]
+        return ['boot-com1.fs'] + ['boot%i.fs' % i for i in range(2, 8)]
 
     # The list of boot floppies we actually have
     def floppies(self):
