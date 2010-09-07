@@ -514,9 +514,17 @@ class Anita:
             else:
 	        raise AssertionError
 
-        child.expect("I found only one disk")
-        child.expect("Hit enter to continue")
-        child.send("\n")
+        # Depending on the number of disks attached, we get either
+        # "Found only one disk" followed by "Hit enter to continue",
+        # or "On which disk do you want to install".
+        child.expect("(Hit enter to continue)|" +
+	    "(On which disk do you want to install)")
+	if child.match.group(1):
+            child.send("\n")
+	elif child.match.group(2):
+	    child.send("a\n")
+        else:
+            raise AssertionError
 
         # Custom installation is choice "c" in -current,
         # choice "b" in older versions
@@ -582,8 +590,16 @@ class Anita:
         child.send("x\n")
 
 	if arch == 'i386' or arch == 'amd64':
-	    child.expect("a: This is the correct geometry")
-	    child.send("\n")
+	    child.expect("(a: This is the correct geometry)|" +
+	        "(a: Use one of these disks)")
+            if child.match.group(1):
+	        child.send("\n")
+	    elif child.match.group(2):
+	        child.send("a\n")
+		child.expect("Choose disk")
+		child.send("0\n")
+	    else:
+		raise AssertionError
 	    child.expect("b: Use the entire disk")
 	    child.send("b\n")
 	    child.expect("Do you want to install the NetBSD bootcode")

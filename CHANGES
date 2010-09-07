@@ -1,11 +1,14 @@
 - 1.14 released -
 
-Increased the maximum number of boot floppies, as four is no longer
+Increase the maximum number of boot floppies, as four is no longer
 enough for amd64.
 
 New command line option "--run".
 
-Added the words "OR CONTRIBUTORS" to the disclaimer of liabilities
+Handle the additional dialogs displayed by sysinst when an
+i386 or amd64 system has more than one disk.
+
+Add the words "OR CONTRIBUTORS" to the disclaimer of liabilities
 in the copyright notice.
 
 - 1.13 released -
