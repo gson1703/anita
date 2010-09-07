@@ -208,10 +208,11 @@ class Version:
         return True
 
     # The list of boot floppies we should try downloading;
-    # not all may actually exist.  amd64 currently has four,
+    # not all may actually exist.  amd64 currently has five,
     # i386 has three, and older versions may have fewer.
+    # Add a couple extra to accomodate future growth.
     def potential_floppies(self):
-        return ['boot-com1.fs', 'boot2.fs', 'boot3.fs', 'boot4.fs']
+        return ['boot-com1.fs'] + ['boot%i.fs' % i for i in range(1, 10)]
 
     # The list of boot floppies we actually have
     def floppies(self):
@@ -729,11 +730,15 @@ class Anita:
 	# interact()
         return child
 
+    # Backwards compatibility
     def interact(self):
         child = self.boot()
-        # We need this in pexpect 2.x or everything will be printed twice
-        child.logfile = None
-        child.interact()
+        console_interaction(child)
+
+def console_interaction(child):
+    # We need this in pexpect 2.x or everything will be printed twice
+    child.logfile = None
+    child.interact()
 
 def login(child):
     child.send("\n")

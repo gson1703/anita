@@ -1,4 +1,4 @@
-.Dd August 25, 2010
+.Dd September 7, 2010
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -9,6 +9,7 @@
 .Op Fl -workdir Ar working_directory
 .Op Fl -qemu-args Ar qemu_arguments
 .Op Fl -disk-size Ar size
+.Op Fl -run Ar command
 .Ar install | boot | test | interact
 .Ar URL
 .Sh DESCRIPTION
@@ -129,6 +130,26 @@ is large enough to hold the OS installation itself, but if you need
 additional space, you can specify a larger size.  The size is given in
 bytes, or a suffix of k, M, G, or T can be used for kilo-, mega-,
 giga-, or terabytes.
+.It Fl -run Ar command
+Log in to the virtual machine and execute the given shell
+.Ar command
+in it once it has booted.  This is only meaningful when used with the
+.Ar boot
+or
+.Ar interact
+command.  Since the command is sent to an interactive shell over the
+console tty, it should be kept short and simple to avoid running into tty
+limitations or quoting issues.  Also, any output from the command that
+looks similar to a root shell "# " prompt is liable to be interpreted
+as such.  Complex commands may be executed by preparing a disk
+image containing a file system containing a shell script, and specifying
+something like
+.Pp
+.Dl --qemu-args '-hdb disk.img' --run 'mount /dev/wd1a /mnt && /mnt/script'
+.Pp
+The exit status of the shell command will be returned as the exit status
+of
+.Nm .
 .El
 .Sh BUGS
 .Nm
@@ -179,3 +200,12 @@ loading the kernel and the kernel printing its first console output,
 which can easily be mistaken for a hang.  Please be patient. This
 issue has been worked around in NetBSD-current; see PR 43156 for
 details.
+.Pp
+While the
+.Ar test
+command is useful as a simple sanity check for a NetBSD release, it
+lacks provisions for exporting detailed test output or otherwise 
+debugging failing tests.  More complex testing setups can be
+implemented using the
+.Fl -run
+option.
