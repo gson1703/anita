@@ -666,7 +666,11 @@ class Anita:
 	# same as the previous one and ignore it if so.
 	#
 	prevmatch = []
+	loop = 0
         while True:
+	    loop = loop + 1
+	    if loop == 10:
+	        raise RuntimeError("loop detected")
 	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|" +
 	        "(Hit enter to continue)|(b: Use serial port com0)|" +
 		"(Please choose the timezone)", 1200)
