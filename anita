@@ -54,7 +54,7 @@ def main(argv = None):
     def maybe_run_command(child):
         if options.run:
 	    anita.login(child)
-	    return anita.shell_cmd(child, options.run)
+	    return anita.shell_cmd(child, options.run, 3600)
 	else:
 	    return 0
 	 

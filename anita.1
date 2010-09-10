@@ -106,12 +106,14 @@ cache directory.  If you remove just the hard disk image file
 .Pa wd0.img ,
 .Ic "anita install" 
 will recreate it from the cached distribution files.
+.Pp
+To ensure that the cached system state is always that of a 
+freshly installed system,
 .Nm
-runs 
+enables the 
 .Ic qemu
-with the 
-.Fl snapshot
-option, so if you log in and make changes to the system, they will not
+snapshotting feature for the system disk (but not for other disks).
+Therefore, if you log in and make changes to the system, they will not
 be saved to the disk image file.
 .Pp
 The following command line options are supported:

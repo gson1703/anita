@@ -415,9 +415,11 @@ class Anita:
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
 
-    def start_qemu(self, qemu_args):
-        child = pexpect.spawn(self.qemu, ["-m", "32", \
-            "-hda", self.wd0_path(), \
+    def start_qemu(self, qemu_args, snapshot_system_disk):
+        child = pexpect.spawn(self.qemu, [
+	    "-m", "32",
+            "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
+	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
             "-nographic"
             ] + qemu_args + self.extra_qemu_args)
 	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
@@ -450,7 +452,7 @@ class Anita:
 	else:
 	    qemu_args += ["-boot", "d"]
 
-        child = self.start_qemu(qemu_args)
+        child = self.start_qemu(qemu_args, snapshot_system_disk = False)
 
         if boot_from_floppy:
 	    # Do the floppy swapping dance
@@ -739,7 +741,7 @@ class Anita:
 
     def boot(self):
         self.install()
-        child = self.start_qemu(["-snapshot"])
+        child = self.start_qemu([], snapshot_system_disk = True)
         # "-net", "nic,model=ne2k_pci", "-net", "user"
         child.expect("login:")
         # Can't close child here because we still need it if called from

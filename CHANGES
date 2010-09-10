@@ -1,3 +1,11 @@
+- 1.15 released -
+
+Increase the timeout for "--run" commands to one hour.
+
+Restrict snapshotting to the system disk, so that additional disks
+mounted for the purpose of exporting data can be persistently
+modified.
+
 - 1.14 released -
 
 Increase the maximum number of boot floppies, as four is no longer
