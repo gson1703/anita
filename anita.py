@@ -779,8 +779,11 @@ class Anita:
 	    "tee /tmp/test.atfraw | " +
 	    "atf-report -o ticker:- -o xml:/tmp/test.atfxml; " +
 	    "{ cd /tmp && " +
+                # To guard against accidentally overwriting the wrong
+                # disk images, check that the disk contains nothing
+                # but nulls.
                 "test `</dev/rwd1a tr -d '\\000' | wc -c` = 0 && " +
-                "disklabel -W /dev/rwd1a && " +
+                # "disklabel -W /dev/rwd1a && " +
                 "tar cf /dev/rwd1a %s; " % " ".join(export_files) +
             "}; " +
 	    "sh -c 'exit `cat /tmp/test.status`'",
