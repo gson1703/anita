@@ -70,8 +70,7 @@ def main(argv = None):
 	status = maybe_run_command(child)    
 	anita.console_interaction(child)
     elif mode == 'test':
-	child = a.boot()
-	status = anita.test(child)
+	a.run_atf_tests()
     else:
 	raise Usage("unknown mode: " + mode)
     return status

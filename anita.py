@@ -428,6 +428,7 @@ class Anita:
         child.log_file = sys.stdout
         child.timeout = 300
         child.setecho(False)
+	self.child = child
         return child
 
     def _install(self):
@@ -743,19 +744,47 @@ class Anita:
                 os.unlink(self.wd0_path())
             raise
 
-    def boot(self):
+    # Boot the virtual machine (installing it first if it's not
+    # installed already).  The qemu_args argument applies when
+    # booting, but not when installing.
+    def boot(self, qemu_args = None):
+        if qemu_args is None:
+            qemu_args = []
         self.install()
-        child = self.start_qemu([], snapshot_system_disk = True)
+        child = self.start_qemu(qemu_args, snapshot_system_disk = True)
         # "-net", "nic,model=ne2k_pci", "-net", "user"
         child.expect("login:")
         # Can't close child here because we still need it if called from
 	# interact()
+	self.child = child
         return child
 
-    # Backwards compatibility
+    # Deprecated
     def interact(self):
         child = self.boot()
         console_interaction(child)
+
+    def run_atf_tests():
+	# Create a scratch disk image for exporting test results from the VM
+	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
+	export_files = ['test.status', 'test.log', 'test.xml']
+        spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '1440k'])
+        child = self.boot(["-drive", "file=%s,index=0,if=floppy,snapshot=off" % scratch_disk_path])
+	login(child)
+        exit_status = shell_cmd(child,
+	    "cd /usr/tests && " +
+            "{ atf-run; echo $? >/tmp/test.status; } | " +
+	    "tee /tmp/test.log | " +
+	    "atf-report -o ticker:- -o xml:/tmp/test.xml; " +
+	    "cd /tmp && tar cf /dev/fd0a %s;" % " ".join(export_files) + 
+	    "sh -c 'exit `cat /tmp/test.status`'",
+            3600)
+	# We give tar an explicit list of files to extract to eliminate
+	# the possibility of an arbitrary file overwrite attack if
+	# anita is used to run an untrusted virtual machine.
+        subprocess.call(["tar", "xf", scratch_disk_path] + export_files,
+	    cwd = self.workdir)
+        return exit_status
 
 def console_interaction(child):
     # We need this in pexpect 2.x or everything will be printed twice
@@ -779,6 +808,7 @@ def shell_cmd(child, cmd, timeout = -1):
     child.expect("(\d+)")
     return int(child.match.group(1))
 
+# Deprecated
 def test(child):
     login(child)
     # We go through some contortions here to return the meaningful exit status
