@@ -765,7 +765,10 @@ class Anita:
         console_interaction(child)
 
     def run_atf_tests(self):
-	# Create a scratch disk image for exporting test results from the VM
+	# Create a scratch disk image for exporting test results from the VM.
+        # The results are stored in tar format because that is more portable
+        # and easier to manipulate than a file system image, especially if the
+        # host is a non-NetBSD system.
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
 	export_files = ['test.atfraw', 'test.atfxml']
         spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '10M'])
@@ -780,7 +783,7 @@ class Anita:
 	    "atf-report -o ticker:- -o xml:/tmp/test.atfxml; " +
 	    "{ cd /tmp && " +
                 # To guard against accidentally overwriting the wrong
-                # disk images, check that the disk contains nothing
+                # disk image, check that the disk contains nothing
                 # but nulls.
                 "test `</dev/rwd1a tr -d '\\000' | wc -c` = 0 && " +
                 # "disklabel -W /dev/rwd1a && " +
