@@ -764,24 +764,26 @@ class Anita:
         child = self.boot()
         console_interaction(child)
 
-    def run_atf_tests():
+    def run_atf_tests(self):
 	# Create a scratch disk image for exporting test results from the VM
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
 	export_files = ['test.status', 'test.log', 'test.xml']
         spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '1440k'])
-        child = self.boot(["-drive", "file=%s,index=0,if=floppy,snapshot=off" % scratch_disk_path])
+        child = self.boot(["-drive",
+                           "file=%s,index=0,if=floppy,snapshot=off" %
+                           scratch_disk_path])
 	login(child)
         exit_status = shell_cmd(child,
 	    "cd /usr/tests && " +
             "{ atf-run; echo $? >/tmp/test.status; } | " +
 	    "tee /tmp/test.log | " +
 	    "atf-report -o ticker:- -o xml:/tmp/test.xml; " +
-	    "cd /tmp && tar cf /dev/fd0a %s;" % " ".join(export_files) + 
+	    "cd /tmp && tar cf /dev/fd0a %s; " % " ".join(export_files) + 
 	    "sh -c 'exit `cat /tmp/test.status`'",
             3600)
 	# We give tar an explicit list of files to extract to eliminate
 	# the possibility of an arbitrary file overwrite attack if
-	# anita is used to run an untrusted virtual machine.
+	# anita is used to test an untrusted virtual machine.
         subprocess.call(["tar", "xf", scratch_disk_path] + export_files,
 	    cwd = self.workdir)
         return exit_status
@@ -808,7 +810,7 @@ def shell_cmd(child, cmd, timeout = -1):
     child.expect("(\d+)")
     return int(child.match.group(1))
 
-# Deprecated
+# Deprecated, use Anita.run_atf_tests
 def test(child):
     login(child)
     # We go through some contortions here to return the meaningful exit status
