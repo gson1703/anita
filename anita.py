@@ -767,18 +767,22 @@ class Anita:
     def run_atf_tests(self):
 	# Create a scratch disk image for exporting test results from the VM
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
-	export_files = ['test.status', 'test.log', 'test.xml']
-        spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '1440k'])
+	export_files = ['test.status', 'test.atf', 'test.xml']
+        spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '10M'])
         child = self.boot(["-drive",
-                           "file=%s,index=0,if=floppy,snapshot=off" %
+                           "file=%s,index=1,media=disk,snapshot=off" %
                            scratch_disk_path])
 	login(child)
         exit_status = shell_cmd(child,
 	    "cd /usr/tests && " +
             "{ atf-run; echo $? >/tmp/test.status; } | " +
-	    "tee /tmp/test.log | " +
+	    "tee /tmp/test.atf | " +
 	    "atf-report -o ticker:- -o xml:/tmp/test.xml; " +
-	    "cd /tmp && tar cf /dev/fd0a %s; " % " ".join(export_files) + 
+	    "{ cd /tmp && " +
+                "test `</dev/rwd1a tr -d '\\000' | wc -c` = 0 && " +
+                "disklabel -W /dev/rwd1a && " +
+                "tar cf /dev/rwd1a %s; " % " ".join(export_files) +
+            "}; " +
 	    "sh -c 'exit `cat /tmp/test.status`'",
             3600)
 	# We give tar an explicit list of files to extract to eliminate
