@@ -767,7 +767,7 @@ class Anita:
     def run_atf_tests(self):
 	# Create a scratch disk image for exporting test results from the VM
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
-	export_files = ['test.status', 'test.atf', 'test.xml']
+	export_files = ['test.atf', 'test.xml']
         spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '10M'])
         child = self.boot(["-drive",
                            "file=%s,index=1,media=disk,snapshot=off" %
