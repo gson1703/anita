@@ -771,6 +771,7 @@ class Anita:
         # host is a non-NetBSD system.
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
 	export_files = ['test.atfraw', 'test.atfxml']
+        # not yet: 'test-results.xsl', 'test-results.css'
         spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '10M'])
         child = self.boot(["-drive",
                            "file=%s,index=1,media=disk,snapshot=off" %
