@@ -51,9 +51,20 @@ with
 When you are done interacting with the virtual machine, you can kill it by
 typing control-a x.
 .Pp
-To run the NetBSD regression test suite on the installed system, use
+To run the NetBSD ATF regression test suite on the installed system, use
 .Pp
 .Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
+.Pp
+This will display the 
+.Cm atf-report 
+output on standard output.  A copy of the raw 
+.Cm atf-run 
+output will be saved in the file
+.Pa test.atfraw
+in the cache directory, and the output from 
+.Cm "atf-report -o xml"
+will be saved in the file
+.Pa test.atfxml .
 .Pp
 To install a snapshot, use something like the following (adjusting
 the URL to point to a current snapshot):
@@ -202,12 +213,3 @@ loading the kernel and the kernel printing its first console output,
 which can easily be mistaken for a hang.  Please be patient. This
 issue has been worked around in NetBSD-current; see PR 43156 for
 details.
-.Pp
-While the
-.Ar test
-command is useful as a simple sanity check for a NetBSD release, it
-lacks provisions for exporting detailed test output or otherwise 
-debugging failing tests.  More complex testing setups can be
-implemented using the
-.Fl -run
-option.

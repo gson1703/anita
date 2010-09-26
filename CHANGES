@@ -1,3 +1,8 @@
+The "test" command now exports copies of the ATF raw and XML
+output to the host.
+
+Add support for FreeBSD hosts, from Kurt Lidl.
+
 - 1.15 released -
 
 Increase the timeout for "--run" commands to one hour.
