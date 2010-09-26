@@ -1,0 +1,3 @@
+To install anita, run the following command as root:
+
+	python setup.py install
