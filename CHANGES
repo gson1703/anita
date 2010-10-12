@@ -1,3 +1,5 @@
+Aded a rudimentary INSTALL file.
+
 The "test" command now exports copies of the ATF raw and XML
 output to the host.
 
