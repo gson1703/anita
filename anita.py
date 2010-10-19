@@ -772,7 +772,7 @@ class Anita:
         # and easier to manipulate than a file system image, especially if the
         # host is a non-NetBSD system.
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
-	export_files = ['test.run', 'test.xml']
+	export_files = ['test.tps', 'test.xml']
         # not yet: 'test-results.xsl', 'test-results.css'
         spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '10M'])
         child = self.boot(["-drive",
@@ -782,7 +782,7 @@ class Anita:
         exit_status = shell_cmd(child,
 	    "cd /usr/tests && " +
             "{ atf-run; echo $? >/tmp/test.status; } | " +
-	    "tee /tmp/test.run | " +
+	    "tee /tmp/test.tps | " +
 	    "atf-report -o ticker:- -o xml:/tmp/test.xml; " +
 	    "{ cd /tmp && " +
                 # To guard against accidentally overwriting the wrong
