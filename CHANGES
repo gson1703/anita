@@ -1,7 +1,11 @@
-Aded a rudimentary INSTALL file.
+Added a rudimentary INSTALL file.
 
-The "test" command now exports copies of the ATF raw and XML
-output to the host.
+The "misc" set is now installed by default, as it is required for
+the ATF XML DTD, XSL files, and style sheets.
+
+The "test" command now exports the raw and XML format ATF output
+to the host, along with some auxiliary files needed for further
+processing of the XML output.
 
 Add support for FreeBSD hosts, from Kurt Lidl.
 

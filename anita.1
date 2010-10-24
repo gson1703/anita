@@ -1,4 +1,4 @@
-.Dd September 7, 2010
+.Dd October 24, 2010
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -57,14 +57,24 @@ To run the NetBSD ATF regression test suite on the installed system, use
 .Pp
 This will display the 
 .Cm atf-report 
-output on standard output.  A copy of the raw 
+output on standard output.  Additionally, a subdirectory
+.Pa atf/
+is created under the cache directory, and will contain various
+output from the ATF test suite: the raw
 .Cm atf-run 
-output will be saved in the file
-.Pa test.tps
-in the cache directory, and the output from 
+output in
+.Pa test.tps ,
+the output from 
 .Cm "atf-report -o xml"
-will be saved in the file
-.Pa test.xml .
+in
+.Pa test.xml ,
+and to facilitate the further processing of the XML output into HTML,
+the files
+.Pa tests-results.xsl ,
+.Pa tests-results.dtd ,
+and 
+.Pa tests-results.css
+are also included.
 .Pp
 To install a snapshot, use something like the following (adjusting
 the URL to point to a current snapshot):

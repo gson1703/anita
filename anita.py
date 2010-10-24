@@ -185,7 +185,7 @@ class Version:
       ( 'comp', 'Compiler Tools', 1, 0 ),
       ( 'games', 'Games', 0, 0 ),
       ( 'man', 'Online Manual Pages', 0, 0 ),
-      ( 'misc', 'Miscellaneous', 0, 0 ),
+      ( 'misc', 'Miscellaneous', 1, 0 ),
       ( 'tests', 'Test programs', 1, 1 ),
       ( 'text', 'Text Processing Tools', 0, 0 ),
     ]
@@ -772,7 +772,9 @@ class Anita:
         # and easier to manipulate than a file system image, especially if the
         # host is a non-NetBSD system.
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
-	export_files = ['test.tps', 'test.xml']
+        atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
+                         '/usr/share/xml/atf/tests-results.dtd',
+                         '/usr/share/examples/atf/tests-results.css']
         # not yet: 'test-results.xsl', 'test-results.css'
         spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '10M'])
         child = self.boot(["-drive",
@@ -780,24 +782,28 @@ class Anita:
                            scratch_disk_path])
 	login(child)
         exit_status = shell_cmd(child,
+	    "mkdir /tmp/atf && " +                                
 	    "cd /usr/tests && " +
-            "{ atf-run; echo $? >/tmp/test.status; } | " +
-	    "tee /tmp/test.tps | " +
-	    "atf-report -o ticker:- -o xml:/tmp/test.xml; " +
+            "{ atf-run; echo $? >/tmp/atf/test.status; } | " +
+	    "tee /tmp/atf/test.tps | " +
+	    "atf-report -o ticker:- -o xml:/tmp/atf/test.xml; " +
 	    "{ cd /tmp && " +
+                "for f in %s; do cp $f atf/; done; " % ' '.join(atf_aux_files) +
+                # Make sure the files will fit on the scratch disk
+                "test `du -sk atf | awk '{print $1}'` -lt 9000 &&" +
                 # To guard against accidentally overwriting the wrong
                 # disk image, check that the disk contains nothing
                 # but nulls.
                 "test `</dev/rwd1d tr -d '\\000' | wc -c` = 0 && " +
                 # "disklabel -W /dev/rwd1d && " +
-                "tar cf /dev/rwd1d %s; " % " ".join(export_files) +
+                "tar cf /dev/rwd1d atf; "+
             "}; " +
-	    "sh -c 'exit `cat /tmp/test.status`'",
+	    "sh -c 'exit `cat /tmp/atf/test.status`'",
             3600)
 	# We give tar an explicit list of files to extract to eliminate
 	# the possibility of an arbitrary file overwrite attack if
 	# anita is used to test an untrusted virtual machine.
-        subprocess.call(["tar", "xf", scratch_disk_path] + export_files,
+        subprocess.call(["tar", "xf", scratch_disk_path, "atf"],
 	    cwd = self.workdir)
         return exit_status
 
