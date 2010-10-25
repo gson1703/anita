@@ -170,12 +170,22 @@ def check_arch_supported(arch, dist_type):
 #        the name of the machine architecture the version is for
 
 class Version:
-    # Information about the available installation file sets.
-    # Each is a tuple of four fields:
+    # Information about the available installation file sets.  As the
+    # set of sets (sic) has evolved over time, this actually represents
+    # the union of those sets of sets, in other words, this list should
+    # contain all currently and historically known sets, with the
+    # exception of the X11 sets which are handled specially.
+    #
+    # This list is used for to determine
+    # - Which sets we should attempt to download
+    # - Which sets we should install by default
+    #
+    # Each array element is a tuple of four fields:
     #   - the file name
     #   - the label used by sysinst
     #   - a flag indicating that the set should be installed by default
     #   - a flag indicating that the set is not present in all versions
+    #
     sets = [
       ( 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ),
       ( 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0, 1 ),
