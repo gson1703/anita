@@ -687,9 +687,7 @@ class Anita:
 	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|" +
 	        "(Hit enter to continue)|(b: Use serial port com0)|" +
 		"(Please choose the timezone)", 1200)
-            print "GROUPS", child.match.groups()
 	    if child.match.groups() == prevmatch:
-	        print "PREVMATCH"
 	        continue
 	    prevmatch = child.match.groups()
 	    if child.match.group(1):
