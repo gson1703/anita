@@ -186,7 +186,8 @@ class Version:
     #   - a flag indicating that the set should be installed by default
     #   - a flag indicating that the set is not present in all versions
     #
-    sets = [
+    sets = [dict(zip(['filename', 'label', 'install', 'optional'],
+                     list(t))) for t in [
       ( 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ),
       ( 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0, 1 ),
       ( 'modules', 'Kernel Modules', 1, 1 ),
@@ -198,7 +199,7 @@ class Version:
       ( 'misc', 'Miscellaneous', 1, 0 ),
       ( 'tests', 'Test programs', 1, 1 ),
       ( 'text', 'Text Processing Tools', 0, 0 ),
-    ]
+    ]]
     def __init__(self):
         self.tempfiles = []
     def set_workdir(self, dir):
@@ -248,13 +249,13 @@ class Version:
                 i >= 2)
             i = i + 1
 
-        for set in Version.sets:
-            (fn, label, enable, optional) = set
-            if enable:
+        for set in self.sets:
+            if set['install']:
                 download_if_missing(self.dist_url(),
-                                    self.download_local_arch_dir(), \
-                                    os.path.join("binary/sets", fn + ".tgz"),
-                                    optional)
+                                    self.download_local_arch_dir(),
+                                    os.path.join("binary/sets",
+                                                 set['filename'] + ".tgz"),
+                                    set['optional'])
 
     # Create an install ISO image to install from
     def make_iso(self):
@@ -570,15 +571,15 @@ class Anita:
             if label == 'X11 sets':
                 x11_state = yesno
                 x11_letter = letter
-            for set in Version.sets:
-                (fn, setlabel, enable, optional) = set
+            for set in self.dist.sets:
                 # Could use RE match here fore more flexibility
-		if label == setlabel:
-                    setinfo[fn] = { 'letter': letter, 'state': yesno }
+                if label == set['label']:
+                    setinfo[set['filename']] = { 'letter': letter, 'state': yesno }
 
         # Then make the actual selections
-        for set in Version.sets:
-            (fn, setlabel, enable, optional) = set
+        for set in self.dist.sets:
+            fn = set['filename']
+            enable = set['install']
             info = setinfo.get(fn)
             if info is None:
                 continue
