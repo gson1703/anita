@@ -1,3 +1,5 @@
+New command line option "--sets".
+
 Added a rudimentary INSTALL file.
 
 The "misc" set is now installed by default, as it is required for

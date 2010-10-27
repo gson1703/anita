@@ -23,12 +23,24 @@ def main(argv = None):
 		      metavar="SIZE")
     parser.add_option("--run",
 		      help="run COMMAND on the virtual machine after boot", metavar="COMMAND")
+    parser.add_option("--sets",
+		      help="install the distribution SETS (e.g., base,games)", metavar="SETS")
     (options, args) = parser.parse_args()
 
     if len(args) < 2:
 	raise Usage("not enough arguments")
 
     distarg = args[1]
+
+    if options.qemu_args:
+        qemu_args = options.qemu_args.split()
+    else:
+        qemu_args = []
+
+    if options.sets:
+        sets = options.sets.split(",")
+    else:
+        sets = None
 
     if re.search(r'\.iso$', distarg):
         dist = anita.ISO(distarg)
@@ -39,14 +51,9 @@ def main(argv = None):
     elif re.match(r'[a-z0-9\.0-]+:', distarg):
 	if not re.search(r'/$', distarg):
 	    raise Usage("distribution URL should end in a slash")
-	dist = anita.URL(distarg)
+	dist = anita.URL(distarg, sets = sets)
     else:
 	raise Usage("expected distribution URL or directory, got " + distarg)
-
-    if options.qemu_args:
-        qemu_args = options.qemu_args.split()
-    else:
-        qemu_args = []
 
     a = anita.Anita(dist, workdir = options.workdir, qemu_args = qemu_args,
         disk_size = options.disk_size)
@@ -57,11 +64,10 @@ def main(argv = None):
 	    return anita.shell_cmd(child, options.run, 3600)
 	else:
 	    return 0
-	 
     status = 0
     mode = args[0]
     if mode == 'install':
-	a.install()
+	a.install(sets)
     elif mode == 'boot':
 	child = a.boot()
 	status = maybe_run_command(child)

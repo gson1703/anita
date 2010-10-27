@@ -10,6 +10,7 @@
 .Op Fl -qemu-args Ar qemu_arguments
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
+.Op Fl -sets Ar sets
 .Ar install | boot | test | interact
 .Ar URL
 .Sh DESCRIPTION
@@ -137,6 +138,7 @@ snapshotting feature for the system disk (but not for other disks).
 Therefore, if you log in and make changes to the system, they will not
 be saved to the disk image file.
 .Pp
+.Sh OPTIONS
 The following command line options are supported:
 .Bl -tag -width indent
 .It Fl -workdir Ar directory
@@ -173,6 +175,14 @@ something like
 The exit status of the shell command will be returned as the exit status
 of
 .Nm .
+.It Fl -sets Ar sets
+The distribution sets to install, as a comma-separated list.
+For a minimal install, use something like
+.Pp
+.Dl --sets kern-GENERIC,modules,base,etc
+.Pp
+A kernel, base, and etc must always be included.  Installing the X sets is
+not supported.
 .El
 .Sh BUGS
 .Nm

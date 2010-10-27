@@ -331,7 +331,7 @@ class LocalBuild(NumberedVersion):
 # The top-level URL of a release tree
 
 class URL(Version):
-    def __init__(self, url):
+    def __init__(self, url, sets = None):
         Version.__init__(self)
         self.url = url
 	match = re.search(r'/([^/]+)/$', url)
@@ -340,6 +340,22 @@ class URL(Version):
 	    "NetBSD distribution") % url)
         self.m_arch = match.group(1)
 	check_arch_supported(self.m_arch, 'reltree')
+        if sets is not None:
+            if not any([re.match('kern-', s) for s in sets]):
+                raise RuntimeError("no kernel set specified");
+            # Create a Python set containing the names of the NetBSD sets we
+            # want for O(1) lookup.  Yes, the multiple meansings of the word
+            # "set" here are confusing.
+            sets_wanted = set(sets)
+            for required in ['base', 'etc']:
+                if not required in sets_wanted:
+                    raise RuntimeError("the '%s' set is required", required);
+            for s in self.sets:
+                s['install'] = (s['filename'] in sets_wanted)
+                sets_wanted.discard(s['filename'])
+            if len(sets_wanted):
+                raise RuntimeError("no such set: " + sets_wanted.pop())
+        
     def dist_url(self):
         return self.url
     def iso_name(self):
@@ -683,12 +699,13 @@ class Anita:
 	loop = 0
         while True:
 	    loop = loop + 1
-	    if loop == 10:
+	    if loop == 20:
 	        raise RuntimeError("loop detected")
 	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|" +
 	        "(Hit enter to continue)|(b: Use serial port com0)|" +
 		"(Please choose the timezone)", 1200)
 	    if child.match.groups() == prevmatch:
+                # print "DUP: " + str(prevmatch)
 	        continue
 	    prevmatch = child.match.groups()
 	    if child.match.group(1):
@@ -742,7 +759,7 @@ class Anita:
         child.close()
         self.dist.cleanup()
 
-    # Install this version of NetBSD if not installed already
+    # Install NetBSD if not installed already
 
     def install(self):
         # Already installed?
