@@ -6,7 +6,6 @@ python=python2.6	# on guesthouse
 set -x
 
 #./anita install /usr/build/20080708-1545/release/iso/i386cd.iso
-#./anita install http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-3.1/i386/  - no longer at funet
 
 rm -f work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-archive-NetBSD-3.0.1-i386-+a4c39c54/wd0.img # XXX
 $python ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-3.0.1/i386/
