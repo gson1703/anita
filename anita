@@ -67,7 +67,7 @@ def main(argv = None):
     status = 0
     mode = args[0]
     if mode == 'install':
-	a.install(sets)
+	a.install()
     elif mode == 'boot':
 	child = a.boot()
 	status = maybe_run_command(child)
