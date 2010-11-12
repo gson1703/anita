@@ -65,7 +65,7 @@ output files from the ATF test suite: the raw
 .Cm atf-run 
 output in
 .Pa test.tps ,
-the output from 
+and the output from 
 .Cm "atf-report -o xml"
 in
 .Pa test.xml .
@@ -205,20 +205,20 @@ Installing NetBSD releases older than 2.1 has not been tested.
 .Pp
 NetBSD/i386 releases older than 4.0 will install, but when booting
 the installed image, they hang after the "root on ffs" message.
-This is presumed to be a bug in 
-.Ic qemu .
 .Pp
 NetBSD/i386 versions older than 2009-06-13 13:35:11 fail to find 
 any PCI buses when run under qemu; see PRs 38729 and 42681.
 .Pp
-When
+When 
 .Nm
-is run under Linux, using a version of qemu that enables the
-"kvm" kernel-mode virtualization by default, the emulated
-NetBSD system hangs while probing the floppy drive.  This can be
-worked around by passing Anita the command line option
+is run on a Linux host using a version of qemu that enables the
+"kvm" kernel-mode virtualization by default, and is used to
+boot a version of NetBSD-current newer than 2009-11-04 
+14:39:17, the emulated NetBSD system hangs during boot; see
+PR 44069 for details.  This issue can be worked 
+around by passing Anita the command line option
 .Fl -qemu-args 
-.Ar -no-kvm .
+.Ar -no-kvm-irqchip .
 .Pp
 Running multithreaded programs (such as the ATF test suite) on
 an emulated i386 or amd64 system requires qemu patches that are in
