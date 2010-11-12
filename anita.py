@@ -70,7 +70,7 @@ def my_urlretrieve(url, filename):
 
 def download_file(file, url):
     try:
-        print "Downloading", url, "..."
+        print "Downloading", url + "..."
         my_urlretrieve(url, file)
     except:
         if os.path.exists(file):
