@@ -705,7 +705,6 @@ class Anita:
 	        "(Hit enter to continue)|(b: Use serial port com0)|" +
 		"(Please choose the timezone)", 1200)
 	    if child.match.groups() == prevmatch:
-                # print "DUP: " + str(prevmatch)
 	        continue
 	    prevmatch = child.match.groups()
 	    if child.match.group(1):
