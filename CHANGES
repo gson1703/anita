@@ -1,6 +1,12 @@
+- 1.16 released -
+
+Update the discussion of Linux KVM virtualization compatibility in the
+BUGS section, noting the --qemu-args -no-kvm-irqchip workaround and
+including a reference to PR 44069.
+
 New command line option "--sets".
 
-Added a rudimentary INSTALL file.
+Add a rudimentary INSTALL file.
 
 The "misc" set is now installed by default, as it is required for
 the ATF XML DTD, XSL files, and style sheets.
