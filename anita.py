@@ -173,8 +173,8 @@ class Version:
     # Information about the available installation file sets.  As the
     # set of sets (sic) has evolved over time, this actually represents
     # the union of those sets of sets, in other words, this list should
-    # contain all currently and historically known sets, with the
-    # exception of the X11 sets which are handled specially.
+    # contain all currently and historically known sets.  The X11 sets
+    # are not included.
     #
     # This list is used for to determine
     # - Which sets we should attempt to download
@@ -825,7 +825,7 @@ class Anita:
             "}; " +
 	    "sh -c 'exit `cat /tmp/atf/test.status`'",
             3600)
-	# We give tar an explicit list of files to extract to eliminate
+	# We give tar an explicit path to extract to guard against
 	# the possibility of an arbitrary file overwrite attack if
 	# anita is used to test an untrusted virtual machine.
         subprocess.call(["tar", "xf", scratch_disk_path, "atf"],
