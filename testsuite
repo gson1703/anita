@@ -1,7 +1,6 @@
 exec >testsuite.log 2>&1
 
-python=python2.6	# on guesthouse
-#python=python2.4	# on guru
+python=python2.6	# on guesthouse or guru
 
 set -x
 
