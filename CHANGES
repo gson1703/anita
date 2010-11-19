@@ -1,3 +1,10 @@
+- 1.17 released -
+
+Fix bugs in the new features introduced in 1.16: the --sets option
+only worked when passing the URL of a distribution directory (rather
+than a pathname or the url of an ISO), and exporting of ATF output
+only worked when using --workdir with an abolute pathname.
+
 - 1.16 released -
 
 Update the discussion of Linux KVM virtualization compatibility in the

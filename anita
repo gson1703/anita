@@ -43,11 +43,11 @@ def main(argv = None):
         sets = None
 
     if re.search(r'\.iso$', distarg):
-        dist = anita.ISO(distarg)
+        dist = anita.ISO(distarg, sets = sets)
     elif re.match(r'/', distarg):
 	if not re.search(r'/$', distarg):
 	    raise Usage("distribution directory should end in a slash")
-	dist = anita.LocalDirectory(distarg)
+	dist = anita.LocalDirectory(distarg, sets = sets)
     elif re.match(r'[a-z0-9\.0-]+:', distarg):
 	if not re.search(r'/$', distarg):
 	    raise Usage("distribution URL should end in a slash")

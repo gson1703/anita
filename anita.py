@@ -200,8 +200,24 @@ class Version:
       ( 'tests', 'Test programs', 1, 1 ),
       ( 'text', 'Text Processing Tools', 0, 0 ),
     ]]
-    def __init__(self):
+    def __init__(self, sets = None):
         self.tempfiles = []
+        if sets is not None:
+            if not any([re.match('kern-', s) for s in sets]):
+                raise RuntimeError("no kernel set specified");
+            # Create a Python set containing the names of the NetBSD sets we
+            # want for O(1) lookup.  Yes, the multiple meansings of the word
+            # "set" here are confusing.
+            sets_wanted = set(sets)
+            for required in ['base', 'etc']:
+                if not required in sets_wanted:
+                    raise RuntimeError("the '%s' set is required", required);
+            for s in self.sets:
+                s['install'] = (s['filename'] in sets_wanted)
+                sets_wanted.discard(s['filename'])
+            if len(sets_wanted):
+                raise RuntimeError("no such set: " + sets_wanted.pop())
+        
     def set_workdir(self, dir):
         self.workdir = dir
     # The directory where we mirror files needed for installation
@@ -260,10 +276,9 @@ class Version:
     # Create an install ISO image to install from
     def make_iso(self):
         self.download()
-        if not os.path.exists(self.iso_path()):
-	    spawn(makefs[0], makefs + \
-		[self.iso_path(), self.download_local_mi_dir()])
-            self.tempfiles.append(self.iso_path())
+        spawn(makefs[0], makefs + \
+            [self.iso_path(), self.download_local_mi_dir()])
+        self.tempfiles.append(self.iso_path())
 
     # Get the architecture name.  This is a hardcoded default for use
     # by the obsolete subclasses; the "URL" class overrides it.
@@ -281,8 +296,8 @@ class Version:
 # Subclass for versions where we pass in the version number explicitly
 
 class NumberedVersion(Version):
-    def __init__(self, ver):
-        Version.__init__(self)
+    def __init__(self, ver, **kwargs):
+        Version.__init__(self, **kwargs)
         self.ver = ver
     # The file name of the install ISO (sans directory)
     def iso_name(self):
@@ -297,8 +312,8 @@ class NumberedVersion(Version):
 # An official NetBSD release
 
 class Release(NumberedVersion):
-    def __init__(self, ver):
-        NumberedVersion.__init__(self, ver)
+    def __init__(self, ver, **kwargs):
+        NumberedVersion.__init__(self, ver, **kwargs)
         pass
     def dist_url(self):
         return netbsd_mirror_url + "NetBSD-" + self.ver + "/i386/"
@@ -306,9 +321,9 @@ class Release(NumberedVersion):
 # A daily build
 
 class DailyBuild(NumberedVersion):
-    def __init__(self, branch, timestamp):
+    def __init__(self, branch, timestamp, **kwargs):
         ver = re.sub("^netbsd-", "", branch)
-        NumberedVersion.__init__(self, ver)
+        NumberedVersion.__init__(self, ver, **kwargs)
         self.timestamp = timestamp
     def default_workdir(self):
         return NumberedVersion.default_workdir(self) + "-" + self.timestamp
@@ -322,8 +337,8 @@ class DailyBuild(NumberedVersion):
 # A local build
 
 class LocalBuild(NumberedVersion):
-    def __init__(self, ver, release_path):
-        NumberedVersion.__init__(self, ver)
+    def __init__(self, ver, release_path, **kwargs):
+        NumberedVersion.__init__(self, ver, **kwargs)
         self.release_path = release_path
     def dist_url(self):
         return "file://" + self.release_path + "/i386/"
@@ -331,8 +346,8 @@ class LocalBuild(NumberedVersion):
 # The top-level URL of a release tree
 
 class URL(Version):
-    def __init__(self, url, sets = None):
-        Version.__init__(self)
+    def __init__(self, url, **kwargs):
+        Version.__init__(self, **kwargs)
         self.url = url
 	match = re.search(r'/([^/]+)/$', url)
 	if match is None:
@@ -340,21 +355,6 @@ class URL(Version):
 	    "NetBSD distribution") % url)
         self.m_arch = match.group(1)
 	check_arch_supported(self.m_arch, 'reltree')
-        if sets is not None:
-            if not any([re.match('kern-', s) for s in sets]):
-                raise RuntimeError("no kernel set specified");
-            # Create a Python set containing the names of the NetBSD sets we
-            # want for O(1) lookup.  Yes, the multiple meansings of the word
-            # "set" here are confusing.
-            sets_wanted = set(sets)
-            for required in ['base', 'etc']:
-                if not required in sets_wanted:
-                    raise RuntimeError("the '%s' set is required", required);
-            for s in self.sets:
-                s['install'] = (s['filename'] in sets_wanted)
-                sets_wanted.discard(s['filename'])
-            if len(sets_wanted):
-                raise RuntimeError("no such set: " + sets_wanted.pop())
         
     def dist_url(self):
         return self.url
@@ -368,15 +368,15 @@ class URL(Version):
 # A local release directory
 
 class LocalDirectory(URL):
-    def __init__(self, dir):
+    def __init__(self, dir, **kwargs):
         # This could be optimized to avoid copying the files
-        URL.__init__(self, "file://" + dir)
+        URL.__init__(self, "file://" + dir, **kwargs)
 
 # An URL or local file name pointing at an ISO image
 
 class ISO(Version):
-    def __init__(self, iso_url):
-        Version.__init__(self)
+    def __init__(self, iso_url, **kwargs):
+        Version.__init__(self, **kwargs)
         if re.match(r'/', iso_url):
 	    self.m_iso_url = "file://" + iso_url
 	    self.m_iso_path = iso_url
@@ -828,8 +828,9 @@ class Anita:
 	# We give tar an explicit path to extract to guard against
 	# the possibility of an arbitrary file overwrite attack if
 	# anita is used to test an untrusted virtual machine.
-        subprocess.call(["tar", "xf", scratch_disk_path, "atf"],
-	    cwd = self.workdir)
+        tarfile = open(scratch_disk_path, "r")
+        subprocess.call(["tar", "xf", "-", "atf"],
+	    cwd = self.workdir, stdin = tarfile)
         return exit_status
 
 def console_interaction(child):
