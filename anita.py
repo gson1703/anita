@@ -695,6 +695,12 @@ class Anita:
 	# a subsequent prompt.  Therefore, we check whether the match is the
 	# same as the previous one and ignore it if so.
 	#
+        # OTOH, -current as of 2009.08.23.20.57.40 will issue the message "Hit 
+        # enter to continue" twice in a row, first as a result of MAKEDEV 
+        # printing a warning messages "MAKEDEV: dri0: unknown device", and 
+        # then after "sysinst will give you the opportunity to configure 
+        # some essential things first".  We match the latter text separately
+        # so that the "Hit enter to continue" matches are not consecutive.
 	prevmatch = []
 	loop = 0
         while True:
@@ -703,7 +709,7 @@ class Anita:
 	        raise RuntimeError("loop detected")
 	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|" +
 	        "(Hit enter to continue)|(b: Use serial port com0)|" +
-		"(Please choose the timezone)", 1200)
+		"(Please choose the timezone)|(essential things)", 1200)
 	    if child.match.groups() == prevmatch:
 	        continue
 	    prevmatch = child.match.groups()
@@ -728,6 +734,9 @@ class Anita:
 	    elif child.match.group(7):
 	        # (Please choose the timezone)
 		break
+	    elif child.match.group(8):
+                # (essential things)
+                pass
 	    else:
 	        raise AssertionError
 
@@ -815,7 +824,7 @@ class Anita:
 	    "{ cd /tmp && " +
                 "for f in %s; do cp $f atf/; done; " % ' '.join(atf_aux_files) +
                 # Make sure the files will fit on the scratch disk
-                "test `du -sk atf | awk '{print $1}'` -lt 9000 &&" +
+                "test `du -sk atf | awk '{print $1}'` -lt 9000 && " +
                 # To guard against accidentally overwriting the wrong
                 # disk image, check that the disk contains nothing
                 # but nulls.

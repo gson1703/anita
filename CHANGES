@@ -1,3 +1,6 @@
+Fix installation of historical versions of -current around
+CVS date 2009.08.23.20.57.40.
+
 - 1.17 released -
 
 Fix bugs in the new features introduced in 1.16: the --sets option
