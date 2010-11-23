@@ -77,6 +77,8 @@ def main(argv = None):
 	anita.console_interaction(child)
     elif mode == 'test':
 	status = a.run_atf_tests()
+    elif mode == 'print-workdir':
+        print a.workdir
     else:
 	raise Usage("unknown mode: " + mode)
     return status

@@ -11,7 +11,7 @@
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
 .Op Fl -sets Ar sets
-.Ar install | boot | test | interact
+.Ar mode
 .Ar URL
 .Sh DESCRIPTION
 .Nm
@@ -56,26 +56,6 @@ To run the ATF regression test suite on the installed system, use
 .Pp
 .Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 .Pp
-This will display the 
-.Cm atf-report 
-output on standard output.  Additionally, a subdirectory
-.Pa atf/
-is created under the cache directory, and will contain
-output files from the ATF test suite: the raw
-.Cm atf-run 
-output in
-.Pa test.tps ,
-and the output from 
-.Cm "atf-report -o xml"
-in
-.Pa test.xml .
-To facilitate the further processing of the XML output into HTML,
-the files
-.Pa tests-results.xsl ,
-.Pa tests-results.dtd ,
-and 
-.Pa tests-results.css
-are also included.
 .Pp
 To install a snapshot, use something like the following (adjusting
 the URL to point to a current snapshot):
@@ -138,6 +118,57 @@ snapshotting feature for the system disk (but not for other disks).
 Therefore, if you log in and make changes to the system, they will not
 be saved to the disk image file.
 .Pp
+.Sh MODES
+The operation performed by 
+.Nm 
+is determined by the 
+.Ar mode
+argument, which takes the following values:
+.Bl -tag -width indent
+.It Ar install
+Install NetBSD if not already installed.
+.It Ar boot
+Install NetBSD if not already installed, then boot the 
+installed system.
+.It Ar interact
+Install NetBSD if not already installed, then boot it and connect
+the serial console to the terminal for interactive use.  The 
+.Cm qemu
+escape character control-a is in effect; for example, you can use
+control-a x to exit, control-a c to enter the
+.Cm qemu
+monitor, or control-a b to send a break (useful for entering DDB).
+.It Ar test
+Install NetBSD if not already installed, then boot it and 
+run the ATF test suite.  The 
+.Cm atf-report 
+output will be displayed on standard output.  Additionally, a
+subdirectory
+.Pa atf/
+is created under the cache directory, and will contain
+output files from the ATF test suite: the raw
+.Cm atf-run 
+output in
+.Pa test.tps ,
+and the output from 
+.Cm "atf-report -o xml"
+in
+.Pa test.xml .
+To facilitate the further processing of the XML output into HTML,
+the files
+.Pa tests-results.xsl ,
+.Pa tests-results.dtd ,
+and 
+.Pa tests-results.css
+are also included.
+.It Ar print-workdir
+Print the pathname of the cache directory on standard output.
+This is intended for use by scripts that need to access files
+in the cache directory, particularly when the
+.Fl -workdir
+option is not used but the name of the directory is automatically
+generated.
+.El
 .Sh OPTIONS
 The following command line options are supported:
 .Bl -tag -width indent

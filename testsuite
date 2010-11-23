@@ -8,17 +8,21 @@ set -x -e
 
 #./anita install /usr/build/20080708-1545/release/iso/i386cd.iso
 
-rm -f work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-archive-NetBSD-2.1-i386-+a4c39c54
-$python ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-2.1/i386/
+runtest() {
+    mode=$1
+    shift
+    workdir=`$python ./anita print-workdir "$@"`
+    rm -f $workdir/wd0.img
+    $python ./anita $mode "$@"
+}
 
-rm -f work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-archive-NetBSD-3.0.1-i386-+a4c39c54/wd0.img # XXX
-$python ./anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-3.0.1/i386/
+runtest install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-2.1/i386/
 
-rm -f work-http---ftp.fi.netbsd.org-pub-NetBSD-NetBSD-4.0-i386-+a4c42/wd0.img
-$python ./anita boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
+runtest install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-3.0.1/i386/
 
-rm -f work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-5.0.2-i386-+a4c39/wd0.img
-$python ./anita boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
+runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
+
+runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 
 # Anita 1.2 compatibility.
 $python <<END
@@ -27,13 +31,15 @@ ver = anita.Release("5.0.2")
 ver.install()
 END
 
-rm -f work-http---ftp.netbsd.org-pub-NetBSD-iso-5.0.2-sparccd-5.0.2.iso+a4c50/wd0.img
 $python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso | tee stdout
 grep "127 9721" stdout
 rm -f stdout
 
-rm -f work-http---ftp.fi.netbsd.org-pub-NetBSD-NetBSD-5.1-i386-+a4c42/wd0.img
-$python ./anita --sets=kern-GENERIC,etc,base,tests,games test http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.1/i386/ | tee stdout || true
+url=http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.1/i386/
+workdir=`$python ./anita print-workdir $url`
+rm -f $workdir/wd0.img
+$python ./anita --sets=kern-GENERIC,etc,base,tests,games test $url | tee stdout || true
 grep 'passed test cases' stdout
+rm -f stdout
 
 echo "pass"

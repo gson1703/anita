@@ -1,3 +1,7 @@
+Reorganized the man page, adding a MODES section.
+
+New mode "print-workdir".
+
 Fix installation of historical versions of -current around
 CVS date 2009.08.23.20.57.40.
 
