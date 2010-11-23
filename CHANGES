@@ -1,3 +1,6 @@
+Fix incorrect description of the --workdir option in the man page, and
+consistently use the term "work directory" throughout.
+
 Reorganized the man page, adding a MODES section.
 
 New mode "print-workdir".

@@ -6,7 +6,7 @@
 .Nd Automated NetBSD Installation and Test Application
 .Sh SYNOPSIS
 .Nm
-.Op Fl -workdir Ar working_directory
+.Op Fl -workdir Ar work_directory
 .Op Fl -qemu-args Ar qemu_arguments
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
@@ -81,22 +81,22 @@ serial console, recognizing sysinst prompts and sending canned
 responses.
 .Pp
 .Nm
-will create a subdirectory under the current working directory
-and cache the distribution sets, boot floppies, and a hard disk image
-in it.  The directory name will be a unique name generated from the
-URL, for example,
+will create a work directory and cache the distribution sets, boot 
+floppies, and a hard disk image in it.  By default, the work directory
+is a subdirectory of the current working directory, with a unique
+name automatically generated from the distribution URL, for example,
 .Pp
 .Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-5.0.2-i386-+a4c39
 .Pp
-To put the cache directory somewhere other than your current working
-directory, use the
+You can also specify the name of the work directory explicitly using
+the 
 .Fl -workdir
 option.
 .Pp
 When you rerun 
 .Nm
 with the same URL, files that already exist in
-the cache directory will not be re-downloaded or rebuilt, so if you
+the work directory will not be re-downloaded or rebuilt, so if you
 run you 
 .Ic "anita install"
 with the same URL twice in a row, the second
@@ -104,7 +104,7 @@ run will effectively be a no-op, and if you rerun
 .Ic "anita interact" ,
 the system will be booted from the existing disk image, skipping the
 installation stage.  To force things to be redone, simply remove the
-cache directory.  If you remove just the hard disk image file
+work directory.  If you remove just the hard disk image file
 .Pa wd0.img ,
 .Ic "anita install" 
 will recreate it from the cached distribution files.
@@ -145,7 +145,7 @@ run the ATF test suite.  The
 output will be displayed on standard output.  Additionally, a
 subdirectory
 .Pa atf/
-is created under the cache directory, and will contain
+is created under the work directory, and will contain
 output files from the ATF test suite: the raw
 .Cm atf-run 
 output in
@@ -162,9 +162,9 @@ and
 .Pa tests-results.css
 are also included.
 .It Ar print-workdir
-Print the pathname of the cache directory on standard output.
+Print the pathname of the work directory on standard output.
 This is intended for use by scripts that need to access files
-in the cache directory, particularly when the
+in the work directory, particularly when the
 .Fl -workdir
 option is not used but the name of the directory is automatically
 generated.
@@ -173,8 +173,8 @@ generated.
 The following command line options are supported:
 .Bl -tag -width indent
 .It Fl -workdir Ar directory
-The directory where
-the cache directories are stored.  The default is ".".
+The work directory.  The default is an automatically generated
+name under ".".
 .It Fl -qemu-args Ar string
 Additional arguments to pass to qemu.  The arguments are given
 as a single string, which may contain multiple arguments separated
@@ -229,7 +229,7 @@ the sysinst user interface.
 .Pp
 The
 .Nm
-cache directories take a lot of disk space.  Figure about a
+work directories take a lot of disk space.  Figure about a
 gigabyte per installed NetBSD version.
 .Pp
 Installing NetBSD releases older than 2.1 has not been tested.
