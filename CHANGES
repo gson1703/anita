@@ -1,3 +1,5 @@
+Deal with sysinst no longer asking for a password cipher.
+
 Create the work directory in "test" mode so that it works without
 running "install" first.
 

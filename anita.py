@@ -742,9 +742,18 @@ class Anita:
 
         # "Press 'x' followed by RETURN to quit the timezone selection"
         child.send("x\n")
-        child.expect("([a-z]): DES")
-        child.send(child.match.group(1) + "\n")
-        child.expect("root password")
+
+        while True:
+            child.expect("(([a-z]): DES)|(root password)")
+            if child.match.group(1):
+                # DES
+                child.send(child.match.group(2) + "\n")
+            elif child.match.group(3):
+                # root password
+                break
+            else:
+                raise AssertionError
+        # Don't set a root password
         child.expect("b: No")
         child.send("b\n")
         child.expect("a: /bin/sh")
