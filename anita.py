@@ -743,14 +743,20 @@ class Anita:
         # "Press 'x' followed by RETURN to quit the timezone selection"
         child.send("x\n")
 
+        # The strange non-deterministic "Hit enter to continue" prompt has
+        # also been spotted after executing the sed commands to set the
+        # root password cipher, with 2010.10.27.10.42.12 source.
         while True:
-            child.expect("(([a-z]): DES)|(root password)")
+            child.expect("(([a-z]): DES)|(root password)|(Hit enter to continue)")
             if child.match.group(1):
                 # DES
                 child.send(child.match.group(2) + "\n")
             elif child.match.group(3):
                 # root password
                 break
+            elif child.match.group(4):
+	        # (Hit enter to continue)
+		child.send("\n")
             else:
                 raise AssertionError
         # Don't set a root password
