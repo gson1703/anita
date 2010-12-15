@@ -815,7 +815,7 @@ class Anita:
         child = self.boot()
         console_interaction(child)
 
-    def run_atf_tests(self):
+    def run_atf_tests(self, timeout = 3600):
 	# Create a scratch disk image for exporting test results from the VM.
         # The results are stored in tar format because that is more portable
         # and easier to manipulate than a file system image, especially if the
@@ -849,7 +849,7 @@ class Anita:
                 "tar cf /dev/rwd1d atf; "+
             "}; " +
 	    "sh -c 'exit `cat /tmp/atf/test.status`'",
-            3600)
+            timeout)
 	# We give tar an explicit path to extract to guard against
 	# the possibility of an arbitrary file overwrite attack if
 	# anita is used to test an untrusted virtual machine.

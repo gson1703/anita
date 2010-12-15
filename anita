@@ -25,6 +25,9 @@ def main(argv = None):
 		      help="run COMMAND on the virtual machine after boot", metavar="COMMAND")
     parser.add_option("--sets",
 		      help="install the distribution SETS (e.g., base,games)", metavar="SETS")
+    parser.add_option("--test-timeout",
+		      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
+                      type="int", default=3600)
     (options, args) = parser.parse_args()
 
     if len(args) < 2:
@@ -76,7 +79,7 @@ def main(argv = None):
 	status = maybe_run_command(child)    
 	anita.console_interaction(child)
     elif mode == 'test':
-	status = a.run_atf_tests()
+	status = a.run_atf_tests(timeout = options.test_timeout)
     elif mode == 'print-workdir':
         print a.workdir
     else:

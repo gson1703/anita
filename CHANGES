@@ -1,4 +1,6 @@
 
+New command line option "--test-timeout".
+
 Deal with yet another seemingly nondetermininstic "Press enter to
 continue" prompt.
 
