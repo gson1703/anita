@@ -1,3 +1,6 @@
+Deprecate the --qemu-args -no-kvm-irqchip workaround, as it doesn't
+quite work.
+
 Add support for MacOS X hosts, from Jeff Rizzo.
 
 New command line option "--test-timeout".
