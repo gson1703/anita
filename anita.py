@@ -37,6 +37,8 @@ if os.uname()[0] == 'NetBSD':
     makefs = ["makefs", "-t", "cd9660", "-o", "rockridge"]
 elif os.uname()[0] == 'FreeBSD':
     makefs = ["mkisofs", "-r", "-o"]
+elif os.uname()[0] == 'Darwin':
+    makefs = ["hdiutil", "makehybrid", "-iso", "-o"]
 else:
     # For Linux, and maybe others
     # On Ubuntu, this is in the "genisoimage" package

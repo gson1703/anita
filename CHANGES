@@ -1,3 +1,4 @@
+Add support for MacOS X hosts, from Jeff Rizzo.
 
 New command line option "--test-timeout".
 
