@@ -826,7 +826,6 @@ class Anita:
         atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
                          '/usr/share/xml/atf/tests-results.dtd',
                          '/usr/share/examples/atf/tests-results.css']
-        # not yet: 'test-results.xsl', 'test-results.css'
         mkdir_p(self.workdir)
         spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '10M'])
         child = self.boot(["-drive",
