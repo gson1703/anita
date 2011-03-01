@@ -766,16 +766,27 @@ class Anita:
         child.send("b\n")
         child.expect("a: /bin/sh")
         child.send("\n")
+
         # "The installation of NetBSD-3.1 is now complete.  The system
         # should boot from hard disk.  Follow the instructions in the
         # INSTALL document about final configuration of your system.
         # The afterboot(8) manpage is another recommended reading; it
         # contains a list of things to be checked after the first
         # complete boot."
-        child.expect("Hit enter to continue")
-        child.send("\n")
-        child.expect("x: Exit")
-        child.send("x\n")
+        #
+        # We are supposed to get a single "Hit enter to continue"
+        # prompt here, but sometimes we get a weird spurious one
+        # after running chpass above.
+        while True:        
+            child.expect("(Hit enter to continue)|(x: Exit)")
+            if child.match.group(1):
+                child.send("\n")
+            elif child.match.group(2):
+                child.send("x\n")
+                break
+            else:
+                raise AssertionError                
+            
 	# On i386 and amd64, you get a root shell; sparc halts.
         child.expect("(#)|(halting machine)")
 	if child.match.group(1):
