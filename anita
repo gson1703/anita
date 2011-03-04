@@ -19,7 +19,7 @@ def main(argv = None):
     parser.add_option("--qemu-args",
 		      help="pass ARGS as extra arguments to qemu", metavar="ARGS")
     parser.add_option("--disk-size",
-		      help="use a virtual disk of SIZE bytes (k/M/G/T suffix accecpted)",
+		      help="use a virtual disk of SIZE bytes (k/M/G/T suffix accepted)",
 		      metavar="SIZE")
     parser.add_option("--run",
 		      help="run COMMAND on the virtual machine after boot", metavar="COMMAND")
