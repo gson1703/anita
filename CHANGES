@@ -1,3 +1,6 @@
+
+- 1.19 released -
+
 Rename the --qemu-args option to --vmm-args in preparation for adding
 support for other virtual machine monitors in addition to qemu.
 
