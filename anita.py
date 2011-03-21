@@ -419,7 +419,7 @@ class ISO(Version):
 #############################################################################
 
 class Anita:
-    def __init__(self, dist, workdir = None, qemu_args = None,
+    def __init__(self, dist, workdir = None, vmm_args = None,
         disk_size = None):
         self.dist = dist
         if workdir:
@@ -438,21 +438,21 @@ class Anita:
             raise RuntimeError("NetBSD port '%s' is not supported" %
 	        dist.arch())
 
-        if qemu_args is None:
-            qemu_args = []
-        self.extra_qemu_args = qemu_args
+        if vmm_args is None:
+            vmm_args = []
+        self.extra_vmm_args = vmm_args
 
     # The path to the NetBSD hard disk image
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
 
-    def start_qemu(self, qemu_args, snapshot_system_disk):
+    def start_qemu(self, vmm_args, snapshot_system_disk):
         child = pexpect.spawn(self.qemu, [
 	    "-m", "32",
             "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
             "-nographic"
-            ] + qemu_args + self.extra_qemu_args)
+            ] + vmm_args + self.extra_vmm_args)
 	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
 	# "child.log_file", so we set both variables for portability
         child.logfile = sys.stdout
@@ -473,18 +473,18 @@ class Anita:
 	# Create a disk image file
         spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), self.disk_size])
 
-        qemu_args = ["-cdrom", self.dist.iso_path()]
+        vmm_args = ["-cdrom", self.dist.iso_path()]
 
         if boot_from_floppy:
 	    floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
 		for f in self.dist.floppies() ]
 	    if len(floppy_paths) == 0:
 	        raise RuntimeError("found no boot floppies")
-            qemu_args += ["-fda", floppy_paths[0], "-boot", "a"]
+            vmm_args += ["-fda", floppy_paths[0], "-boot", "a"]
 	else:
-	    qemu_args += ["-boot", "d"]
+	    vmm_args += ["-boot", "d"]
 
-        child = self.start_qemu(qemu_args, snapshot_system_disk = False)
+        child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 
         if boot_from_floppy:
 	    # Do the floppy swapping dance
@@ -809,13 +809,13 @@ class Anita:
             raise
 
     # Boot the virtual machine (installing it first if it's not
-    # installed already).  The qemu_args argument applies when
+    # installed already).  The vmm_args argument applies when
     # booting, but not when installing.
-    def boot(self, qemu_args = None):
-        if qemu_args is None:
-            qemu_args = []
+    def boot(self, vmm_args = None):
+        if vmm_args is None:
+            vmm_args = []
         self.install()
-        child = self.start_qemu(qemu_args, snapshot_system_disk = True)
+        child = self.start_qemu(vmm_args, snapshot_system_disk = True)
         # "-net", "nic,model=ne2k_pci", "-net", "user"
         child.expect("login:")
         # Can't close child here because we still need it if called from

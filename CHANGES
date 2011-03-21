@@ -1,4 +1,7 @@
-Fix typos found by Antti Kantee and Jean-Yves Migeon
+Rename the --qemu-args option to --vmm-args in preparation for adding
+support for other virtual machine monitors in addition to qemu.
+
+Fix typos found by Antti Kantee and Jean-Yves Migeon.
 
 Deprecate the --qemu-args -no-kvm-irqchip workaround, as it doesn't
 quite work.
@@ -7,7 +10,7 @@ Add support for MacOS X hosts, from Jeff Rizzo.
 
 New command line option "--test-timeout".
 
-Deal with yet another seemingly nondetermininstic "Press enter to
+Deal with yet another seemingly nondeterministic "Press enter to
 continue" prompt.
 
 - 1.18 released -

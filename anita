@@ -3,7 +3,7 @@
 import sys
 import re
 import anita
-from optparse import OptionParser
+import optparse
 
 class Usage(Exception):
     def __init__(self, msg):
@@ -13,18 +13,24 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    parser = OptionParser(usage = "usage: %prog [options] install|boot|interact distribution")
+    parser = optparse.OptionParser(
+        usage = "usage: %prog [options] install|boot|interact distribution")
     parser.add_option("--workdir",
 		      help="store work files in DIR", metavar="DIR")
+    parser.add_option("--vmm-args",
+		      help="pass ARGS as extra arguments to virtual machine monitor",
+		      metavar="ARGS", default="")
+    # Deprecated
     parser.add_option("--qemu-args",
-		      help="pass ARGS as extra arguments to qemu", metavar="ARGS")
+		      help=optparse.SUPPRESS_HELP, default="")
     parser.add_option("--disk-size",
 		      help="use a virtual disk of SIZE bytes (k/M/G/T suffix accepted)",
 		      metavar="SIZE")
     parser.add_option("--run",
 		      help="run COMMAND on the virtual machine after boot", metavar="COMMAND")
     parser.add_option("--sets",
-		      help="install the distribution SETS (e.g., base,games)", metavar="SETS")
+		      help="install the distribution SETS (e.g., base,games)",
+		      metavar="SETS")
     parser.add_option("--test-timeout",
 		      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
                       type="int", default=3600)
@@ -35,10 +41,7 @@ def main(argv = None):
 
     distarg = args[1]
 
-    if options.qemu_args:
-        qemu_args = options.qemu_args.split()
-    else:
-        qemu_args = []
+    vmm_args = options.vmm_args.split() + options.qemu_args.split()
 
     if options.sets:
         sets = options.sets.split(",")
@@ -58,7 +61,7 @@ def main(argv = None):
     else:
 	raise Usage("expected distribution URL or directory, got " + distarg)
 
-    a = anita.Anita(dist, workdir = options.workdir, qemu_args = qemu_args,
+    a = anita.Anita(dist, workdir = options.workdir, vmm_args = vmm_args,
         disk_size = options.disk_size)
 
     def maybe_run_command(child):
@@ -67,6 +70,7 @@ def main(argv = None):
 	    return anita.shell_cmd(child, options.run, 3600)
 	else:
 	    return 0
+
     status = 0
     mode = args[0]
     if mode == 'install':

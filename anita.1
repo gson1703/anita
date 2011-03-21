@@ -1,4 +1,4 @@
-.Dd November 17, 2010
+.Dd March 21, 2011
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar work_directory
-.Op Fl -qemu-args Ar qemu_arguments
+.Op Fl -vmm-args Ar vmm_arguments
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
 .Op Fl -sets Ar sets
@@ -176,11 +176,14 @@ The following command line options are supported:
 .It Fl -workdir Ar directory
 The work directory.  The default is an automatically generated
 name under ".".
-.It Fl -qemu-args Ar string
-Additional arguments to pass to qemu.  The arguments are given
+.It Fl -vmm-args Ar string
+Additional arguments to pass to the virtual machine monitor (currently
+qemu, but others may be supported in the future).  The arguments are given
 as a single string, which may contain multiple arguments separated
-by whitespace.  There is no way to pass qemu an argument containing
-whitespace.
+by whitespace.  There is no way to pass an argument containing
+whitespace.  This option was previously called
+.Fl -qemu-args ;
+the old name is still accepted for backwards compatibility.
 .It Fl -disk-size Ar size
 The size of the virtual disk NetBSD gets installed on.  The default
 is large enough to hold the OS installation itself, but if you need
@@ -202,7 +205,7 @@ as such.  Complex commands may be executed by preparing a disk
 image containing a file system containing a shell script, and specifying
 something like
 .Pp
-.Dl --qemu-args '-hdb disk.img' --run 'mount /dev/wd1a /mnt && /mnt/script'
+.Dl --vmm-args '-hdb disk.img' --run 'mount /dev/wd1a /mnt && /mnt/script'
 .Pp
 The exit status of the shell command will be returned as the exit status
 of
@@ -253,10 +256,10 @@ boot a version of NetBSD-current newer than 2009-11-04
 14:39:17, the emulated NetBSD system hangs during boot; see
 PR 44069 for details.  This issue can be worked 
 around by passing Anita the command line option
-.Fl -qemu-args 
+.Fl -vmm-args 
 .Ar -no-kvm
 to disable kvm.  The alternative 
-.Fl -qemu-args 
+.Fl -vmm-args 
 .Ar -no-kvm-irqchip
 performs better but doesn't quite work: the system installs and
 boots, but the ATF tests occasionally fail to complete; see PR 44176.
