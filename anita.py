@@ -151,7 +151,7 @@ def check_arch_supported(arch, dist_type):
         raise RuntimeError(("NetBSD/%s must be installed from " +
 	    "a release tree, not an ISO") % arch)
     if (arch == 'sparc') and dist_type != 'iso':
-        raise RuntimeError(("NetBSD/%s must be installd from " +
+        raise RuntimeError(("NetBSD/%s must be installed from " +
 	"an ISO, not a release tree") % arch)
 
 #############################################################################

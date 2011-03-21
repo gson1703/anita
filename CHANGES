@@ -1,3 +1,5 @@
+Fix typos found by Antti Kantee and Jean-Yves Migeon
+
 Deprecate the --qemu-args -no-kvm-irqchip workaround, as it doesn't
 quite work.
 
