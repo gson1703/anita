@@ -38,7 +38,7 @@ rm -f stdout
 url=http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.1/i386/
 workdir=`$python ./anita print-workdir $url`
 rm -f $workdir/wd0.img
-$python ./anita --sets=kern-GENERIC,etc,base,tests,games test $url | tee stdout || true
+$python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee stdout || true
 grep 'passed test cases' stdout
 rm -f stdout
 
