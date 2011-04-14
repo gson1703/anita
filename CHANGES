@@ -1,4 +1,8 @@
 
+Increase the timeout for the set extraction phase from 1200 to 2400
+seconds; the extra time is needed when installing a system built
+without optimization.
+
 - 1.19 released -
 
 Rename the --qemu-args option to --vmm-args in preparation for adding

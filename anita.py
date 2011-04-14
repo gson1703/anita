@@ -711,7 +711,7 @@ class Anita:
 	        raise RuntimeError("loop detected")
 	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|" +
 	        "(Hit enter to continue)|(b: Use serial port com0)|" +
-		"(Please choose the timezone)|(essential things)", 1200)
+		"(Please choose the timezone)|(essential things)", 2400)
 	    if child.match.groups() == prevmatch:
 	        continue
 	    prevmatch = child.match.groups()
