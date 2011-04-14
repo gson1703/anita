@@ -828,7 +828,7 @@ class Anita:
         child = self.boot()
         console_interaction(child)
 
-    def run_atf_tests(self, timeout = 3600):
+    def run_atf_tests(self, timeout = 7200):
 	# Create a scratch disk image for exporting test results from the VM.
         # The results are stored in tar format because that is more portable
         # and easier to manipulate than a file system image, especially if the
@@ -899,6 +899,6 @@ def test(child):
     # from atf-run rather than the meaningless one from atf-report.
     return shell_cmd(child, "cd /usr/tests && " +
         "{ atf-run && :>/tmp/test.ok; } | atf-report && test -f /tmp/test.ok",
-        3600)
+        7200)
 
 #############################################################################

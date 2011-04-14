@@ -33,7 +33,7 @@ def main(argv = None):
 		      metavar="SETS")
     parser.add_option("--test-timeout",
 		      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
-                      type="int", default=3600)
+                      type="int", default=7200)
     (options, args) = parser.parse_args()
 
     if len(args) < 2:
