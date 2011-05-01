@@ -1,3 +1,6 @@
+Run df before and after the ATF tests so that disk usage data
+can be gathered from the test logs.
+
 Increase the default timeout for the ATF test from 1 hour to 2 hours
 as the number of tests has now increased to a point where 1 hour is
 not always enough even on a fast machine.

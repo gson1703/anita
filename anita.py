@@ -844,7 +844,8 @@ class Anita:
                            scratch_disk_path])
 	login(child)
         exit_status = shell_cmd(child,
-	    "mkdir /tmp/atf && " +                                
+	    "df -k | sed 's/^/df-pre-test /'; " +
+	    "mkdir /tmp/atf && " +
 	    "cd /usr/tests && " +
             "{ atf-run; echo $? >/tmp/atf/test.status; } | " +
 	    "tee /tmp/atf/test.tps | " +
@@ -860,7 +861,8 @@ class Anita:
                 # "disklabel -W /dev/rwd1d && " +
                 "tar cf /dev/rwd1d atf; "+
             "}; " +
-	    "sh -c 'exit `cat /tmp/atf/test.status`'",
+	    "df -k | sed 's/^/df-post-test /'; " +
+            "sh -c 'exit `cat /tmp/atf/test.status`'",
             timeout)
 	# We give tar an explicit path to extract to guard against
 	# the possibility of an arbitrary file overwrite attack if
