@@ -1,3 +1,6 @@
+Increase the default disk size from 512M to 768M, as 512M is
+no longer sufficient for amd64.
+
 - 1.20 released -
 
 Run df before and after the ATF tests so that disk usage data

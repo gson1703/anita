@@ -428,9 +428,8 @@ class Anita:
             self.workdir = dist.default_workdir()
 
 	# Set the default disk size if none was given.
-	# 384M is sufficient for i386 but not for amd64.
         if disk_size is None:
-	    disk_size = "512M"
+	    disk_size = "768M"
 	self.disk_size = disk_size
 
 	self.qemu = arch_qemu_map.get(dist.arch())
