@@ -32,7 +32,6 @@ arch_qemu_map = {
 
 # External commands we rely on
 
-qemu_img = "qemu-img"
 if os.uname()[0] == 'NetBSD':
     makefs = ["makefs", "-t", "cd9660", "-o", "rockridge"]
 elif os.uname()[0] == 'FreeBSD':
@@ -78,6 +77,27 @@ def download_file(file, url):
         if os.path.exists(file):
             os.unlink(file)
         raise
+
+# Create a file of the given size, containing NULs, without holes.
+
+def make_dense_image(fn, size):
+    f = open(fn, "w")
+    blocksize = 64 * 1024
+    while size > 0:
+        chunk = min(size, blocksize)
+        f.write("\000" * chunk)
+        size = size - chunk
+    f.close()
+
+# Parse a size with optional k/M/G/T suffix and return an integer
+
+def parse_size(size):
+    m = re.match(r'(\d+)([kMGT])?$', size)
+    if not m:
+        raise RuntimeError("%s: invalid size" % size)
+    size, suffix = m.groups()
+    mult = dict(k=1024, M=1024**2, G=1024**3, T=1024**4).get(suffix, 1)
+    return int(size) * mult
 
 # Download "url" to the local file "file".  If the file already
 # exists locally, do nothing.  If "optional" is true, ignore download
@@ -470,7 +490,7 @@ class Anita:
 	boot_from_floppy = self.dist.boot_from_floppy()
 
 	# Create a disk image file
-        spawn(qemu_img, ["qemu-img", "create", self.wd0_path(), self.disk_size])
+        make_dense_image(self.wd0_path(), parse_size(self.disk_size))
 
         vmm_args = ["-cdrom", self.dist.iso_path()]
 
@@ -837,7 +857,7 @@ class Anita:
                          '/usr/share/xml/atf/tests-results.dtd',
                          '/usr/share/examples/atf/tests-results.css']
         mkdir_p(self.workdir)
-        spawn(qemu_img, ["qemu-img", "create", scratch_disk_path, '10M'])
+        make_dense_image(scratch_disk_path, parse_size('10M'))
         child = self.boot(["-drive",
                            "file=%s,index=1,media=disk,snapshot=off" %
                            scratch_disk_path])
