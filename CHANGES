@@ -1,5 +1,5 @@
 Disk images no longer contain holes, making them easier to use with
-vnd(4).
+vnd(4).  Partially based on patch from Vladimir Kirillov.
 
 Increase the default disk size from 512M to 768M, as 512M is no longer
 sufficient for amd64.
