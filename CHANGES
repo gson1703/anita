@@ -1,3 +1,5 @@
+- 1.21 released -
+
 Disk images no longer contain holes, making them easier to use with
 vnd(4).  Partially based on patch from Vladimir Kirillov.
 
