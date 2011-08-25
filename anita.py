@@ -540,7 +540,7 @@ class Anita:
 		    child.send("info block\n")
 		    child.expect(r'\n(\w+): type=floppy')
 		    floppy0_name = child.match.group(1)
-		# Now we chan change the floppy
+		# Now we can change the floppy
 		child.send("change %s %s\n" %
 		    (floppy0_name, floppy_paths[floppy_index]))
 		# Exit qemu command mode
