@@ -26,6 +26,9 @@ def main(argv = None):
     parser.add_option("--disk-size",
 		      help="use a virtual disk of SIZE bytes (k/M/G/T suffix accepted)",
 		      metavar="SIZE")
+    parser.add_option("--memory-size",
+		      help="use a virtual RAM size of SIZE bytes (k/M/G/T suffix accepted)",
+		      metavar="SIZE")
     parser.add_option("--run",
 		      help="run COMMAND on the virtual machine after boot", metavar="COMMAND")
     parser.add_option("--sets",
@@ -62,7 +65,7 @@ def main(argv = None):
 	raise Usage("expected distribution URL or directory, got " + distarg)
 
     a = anita.Anita(dist, workdir = options.workdir, vmm_args = vmm_args,
-        disk_size = options.disk_size)
+        disk_size = options.disk_size, memory_size = options.memory_size)
 
     def maybe_run_command(child):
         if options.run:

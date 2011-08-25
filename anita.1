@@ -1,4 +1,4 @@
-.Dd March 21, 2011
+.Dd August 25, 2011
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -190,6 +190,12 @@ is large enough to hold the OS installation itself, but if you need
 additional space, you can specify a larger size.  The size is given in
 bytes, or a suffix of k, M, G, or T can be used for kilo-, mega-,
 giga-, or terabytes.
+.It Fl -memory-size Ar size
+The size of the virtual RAM.  The size is given in
+bytes, or a suffix of k, M, or G can be used as with 
+the 
+.Fl -disk-size
+option.  The default is 32M.
 .It Fl -run Ar command
 Log in to the virtual machine and execute the given shell
 .Ar command

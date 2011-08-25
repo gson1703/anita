@@ -1,3 +1,5 @@
+New command line option "--memory-size".
+
 - 1.21 released -
 
 Disk images no longer contain holes, making them easier to use with

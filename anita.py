@@ -440,7 +440,7 @@ class ISO(Version):
 
 class Anita:
     def __init__(self, dist, workdir = None, vmm_args = None,
-        disk_size = None):
+        disk_size = None, memory_size = None):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -451,6 +451,11 @@ class Anita:
         if disk_size is None:
 	    disk_size = "768M"
 	self.disk_size = disk_size
+
+	# Set the default memory size if none was given.
+        if memory_size is None:
+            memory_size = "32M"
+	self.memory_size_bytes = parse_size(memory_size)
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -466,8 +471,14 @@ class Anita:
         return os.path.join(self.workdir, "wd0.img")
 
     def start_qemu(self, vmm_args, snapshot_system_disk):
+        megs = (self.memory_size_bytes + 2 ** 20 - 1) / 2 ** 20
+        if megs != self.memory_size_bytes / 2 **20:
+            print >>sys.stderr, \
+                "warning: rounding up memory size of %i bytes to %i megabytes" \
+                % (self.memory_size_bytes, megs)
+        
         child = pexpect.spawn(self.qemu, [
-	    "-m", "32",
+	    "-m", str(megs),
             "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
             "-nographic"
