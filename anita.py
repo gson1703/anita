@@ -536,9 +536,11 @@ class Anita:
 		    # Between qemu 0.9.0 and 0.9.1, the name of the floppy
 		    # device accepted by the "change" command changed from
 		    # "fda" to "floppy0" without any provision for backwards
-		    # compatibility.  Deal with it.
+		    # compatibility.  Deal with it.  Also deal with the fact
+		    # that as of qemu 0.15, "info block" no longer prints
+		    # "type=floppy" for floppy drives.
 		    child.send("info block\n")
-		    child.expect(r'\n(\w+): type=floppy')
+		    child.expect(r'\n(fda|floppy0): ')
 		    floppy0_name = child.match.group(1)
 		# Now we can change the floppy
 		child.send("change %s %s\n" %

@@ -1,3 +1,9 @@
+- 1.23 released -
+
+Support qemu 0.15, where the output of the "info block" monitor
+command has backwards-incompatibly changed to no longer include a
+"type" field.
+
 - 1.22 released -
 
 New command line option "--memory-size".
