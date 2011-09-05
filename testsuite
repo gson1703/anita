@@ -1,6 +1,9 @@
 #!/bin/sh
 
-exec >testsuite.log 2>&1
+logfile=testsuite.log.`date +%Y%m%m`
+echo "logging to $logfile"
+
+exec >$logfile 2>&1
 
 python=python2.6	# on guesthouse or guru
 
