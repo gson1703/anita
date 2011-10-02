@@ -186,7 +186,12 @@ whitespace.  This option was previously called
 the old name is still accepted for backwards compatibility.
 .It Fl -disk-size Ar size
 The size of the virtual disk NetBSD gets installed on.  The default
-is large enough to hold the OS installation itself, but if you need
+is large enough to hold the OS installation itself when also using
+default values for the 
+.Fl -sets
+and 
+.Fl -memory-size
+options, but if you need
 additional space, you can specify a larger size.  The size is given in
 bytes, or a suffix of k, M, G, or T can be used for kilo-, mega-,
 giga-, or terabytes.
@@ -195,7 +200,13 @@ The size of the virtual RAM.  The size is given in
 bytes, or a suffix of k, M, or G can be used as with 
 the 
 .Fl -disk-size
-option.  The default is 32M.
+option.  The default is 32M.  Note that since sysinst sizes the
+swap partition based on the amount of RAM, if you run
+.Cm anita install
+with a large
+.Fl -memory-size ,
+you may also have to increase
+.Fl -disk-size .
 .It Fl -run Ar command
 Log in to the virtual machine and execute the given shell
 .Ar command
