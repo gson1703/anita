@@ -1,3 +1,6 @@
+After running the ATF tests, run "ps" to show any processes possibly
+left running by the tests.
+
 - 1.23 released -
 
 Support qemu 0.15, where the output of the "info block" monitor

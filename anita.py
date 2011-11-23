@@ -894,6 +894,7 @@ class Anita:
                 "tar cf /dev/rwd1d atf; "+
             "}; " +
 	    "df -k | sed 's/^/df-post-test /'; " +
+	    "ps -glaxw | sed 's/^/ps-post-test /'; " +
             "sh -c 'exit `cat /tmp/atf/test.status`'",
             timeout)
 	# We give tar an explicit path to extract to guard against
