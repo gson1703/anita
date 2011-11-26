@@ -1,3 +1,11 @@
+Invoke the i386 version of qemu as "qemu-system-i386" rather
+than just "qemu", because a current stock git qemu doesn't
+install a binary called just "qemu".
+
+Specify "cache=writeback" for the emulated hard disk; this
+significantly speeds up installation at least in some versions
+of qemu.
+
 After running the ATF tests, run "ps" to show any processes possibly
 left running by the tests.
 
