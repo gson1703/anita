@@ -22,7 +22,7 @@ netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 #netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
 
 arch_qemu_map = {
-    'i386': 'qemu',
+    'i386': 'qemu-system-i386',
     'amd64': 'qemu-system-x86_64',
     'sparc': 'qemu-system-sparc',
      # The following ones don't actually work
@@ -479,7 +479,7 @@ class Anita:
         
         child = pexpect.spawn(self.qemu, [
 	    "-m", str(megs),
-            "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
+            "-drive", "file=%s,index=0,media=disk,snapshot=%s,cache=writeback" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
