@@ -1,3 +1,5 @@
+Allow a full hour for extracting sets.
+
 Invoke the i386 version of qemu as "qemu-system-i386" rather
 than just "qemu", because a current stock git qemu doesn't
 install a binary called just "qemu".
