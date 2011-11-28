@@ -39,9 +39,10 @@ elif os.uname()[0] == 'FreeBSD':
 elif os.uname()[0] == 'Darwin':
     makefs = ["hdiutil", "makehybrid", "-iso", "-o"]
 else:
-    # For Linux, and maybe others
-    # On Ubuntu, this is in the "genisoimage" package
-    makefs = ["genisoimage", "-r", "-o"]
+    # Linux distributions differ.  Ubuntu has genisoimage
+    # and mkisofs (as an alias of genisoimage); CentOS has
+    # mkisofs only.  Use the latter so we work in both.
+    makefs = ["mkisofs", "-r", "-o"]
 
 # Create a directory if missing
 

@@ -1,3 +1,5 @@
+On unknown platforms, use mkisofs instead of genisoimage.
+
 On sparc, the scratch disk is sd1c, not wd1d.
 
 Allow a full hour for extracting sets.
