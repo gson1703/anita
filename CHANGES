@@ -1,3 +1,5 @@
+On sparc, the scratch disk is sd1c, not wd1d.
+
 Allow a full hour for extracting sets.
 
 Invoke the i386 version of qemu as "qemu-system-i386" rather

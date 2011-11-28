@@ -254,9 +254,14 @@ class Version:
     def floppy_dir(self):
         return os.path.join(self.download_local_arch_dir(),
 	    "installation/floppy")
-
     def boot_from_floppy(self):
         return True
+    def scratch_disk(self):
+        arch = self.arch()
+        if (arch == 'i386' or arch == 'amd64'):
+            return "wd1d"
+        else:
+            return "sd1c"
 
     # The list of boot floppies we should try downloading;
     # not all may actually exist.  amd64 currently has five,
@@ -866,6 +871,7 @@ class Anita:
         # and easier to manipulate than a file system image, especially if the
         # host is a non-NetBSD system.
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
+        scratch_disk = self.dist.scratch_disk()
         atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
                          '/usr/share/xml/atf/tests-results.dtd',
                          '/usr/share/examples/atf/tests-results.css']
@@ -889,9 +895,9 @@ class Anita:
                 # To guard against accidentally overwriting the wrong
                 # disk image, check that the disk contains nothing
                 # but nulls.
-                "test `</dev/rwd1d tr -d '\\000' | wc -c` = 0 && " +
+                "test `</dev/r%s tr -d '\\000' | wc -c` = 0 && " % scratch_disk +
                 # "disklabel -W /dev/rwd1d && " +
-                "tar cf /dev/rwd1d atf; "+
+                "tar cf /dev/r%s atf; " % scratch_disk +
             "}; " +
 	    "df -k | sed 's/^/df-post-test /'; " +
 	    "ps -glaxw | sed 's/^/ps-post-test /'; " +
