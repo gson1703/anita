@@ -669,7 +669,7 @@ class Anita:
                 x11_state = yesno
                 x11_letter = letter
             for set in self.dist.sets:
-                # Could use RE match here fore more flexibility
+                # Could use RE match here for more flexibility
                 if label == set['label']:
                     setinfo[set['filename']] = { 'letter': letter, 'state': yesno }
 
