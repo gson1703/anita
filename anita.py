@@ -44,6 +44,17 @@ else:
     # mkisofs only.  Use the latter so we work in both.
     makefs = ["mkisofs", "-r", "-o"]
 
+fnull = open(os.devnull, 'w')
+
+# Return true if the given program (+args) can be successfully run
+
+def try_program(argv):
+   try:
+       result = subprocess.call(argv, stdout = fnull, stderr = fnull)
+       return result == 0
+   except OSError:
+       return False
+
 # Create a directory if missing
 
 def mkdir_p(dir):
@@ -192,6 +203,17 @@ def check_arch_supported(arch, dist_type):
 #    arch(self)
 #        the name of the machine architecture the version is for
 
+def make_item(t):
+    d = dict(zip(['filename', 'label', 'install'], t[0:3]))
+    if isinstance(t[3], list):
+        d['group'] = make_set_dict(t[3])
+    else:
+        d['optional'] = t[3]
+    return d
+
+def make_set_dict(list_):
+    return [make_item(t) for t in list_]
+
 class Version:
     # Information about the available installation file sets.  As the
     # set of sets (sic) has evolved over time, this actually represents
@@ -209,20 +231,34 @@ class Version:
     #   - a flag indicating that the set should be installed by default
     #   - a flag indicating that the set is not present in all versions
     #
-    sets = [dict(zip(['filename', 'label', 'install', 'optional'],
-                     list(t))) for t in [
-      ( 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ),
-      ( 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0, 1 ),
-      ( 'modules', 'Kernel Modules', 1, 1 ),
-      ( 'base', 'Base', 1, 0 ),
-      ( 'etc', 'System (/etc)', 1, 0 ),
-      ( 'comp', 'Compiler Tools', 1, 0 ),
-      ( 'games', 'Games', 0, 0 ),
-      ( 'man', 'Online Manual Pages', 0, 0 ),
-      ( 'misc', 'Miscellaneous', 1, 0 ),
-      ( 'tests', 'Test programs', 1, 1 ),
-      ( 'text', 'Text Processing Tools', 0, 0 ),
-    ]]
+    
+    sets = make_set_dict([
+      [ 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ],
+      [ 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0, 1 ],
+      [ 'modules', 'Kernel Modules', 1, 1 ],
+      [ 'base', 'Base', 1, 0 ],
+      [ 'etc', 'System (/etc)', 1, 0 ],
+      [ 'comp', 'Compiler Tools', 1, 0 ],
+      [ 'games', 'Games', 0, 0 ],
+      [ 'man', 'Online Manual Pages', 0, 0 ],
+      [ 'misc', 'Miscellaneous', 1, 0 ],
+      [ 'tests', 'Test programs', 1, 1 ],
+      [ 'text', 'Text Processing Tools', 0, 0 ],
+      [ '_x11', 'X11 sets', 0, [
+          ['xbase',   'X11 base and clients', 0, 1 ],
+          ['xcomp',   'X11 configuration', 0, 1 ],
+          ['xetc',    'X11 fonts', 0, 1 ],
+          ['xfont',   'X11 servers', 0, 1 ],
+          ['xserver', 'X11 programming', 0, 1 ],
+      ]],
+      [ '_src', 'Source Sets', 0, [
+          ['syssrc', 'Kernel sources', 0, 1],
+          ['src', 'Base sources', 0, 1],
+          ['sharesrc', 'Share sources', 0, 1],
+          ['gnusrc', 'GNU sources', 0, 1],
+          ['xsrc', 'X11 sources', 0, 1],
+      ]]
+    ])
     def __init__(self, sets = None):
         self.tempfiles = []
         if sets is not None:
@@ -467,6 +503,11 @@ class Anita:
 	if self.qemu is None:
             raise RuntimeError("NetBSD port '%s' is not supported" %
 	        dist.arch())
+
+        if self.qemu == 'qemu-system-i386' and \
+           not try_program(['qemu-system-i386', '--version']) \
+           and try_program(['qemu', '--version']): \
+               self.qemu = 'qemu'
 
         if vmm_args is None:
             vmm_args = []
