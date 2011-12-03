@@ -141,6 +141,12 @@ def download_if_missing(urlbase, dirbase, relfile, optional = False):
     file = os.path.join(dirbase, relfile)
     return download_if_missing_2(url, file, optional)
 
+def download_if_missing_3(urlbase, dirbase, relpath, optional = False):
+    print >>sys.stderr, "DLIM", urlbase, dirbase, relpath, optional
+    url = urlbase + "/".join(relpath)
+    file = os.path.join(*([dirbase] + relpath))
+    return download_if_missing_2(url, file, optional)
+
 # Map a URL to a directory name.  No two URLs should map to the same
 # directory.
 
@@ -193,15 +199,21 @@ def check_arch_supported(arch, dist_type):
 # Subclasses should define:
 #
 #    dist_url(self)
-#	the URL for the top of the download tree where the version
-#       can be downloaded
+#	the top-level URL for the machine-dependent download tree where 
+#       the version can be downloaded, for example,
+#       ftp://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
+#
+#    mi_url(self)
+#       The top-level URL for the machine-independent download tree,
+#       for example, ftp://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/
 #
 #    default_workdir(self)
 #        a file name component identifying the version, for use in
 #        constructing a unique, version-specific working directory
 #
 #    arch(self)
-#        the name of the machine architecture the version is for
+#        the name of the machine architecture the version is for,
+#        e.g., i386
 
 def make_item(t):
     d = dict(zip(['filename', 'label', 'install'], t[0:3]))
@@ -272,11 +284,10 @@ class Version:
     flat_sets = flatten_set_dict_list(sets)
 
     def __init__(self, sets = None):
-
-        print "FLAT", self.flat_sets
-        
         self.tempfiles = []
+        print >>sys.stderr, "INIT"
         if sets is not None:
+            print >>sys.stderr, "NOTNONE"
             if not any([re.match('kern-', s) for s in sets]):
                 raise RuntimeError("no kernel set specified");
             # Create a Python set containing the names of the NetBSD sets we
@@ -286,8 +297,11 @@ class Version:
             for required in ['base', 'etc']:
                 if not required in sets_wanted:
                     raise RuntimeError("the '%s' set is required", required);
-            for s in self.sets:
+            print >>sys.stderr, "FOR"
+            for s in self.flat_sets:
+                print >>sys.stderr, "XX"                
                 s['install'] = (s['filename'] in sets_wanted)
+                print >>sys.stderr, "WANT", s['filename'], s['install']
                 sets_wanted.discard(s['filename'])
             if len(sets_wanted):
                 raise RuntimeError("no such set: " + sets_wanted.pop())
@@ -331,6 +345,15 @@ class Version:
         for fn in self.tempfiles:
             os.unlink(fn)
 
+    def set_path(self, setname):
+        print >>sys.stderr, "SETPATH", setname
+        if re.match(r'.*src$', setname):
+            print >>sys.stderr, "SOURCE"
+            return ['source', 'sets', setname + '.tgz']
+        else:
+            print >>sys.stderr, "VBINARY"            
+            return [self.arch(), 'binary', 'sets', setname + '.tgz']
+    
     # Download this release
     def download(self):
         # Depending on the NetBSD version, there may be two or three
@@ -338,19 +361,18 @@ class Version:
         # optional files.
         i = 0
         for floppy in self.potential_floppies():
-            download_if_missing(self.dist_url(),
+            download_if_missing_3(self.dist_url(),
                 self.download_local_arch_dir(),
-                os.path.join("installation/floppy/", floppy),
+                ["installation", "floppy", floppy],
                 i >= 2)
             i = i + 1
 
-        for set in self.sets:
+        for set in self.flat_sets:
             if set['install']:
-                download_if_missing(self.dist_url(),
-                                    self.download_local_arch_dir(),
-                                    os.path.join("binary/sets",
-                                                 set['filename'] + ".tgz"),
-                                    set['optional'])
+                download_if_missing_3(self.mi_url(),
+                                      self.download_local_mi_dir(),
+                                      self.set_path(set['filename']),
+                                      set['optional'])
 
     # Create an install ISO image to install from
     def make_iso(self):
@@ -428,15 +450,17 @@ class URL(Version):
     def __init__(self, url, **kwargs):
         Version.__init__(self, **kwargs)
         self.url = url
-	match = re.search(r'/([^/]+)/$', url)
+	match = re.match(r'(^.*/)([^/]+)/$', url)
 	if match is None:
             raise RuntimeError(("URL '%s' doesn't look like the URL of a " + \
 	    "NetBSD distribution") % url)
-        self.m_arch = match.group(1)
+        self.url_mi_part = match.group(1)
+        self.m_arch = match.group(2)
 	check_arch_supported(self.m_arch, 'reltree')
-        
     def dist_url(self):
         return self.url
+    def mi_url(self):
+        return self.url_mi_part
     def iso_name(self):
         return "install_tmp.iso"
     def default_workdir(self):

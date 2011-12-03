@@ -19,6 +19,9 @@ runtest() {
     $python ./anita $mode "$@"
 }
 
+# Test an installation with debug symbols and partial source
+runtest "--disk-size=2G --sets=kern-GENERIC,etc,base,tests,games,misc,syssrc boot" `pwd`/release/i386-source-2011.12.02.18.07.26/i386/
+
 runtest install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-2.1/i386/
 
 runtest install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-3.0.1/i386/
