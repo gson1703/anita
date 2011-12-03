@@ -142,7 +142,6 @@ def download_if_missing(urlbase, dirbase, relfile, optional = False):
     return download_if_missing_2(url, file, optional)
 
 def download_if_missing_3(urlbase, dirbase, relpath, optional = False):
-    print >>sys.stderr, "DLIM", urlbase, dirbase, relpath, optional
     url = urlbase + "/".join(relpath)
     file = os.path.join(*([dirbase] + relpath))
     return download_if_missing_2(url, file, optional)
@@ -285,9 +284,7 @@ class Version:
 
     def __init__(self, sets = None):
         self.tempfiles = []
-        print >>sys.stderr, "INIT"
         if sets is not None:
-            print >>sys.stderr, "NOTNONE"
             if not any([re.match('kern-', s) for s in sets]):
                 raise RuntimeError("no kernel set specified");
             # Create a Python set containing the names of the NetBSD sets we
@@ -297,11 +294,8 @@ class Version:
             for required in ['base', 'etc']:
                 if not required in sets_wanted:
                     raise RuntimeError("the '%s' set is required", required);
-            print >>sys.stderr, "FOR"
             for s in self.flat_sets:
-                print >>sys.stderr, "XX"                
                 s['install'] = (s['filename'] in sets_wanted)
-                print >>sys.stderr, "WANT", s['filename'], s['install']
                 sets_wanted.discard(s['filename'])
             if len(sets_wanted):
                 raise RuntimeError("no such set: " + sets_wanted.pop())
@@ -346,12 +340,9 @@ class Version:
             os.unlink(fn)
 
     def set_path(self, setname):
-        print >>sys.stderr, "SETPATH", setname
         if re.match(r'.*src$', setname):
-            print >>sys.stderr, "SOURCE"
             return ['source', 'sets', setname + '.tgz']
         else:
-            print >>sys.stderr, "VBINARY"            
             return [self.arch(), 'binary', 'sets', setname + '.tgz']
     
     # Download this release
@@ -710,16 +701,13 @@ class Anita:
                 child.expect(
                     "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s?\x1b\[\d+;\d+H))(Yes|No|All|None))|(x: )")
                 (letter, label, yesno, exit) = child.match.groups()
-                print "MATCH", child.match.groups()
                 if exit:
-                    print "SETS_THIS_SCREEN: ", sets_this_screen
                     if len(sets_this_screen) != 0:
                         break
                 else:
                     for set in set_list:
                         # Could use RE match here for more flexibility
                         if label == set['label'] and label not in labels_seen:
-                            print "APPEND"
                             sets_this_screen.append({
                                 'set': set,
                                 'letter': letter,
@@ -736,15 +724,12 @@ class Anita:
                 if (enable and state == "No" or \
                        not enable and state == "Yes") \
                        or group:
-                    print "SENDING LETTER: ", item['letter']
                     child.send(item['letter'] + "\n")
                 if group:
-                    print "ENTERING SUBMENU"
                     # Recurse to handle sub-menu
                     choose_sets(group)
 
             # Exit the set selection menu
-            print "EXITING ***"
             child.send("x\n")
 
         choose_sets(self.dist.sets)
