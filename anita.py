@@ -206,13 +206,22 @@ def check_arch_supported(arch, dist_type):
 def make_item(t):
     d = dict(zip(['filename', 'label', 'install'], t[0:3]))
     if isinstance(t[3], list):
-        d['group'] = make_set_dict(t[3])
+        d['group'] = make_set_dict_list(t[3])
     else:
         d['optional'] = t[3]
     return d
 
-def make_set_dict(list_):
+def make_set_dict_list(list_):
     return [make_item(t) for t in list_]
+
+def flatten_set_dict_list(list_):
+    def item2list(item):
+        group = item.get('group')
+        if group:
+            return group
+        else:
+            return [item]
+    return sum([item2list(item) for item in list_], [])
 
 class Version:
     # Information about the available installation file sets.  As the
@@ -232,7 +241,7 @@ class Version:
     #   - a flag indicating that the set is not present in all versions
     #
     
-    sets = make_set_dict([
+    sets = make_set_dict_list([
       [ 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ],
       [ 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0, 1 ],
       [ 'modules', 'Kernel Modules', 1, 1 ],
@@ -259,7 +268,13 @@ class Version:
           ['xsrc', 'X11 sources', 0, 1],
       ]]
     ])
+
+    flat_sets = flatten_set_dict_list(sets)
+
     def __init__(self, sets = None):
+
+        print "FLAT", self.flat_sets
+        
         self.tempfiles = []
         if sets is not None:
             if not any([re.match('kern-', s) for s in sets]):
@@ -646,61 +661,69 @@ class Anita:
         child.expect("([a-z]): Custom installation")
         child.send(child.match.group(1) + "\n")
 
-        # Enable/disable sets.  First parse the set selection
-	# screen; it's messier than most.
+        # Enable/disable sets.  
 
-        setinfo = { }
-        x11_state = None
-        x11_letter = None
-        while True:
-            # Match a letter-label pair, like "h: Compiler Tools".
-            # The label can be separated from the "Yes/No" field
-            # either by spaces (at least two, so that there can
-            # be single spaces within the label), or by a cursor
-            # positioning escape sequence.
-	    child.expect(
-	        "([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s)|(?:\x1b))")
-            (letter, label) = child.match.groups()
-            if letter == 'x':
-                break
-            child.expect("((Yes)|(No)|(All)|(None))\W")
-            yesno = child.match.group(1)
-            if label == 'X11 sets':
-                x11_state = yesno
-                x11_letter = letter
-            for set in self.dist.sets:
-                # Could use RE match here for more flexibility
-                if label == set['label']:
-                    setinfo[set['filename']] = { 'letter': letter, 'state': yesno }
+        # Keep track of sets we have already handled, by label.
+        # This is needed so that parsing a pop-up submenu is not
+        # confused by earlier output echoing past choices.
+        labels_seen = set()
 
-        # Then make the actual selections
-        for set in self.dist.sets:
-            fn = set['filename']
-            enable = set['install']
-            info = setinfo.get(fn)
-            if info is None:
-                continue
-            state = info['state']
-	    if enable and state == "No" or \
-		    not enable and state == "Yes":
-		child.send(info['letter'] + "\n")
+        def choose_sets(set_list):
+            sets_this_screen = []
+            # First parse the set selection screen or popup; it's messy.
+            while True:
+                # Match a letter-label pair, like "h: Compiler Tools",
+                # followed by an installation status of Yes, No, All,
+                # or None.  The label can be separated from the "Yes/No" 
+                # field either by spaces (at least two, so that there can
+                # be single spaces within the label), or by a cursor
+                # positioning escape sequence.  In the case of the
+                # "X11 fonts" set, we strangely get both a single space
+                # and an escape sequence, which seems disoptimal.
+                #
+                # Alternatively, match the special letter "x: " which
+                # is not followed by an installation status.
+                child.expect(
+                    "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s?\x1b\[\d+;\d+H))(Yes|No|All|None))|(x: )")
+                (letter, label, yesno, exit) = child.match.groups()
+                print "MATCH", child.match.groups()
+                if exit:
+                    print "SETS_THIS_SCREEN: ", sets_this_screen
+                    if len(sets_this_screen) != 0:
+                        break
+                else:
+                    for set in set_list:
+                        # Could use RE match here for more flexibility
+                        if label == set['label'] and label not in labels_seen:
+                            print "APPEND"
+                            sets_this_screen.append({
+                                'set': set,
+                                'letter': letter,
+                                'state': yesno
+                            })
+                            labels_seen.add(label)
 
-        # If the X11 sets are selected by default, deselect them
-        if x11_state == "All":
-            child.send(x11_letter + "\n")
-            child.expect("a: X11 base and clients")
-            # Deselect the X sets one by one.  Avoid
-            # "g: Deselect all the above sets" as it behaves
-            # inconsistently between NetBSD versions:
-            # -current wants that to be followed by
-            # "x\n" to exit the dialog, but older versions
-            # do not.
-            for c in "abcde":
-                 child.send(c + "\n")
-            # Exit the X set selection submenu
+            # Then make the actual selections
+            for item in sets_this_screen:
+                set = item['set']
+                enable = set['install']
+                state = item['state']
+                group = set.get('group')
+                if (enable and state == "No" or \
+                       not enable and state == "Yes") \
+                       or group:
+                    print "SENDING LETTER: ", item['letter']
+                    child.send(item['letter'] + "\n")
+                if group:
+                    print "ENTERING SUBMENU"
+                    # Recurse to handle sub-menu
+                    choose_sets(group)
+
+            # Exit the set selection menu
+            print "EXITING ***"
             child.send("x\n")
-        # Exit the main set selection menu
-        child.send("x\n")
+
+        choose_sets(self.dist.sets)
 
 	if arch == 'i386' or arch == 'amd64':
 	    child.expect("(a: This is the correct geometry)|" +
