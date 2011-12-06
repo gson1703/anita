@@ -271,7 +271,7 @@ class Version:
           ['xfont',   'X11 servers', 0, 1 ],
           ['xserver', 'X11 programming', 0, 1 ],
       ]],
-      [ '_src', 'Source Sets', 0, [
+      [ '_src', 'Source sets', 0, [
           ['syssrc', 'Kernel sources', 0, 1],
           ['src', 'Base sources', 0, 1],
           ['sharesrc', 'Share sources', 0, 1],
