@@ -283,8 +283,15 @@ boots, but the ATF tests occasionally fail to complete; see PR 44176.
 .Pp
 Running multithreaded programs (such as the ATF test suite) on
 an emulated i386 or amd64 system requires qemu patches that are in
-pkgsrc beginning with qemu 0.12.3nb3, but are not yet in any official
-qemu release.  See PR 42158 and https://bugs.launchpad.net/bugs/569760
+pkgsrc beginning with qemu 0.12.3nb3. They were finally integrated 
+into qemu on 2011-12-11, but are not yet in any official qemu 
+release at the time of this writing.  See PR 42158 and 
+https://bugs.launchpad.net/bugs/569760 for details.
+.Pp
+When attempting to install NetBSD-current in qemu 1.0, it panics
+during the install kernel boot.  It is currently unknown whether 
+NetBSD or qemu is at fault.  The work-around is to use qemu 0.xx.
+See PR 45671 and https://bugs.launchpad.net/qemu/+bug/897771
 for details.
 .Pp
 Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
