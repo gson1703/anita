@@ -289,10 +289,10 @@ release at the time of this writing.  See PR 42158 and
 https://bugs.launchpad.net/bugs/569760 for details.
 .Pp
 When attempting to install NetBSD-current in qemu 1.0, it panics
-during the install kernel boot.  It is currently unknown whether 
-NetBSD or qemu is at fault.  The work-around is to use qemu 0.xx.
-See PR 45671 and https://bugs.launchpad.net/qemu/+bug/897771
-for details.
+during the install kernel boot due to a regression in qemu's
+emulation of the PCI configuration registers.  The work-around 
+is to use qemu 0.xx.  See PR 45671 and 
+https://bugs.launchpad.net/qemu/+bug/897771 for details.
 .Pp
 Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
 time with recent versions of qemu because the bootloader countdown
