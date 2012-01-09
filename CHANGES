@@ -1,12 +1,13 @@
+Support installation of the X11 and source sets.
+
 On unknown platforms, use mkisofs instead of genisoimage.
 
 On sparc, the scratch disk is sd1c, not wd1d.
 
 Allow a full hour for extracting sets.
 
-Invoke the i386 version of qemu as "qemu-system-i386" rather
-than just "qemu", because a current stock git qemu doesn't
-install a binary called just "qemu".
+Deal with the backwards incompatible renaming of "qemu" to
+"qemu-system-i386" in qemu 1.0.
 
 Specify "cache=writeback" for the emulated hard disk; this
 significantly speeds up installation at least in some versions
