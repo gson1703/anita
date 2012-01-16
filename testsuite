@@ -21,8 +21,7 @@ runtest() {
 
 # Test an installation with debug symbols and partial source
 # With 32M of memory, we hit the "stalled" problem
-runtest "--memory-size=128M --disk-size=2G --sets=kern-GENERIC,etc,base,tests,games,misc,syssrc boot" `pwd`/release/i386-source-2011.12.02.18.07.26/i386/
-exit $?
+runtest "--memory-size=128M --disk-size=2G --sets=kern-GENERIC,etc,base,tests,games,misc,syssrc boot" `pwd`/release/i386-source-2012.01.09.11.52.43/i386/
 
 runtest install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-2.1/i386/
 
