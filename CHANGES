@@ -1,3 +1,6 @@
+Support the new distribution ISO naming scheme, e.g.,
+NetBSD-5.99.60-sparc.iso instead of sparccd.iso.
+
 Support installation of the X11 and source sets.
 
 On unknown platforms, use mkisofs instead of genisoimage.
@@ -8,10 +11,6 @@ Allow a full hour for extracting sets.
 
 Deal with the backwards incompatible renaming of "qemu" to
 "qemu-system-i386" in qemu 1.0.
-
-Specify "cache=writeback" for the emulated hard disk; this
-significantly speeds up installation at least in some versions
-of qemu.
 
 After running the ATF tests, run "ps" to show any processes possibly
 left running by the tests.

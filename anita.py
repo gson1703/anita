@@ -482,11 +482,14 @@ class ISO(Version):
 	# basename of it.
 	self.m_iso_basename = os.path.basename(
 	    urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
-	m = re.match("(.*)cd.*iso", self.m_iso_basename)
+	m = re.match(r"(.*)cd.*iso|NetBSD-[0-9\.]+-(.*).iso", self.m_iso_basename)
 	if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'"
 	        % self.m_iso_basename)
-	self.m_arch = m.group(1)
+        if m.group(1) is not None:
+            self.m_arch = m.group(1)
+        if m.group(2) is not None:
+            self.m_arch = m.group(2)
 	check_arch_supported(self.m_arch, 'iso')
     def iso_path(self):
         if self.m_iso_path is not None:
@@ -556,7 +559,7 @@ class Anita:
         
         child = pexpect.spawn(self.qemu, [
 	    "-m", str(megs),
-            "-drive", "file=%s,index=0,media=disk,snapshot=%s,cache=writeback" %
+            "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
