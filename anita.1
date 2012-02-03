@@ -1,4 +1,4 @@
-.Dd August 25, 2011
+.Dd January 27, 2012
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -12,6 +12,7 @@
 .Op Fl -run Ar command
 .Op Fl -sets Ar sets
 .Op Fl -test-timeout Ar timeout
+.Op Fl -persist
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -115,9 +116,11 @@ freshly installed system,
 .Nm
 enables the 
 .Ic qemu
-snapshotting feature for the system disk (but not for other disks).
+snapshotting feature for the system disk by default (but not for other disks).
 Therefore, if you log in and make changes to the system, they will not
-be saved to the disk image file.
+be saved to the disk image file.  To override this behavior, specify the
+.Ar -persist
+option.
 .Pp
 .Sh MODES
 The operation performed by 
@@ -239,6 +242,14 @@ is not supported.
 Set a timeout for the tests run in the
 .Cm test
 mode, in seconds.  The default is 7200 seconds (two hours).
+.It Fl -persist
+Store any changes to the contents of the system disk persistently,
+such that they may affect future
+.Nm
+runs, instead of the default behavior where only the 
+.Ar install
+mode can modify the disk contents and all other modes work with
+an ephemeral snapshot copy of the freshly installed system.
 .El
 .Sh BUGS
 .Nm

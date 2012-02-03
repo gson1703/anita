@@ -515,7 +515,7 @@ class ISO(Version):
 
 class Anita:
     def __init__(self, dist, workdir = None, vmm_args = None,
-        disk_size = None, memory_size = None):
+        disk_size = None, memory_size = None, persist = False):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -531,6 +531,8 @@ class Anita:
         if memory_size is None:
             memory_size = "32M"
 	self.memory_size_bytes = parse_size(memory_size)
+
+        self.persist = persist
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -929,7 +931,7 @@ class Anita:
         if vmm_args is None:
             vmm_args = []
         self.install()
-        child = self.start_qemu(vmm_args, snapshot_system_disk = True)
+        child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
         # "-net", "nic,model=ne2k_pci", "-net", "user"
         child.expect("login:")
         # Can't close child here because we still need it if called from

@@ -1,3 +1,5 @@
+New command line option "--persist".
+
 - 1.24 released -
 
 Support the new distribution ISO naming scheme, e.g.,

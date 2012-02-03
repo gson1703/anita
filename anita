@@ -37,6 +37,9 @@ def main(argv = None):
     parser.add_option("--test-timeout",
 		      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
                       type="int", default=7200)
+    parser.add_option("--persist",
+		      help="make changes to disk contents persistent", action="store_true")
+
     (options, args) = parser.parse_args()
 
     if len(args) < 2:
@@ -65,7 +68,8 @@ def main(argv = None):
 	raise Usage("expected distribution URL or directory, got " + distarg)
 
     a = anita.Anita(dist, workdir = options.workdir, vmm_args = vmm_args,
-        disk_size = options.disk_size, memory_size = options.memory_size)
+        disk_size = options.disk_size, memory_size = options.memory_size,
+	persist = options.persist)
 
     def maybe_run_command(child):
         if options.run:
