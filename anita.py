@@ -327,7 +327,7 @@ class Version:
         return True
     def scratch_disk(self):
         arch = self.arch()
-        if (arch == 'i386' or arch == 'amd64'):
+        if arch == 'i386' or arch == 'amd64':
             return "wd1d"
         else:
             return "sd1c"
@@ -550,12 +550,15 @@ class ISO(Version):
 
 #############################################################################
 
+# Helper class for killing the DomU when the last reference to the
+# child process is dropped
+    
 class DomUKiller:
-    def __init__(self, domain_id):
-        self.domain_id = domain_id
+    def __init__(self, name):
+        self.name = name
     def __del__(self):
-        print "destroying domU"
-        spawn("xm", ["xm", "destroy", self.domain_id])
+        print "destroying domU", self.name
+        spawn("xm", ["xm", "destroy", self.name])
 
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
@@ -1005,6 +1008,9 @@ class Anita:
 	    child.send("halt\n")
 	    child.expect("halted by root")
         child.close()
+        # Make sure all refs go away
+        child = None
+        self.child = None
         self.dist.cleanup()
 
     # Install NetBSD if not installed already
@@ -1026,6 +1032,11 @@ class Anita:
     def boot(self, vmm_args = None):
         if vmm_args is None:
             vmm_args = []
+
+        # This is needed only for Xen, where we get the kernel
+        # from the dist rather than the installed image
+        self.dist.set_workdir(self.workdir)
+
         self.install()
 
         if self.vmm == 'qemu':
@@ -1055,7 +1066,10 @@ class Anita:
         # and easier to manipulate than a file system image, especially if the
         # host is a non-NetBSD system.
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
-        scratch_disk = self.dist.scratch_disk()
+        if self.vmm == 'xen':
+            scratch_disk = 'xbd1d'
+        else:
+            scratch_disk = self.dist.scratch_disk()
         atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
                          '/usr/share/xml/atf/tests-results.dtd',
                          '/usr/share/examples/atf/tests-results.css']
