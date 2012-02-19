@@ -655,6 +655,7 @@ class Anita:
 	arch = self.dist.arch()
 	
 	# Create a disk image file
+        print "DENSE", self.wd0_path()
         make_dense_image(self.wd0_path(), parse_size(self.disk_size))
 
         if self.vmm == 'xen':
@@ -824,26 +825,29 @@ class Anita:
 
         choose_sets(self.dist.sets)
 
-	if arch == 'i386' or arch == 'amd64':
+        while True:
+            # On non-Xen i386/amd64 we first get group 1 or 2,
+            # then group 3; on sparc an Xen, we just get group 3.
 	    child.expect("(a: This is the correct geometry)|" +
-	        "(a: Use one of these disks)")
-            if child.match.group(1):
-	        child.send("\n")
-	    elif child.match.group(2):
-	        child.send("a\n")
-		child.expect("Choose disk")
-		child.send("0\n")
+	        "(a: Use one of these disks)|" +
+                "(a: Set sizes of NetBSD partitions)")
+            if child.match.group(1) or child.match.group(2):
+                if child.match.group(1):
+                    child.send("\n")
+                elif child.match.group(2):
+                    child.send("a\n")
+                    child.expect("Choose disk")
+                    child.send("0\n")
+                child.expect("b: Use the entire disk")
+                child.send("b\n")
+                child.expect("Do you want to install the NetBSD bootcode")
+                child.expect("a: Yes")
+                child.send("\n")
+            elif child.match.group(3):
+                child.send("a\n")
+                break
 	    else:
 		raise AssertionError
-	    child.expect("b: Use the entire disk")
-	    child.send("b\n")
-	    child.expect("Do you want to install the NetBSD bootcode")
-	    child.expect("a: Yes")
-	    child.send("\n")
-	    child.send("\n")
-        else: # sparc, maybe others
-	    child.expect("a: Set sizes of NetBSD partitions")
-	    child.send("a\n")
 
         child.expect("Accept partition sizes")
         # Press cursor-down enough times to get to the end of the list,
