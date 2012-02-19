@@ -1044,8 +1044,8 @@ class Anita:
             # "-net", "nic,model=ne2k_pci", "-net", "user"
         elif self.vmm == 'xen':
             child = self.start_xen_domu(vmm_args + ["kernel=" +
-                os.path.join(self.dist.download_local_arch_dir(),
-                             "binary", "kernel", self.dist.xen_kernel())])
+                os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                             "binary", "kernel", self.dist.xen_kernel()))])
         else:
             raise RuntimeError('unknown vmm')
             
