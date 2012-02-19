@@ -323,6 +323,25 @@ class Version:
         else:
             return "sd1c"
 
+    def xen_kernel(self):
+        arch = self.arch()
+        if arch == 'i386':
+            return 'netbsd-XEN3PAE_DOMU.gz'
+        elif arch == 'amd64':
+            return 'netbsd-XEN3_DOMU.gz'
+        else:
+            return None
+            
+    def xen_install_kernel(self):
+        arch = self.arch()
+        if arch == 'i386':
+            return 'netbsd-INSTALL_XEN3PAE_DOMU.gz'
+        elif arch == 'amd64':
+            return 'netbsd-INSTALL_XEN3_DOMU.gz'
+        else:
+            return None
+
+
     # The list of boot floppies we should try downloading;
     # not all may actually exist.  amd64 currently has five,
     # i386 has three, and older versions may have fewer.
@@ -346,6 +365,7 @@ class Version:
             return [self.arch(), 'binary', 'sets', setname + '.tgz']
     
     # Download this release
+    # The ISO class overrides this to download the ISO only
     def download(self):
         # Depending on the NetBSD version, there may be two or three
         # boot floppies.  Treat any floppies past the first two as
@@ -364,6 +384,14 @@ class Version:
                                       self.download_local_mi_dir(),
                                       self.set_path(set['filename']),
                                       set['optional'])
+
+        # Download XEN kernels in case we want to do a Xen domU install
+        xenkernels = [k for k in [self.xen_kernel(), self.xen_install_kernel()] if k]
+        for kernel in xenkernels:
+            download_if_missing_3(self.dist_url(),
+                    self.download_local_arch_dir(),
+                    ["binary", "kernel", kernel],
+                    True)
 
     # Create an install ISO image to install from
     def make_iso(self):
@@ -514,7 +542,7 @@ class ISO(Version):
 #############################################################################
 
 class Anita:
-    def __init__(self, dist, workdir = None, vmm_args = None,
+    def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False):
         self.dist = dist
         if workdir:
@@ -544,6 +572,8 @@ class Anita:
            and try_program(['qemu', '--version']): \
                self.qemu = 'qemu'
 
+        self.vmm = vmm
+
         if vmm_args is None:
             vmm_args = []
         self.extra_vmm_args = vmm_args
@@ -552,19 +582,16 @@ class Anita:
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
 
-    def start_qemu(self, vmm_args, snapshot_system_disk):
+    # Return the memory size rounded up to whole megabytes
+    def memory_megs(self):
         megs = (self.memory_size_bytes + 2 ** 20 - 1) / 2 ** 20
         if megs != self.memory_size_bytes / 2 **20:
             print >>sys.stderr, \
                 "warning: rounding up memory size of %i bytes to %i megabytes" \
                 % (self.memory_size_bytes, megs)
-        
-        child = pexpect.spawn(self.qemu, [
-	    "-m", str(megs),
-            "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
-	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
-            "-nographic"
-            ] + vmm_args + self.extra_vmm_args)
+        return megs
+
+    def configure_child(self, child):
 	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
 	# "child.log_file", so we set both variables for portability
         child.logfile = sys.stdout
@@ -572,32 +599,65 @@ class Anita:
         child.timeout = 300
         child.setecho(False)
 	self.child = child
+
+    def start_qemu(self, vmm_args, snapshot_system_disk):
+        child = pexpect.spawn(self.qemu, [
+	    "-m", str(self.memory_megs()),
+            "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
+	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
+            "-nographic"
+            ] + vmm_args + self.extra_vmm_args)
+        self.configure_child(child)
+        return child
+
+    def start_xen_domu(self, vmm_args):
+        child = pexpect.spawn("xm", [
+            "create",
+            "-c",
+            "/dev/null",
+            "disk=file:" + self.wd0_path() + ",0x0,w",
+	    "memory=" + str(self.memory_megs()),
+            "name=anita-%i" % os.getpid()
+        ] + vmm_args + self.extra_vmm_args)
+        self.configure_child(child)
         return child
 
     def _install(self):
-        # Get the install ISO
+        # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
         self.dist.make_iso()
 
 	arch = self.dist.arch()
-	boot_from_floppy = self.dist.boot_from_floppy()
-
+	
 	# Create a disk image file
         make_dense_image(self.wd0_path(), parse_size(self.disk_size))
 
-        vmm_args = ["-cdrom", self.dist.iso_path()]
+        if self.vmm == 'xen':
+            boot_from_floppy = False
+            vmm_args = [
+                "kernel=" + os.path.join(self.dist.download_local_arch_dir(),
+                    "binary", "kernel", self.dist.xen_install_kernel()),
+                "disk=file:" + self.dist.iso_path() + ",0x1,r",
+            ]
+            child = self.start_xen_domu(vmm_args)
+            
+        elif self.vmm == 'qemu':
+            vmm_args = ["-cdrom", self.dist.iso_path()]
 
-        if boot_from_floppy:
-	    floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
-		for f in self.dist.floppies() ]
-	    if len(floppy_paths) == 0:
-	        raise RuntimeError("found no boot floppies")
-            vmm_args += ["-fda", floppy_paths[0], "-boot", "a"]
-	else:
-	    vmm_args += ["-boot", "d"]
+            boot_from_floppy = self.dist.boot_from_floppy()
+            if boot_from_floppy:
+                floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
+                    for f in self.dist.floppies() ]
+                if len(floppy_paths) == 0:
+                    raise RuntimeError("found no boot floppies")
+                vmm_args += ["-fda", floppy_paths[0], "-boot", "a"]
+            else:
+                vmm_args += ["-boot", "d"]
 
-        child = self.start_qemu(vmm_args, snapshot_system_disk = False)
-
+            child = self.start_qemu(vmm_args, snapshot_system_disk = False)
+        else:
+            raise RuntimeError('unknown vmm')
+                               
         if boot_from_floppy:
 	    # Do the floppy swapping dance
 	    floppy0_name = None
@@ -931,8 +991,17 @@ class Anita:
         if vmm_args is None:
             vmm_args = []
         self.install()
-        child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
-        # "-net", "nic,model=ne2k_pci", "-net", "user"
+
+        if self.vmm == 'qemu':
+            child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
+            # "-net", "nic,model=ne2k_pci", "-net", "user"
+        elif self.vmm == 'xen':
+            child = self.start_xen_domu(vmm_args + ["kernel=" +
+                os.path.join(self.dist.download_local_arch_dir(),
+                             "binary", "kernel", self.dist.xen_kernel())])
+        else:
+            raise RuntimeError('unknown vmm')
+            
         child.expect("login:")
         # Can't close child here because we still need it if called from
 	# interact()
@@ -956,9 +1025,14 @@ class Anita:
                          '/usr/share/examples/atf/tests-results.css']
         mkdir_p(self.workdir)
         make_dense_image(scratch_disk_path, parse_size('10M'))
-        child = self.boot(["-drive",
-                           "file=%s,index=1,media=disk,snapshot=off" %
-                           scratch_disk_path])
+
+        if self.vmm == 'xen':
+            scratch_disk_args = ["disk=file:" + scratch_disk_path + ",0x1,w"]
+        elif self.vmm == 'qemu':
+            scratch_disk_args = ["-drive", "file=%s,index=1,media=disk,snapshot=off" % scratch_disk_path]
+        else:
+            raise RuntimeError('unknown vmm')
+        child = self.boot(scratch_disk_args)
 	login(child)
         exit_status = shell_cmd(child,
 	    "df -k | sed 's/^/df-pre-test /'; " +

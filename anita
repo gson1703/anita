@@ -17,6 +17,9 @@ def main(argv = None):
         usage = "usage: %prog [options] install|boot|interact distribution")
     parser.add_option("--workdir",
 		      help="store work files in DIR", metavar="DIR")
+    parser.add_option("--vmm",
+		      help="use VMM (qemu or xen) as the virtual machine monitor",
+		      metavar="VMM", default="qemu")
     parser.add_option("--vmm-args",
 		      help="pass ARGS as extra arguments to virtual machine monitor",
 		      metavar="ARGS", default="")
@@ -67,7 +70,8 @@ def main(argv = None):
     else:
 	raise Usage("expected distribution URL or directory, got " + distarg)
 
-    a = anita.Anita(dist, workdir = options.workdir, vmm_args = vmm_args,
+    a = anita.Anita(dist, workdir = options.workdir,
+        vmm = options.vmm, vmm_args = vmm_args,
         disk_size = options.disk_size, memory_size = options.memory_size,
 	persist = options.persist)
 
