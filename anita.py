@@ -631,7 +631,7 @@ class Anita:
             "create",
             "-c",
             "/dev/null",
-            "disk=file:" + self.wd0_path() + ",0x0,w",
+            "disk=file:" + os.path.abspath(self.wd0_path()) + ",0x0,w",
 	    "memory=" + str(self.memory_megs()),
             "name=" + name
         ] + vmm_args + self.extra_vmm_args)
@@ -660,9 +660,9 @@ class Anita:
         if self.vmm == 'xen':
             boot_from_floppy = False
             vmm_args = [
-                "kernel=" + os.path.join(self.dist.download_local_arch_dir(),
-                    "binary", "kernel", self.dist.xen_install_kernel()),
-                "disk=file:" + self.dist.iso_path() + ",0x1,r",
+                "kernel=" + os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                    "binary", "kernel", self.dist.xen_install_kernel())),
+                "disk=file:" + os.path.abspath(self.dist.iso_path()) + ",0x1,r",
             ]
             child = self.start_xen_domu(vmm_args)
             
@@ -1052,7 +1052,7 @@ class Anita:
         make_dense_image(scratch_disk_path, parse_size('10M'))
 
         if self.vmm == 'xen':
-            scratch_disk_args = ["disk=file:" + scratch_disk_path + ",0x1,w"]
+            scratch_disk_args = ["disk=file:" + os.path.abspath(scratch_disk_path) + ",0x1,w"]
         elif self.vmm == 'qemu':
             scratch_disk_args = ["-drive", "file=%s,index=1,media=disk,snapshot=off" % scratch_disk_path]
         else:
