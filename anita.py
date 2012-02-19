@@ -541,6 +541,12 @@ class ISO(Version):
 
 #############################################################################
 
+class DomUKiller:
+    def __init__(self, domain_id):
+        self.domain_id = domain.id
+    def __del__(self):
+        spawn("xm", ["xm", "destroy", self.domain_id])
+
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False):
@@ -611,15 +617,25 @@ class Anita:
         return child
 
     def start_xen_domu(self, vmm_args):
+        name = "anita-%i" % os.getpid()
         child = pexpect.spawn("xm", [
             "create",
             "-c",
             "/dev/null",
             "disk=file:" + self.wd0_path() + ",0x0,w",
 	    "memory=" + str(self.memory_megs()),
-            "name=anita-%i" % os.getpid()
+            "name=" + name
         ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
+        # This is ugly; we reach into the child object and set an
+        # additional attribute.  The name of the attribute,
+        # "garbage_collector" below, is arbitrary, but must not
+        # conflict with any existing attribute of the child
+        # object.  Its purpose is only to hold a reference to the
+        # DomUKiller object, such that when the child object is
+        # destroyed, the destructor of the DomUKiller object
+        # is also invoked.
+        child.garbage_collector = DomUKiller(name)
         return child
 
     def _install(self):
