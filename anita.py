@@ -554,6 +554,7 @@ class DomUKiller:
     def __init__(self, domain_id):
         self.domain_id = domain_id
     def __del__(self):
+        print "destroying domU"
         spawn("xm", ["xm", "destroy", self.domain_id])
 
 class Anita:
@@ -655,7 +656,6 @@ class Anita:
 	arch = self.dist.arch()
 	
 	# Create a disk image file
-        print "DENSE", self.wd0_path()
         make_dense_image(self.wd0_path(), parse_size(self.disk_size))
 
         if self.vmm == 'xen':
@@ -914,9 +914,13 @@ class Anita:
 	    loop = loop + 1
 	    if loop == 20:
 	        raise RuntimeError("loop detected")
-	    child.expect("(a: Progress bar)|(a: CD-ROM)|(([cx]): Continue)|" +
-	        "(Hit enter to continue)|(b: Use serial port com0)|" +
-		"(Please choose the timezone)|(essential things)", 3600)
+	    child.expect("(a: Progress bar)|" +
+                         "(a: CD-ROM)|" +
+                         "(([cx]): Continue)|" +
+                         "(Hit enter to continue)|" +
+                         "(b: Use serial port com0)|" +
+                         "(Please choose the timezone)|" +
+                         "(essential things)", 3600)
 	    if child.match.groups() == prevmatch:
 	        continue
 	    prevmatch = child.match.groups()
@@ -928,6 +932,9 @@ class Anita:
 		child.send("\n")
             elif child.match.group(3):
 	        # CDROM device selection
+                if self.vmm == 'xen':
+                    # change the device from the default of cd0a to xbd1d
+                    child.send("a\nxbd1d\n")
 	        # (([cx]): Continue)
 		# In 3.0.1, you type "c" to continue, whereas in -current,
 		# you type "x".  Handle both cases.
