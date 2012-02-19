@@ -64,9 +64,18 @@ def mkdir_p(dir):
 # Run a shell command safely and with error checking
 
 def spawn(command, args):
+    print command, " \\\n    ".join(args[1:])
     ret = os.spawnvp(os.P_WAIT, command, args)
     if ret != 0:
         raise RuntimeError("could not run " + command)
+
+# Wrapper around pexpect.spawn to let us log the command for
+# debugging.  Note that unlike os.spawnvp, args[0] is not
+# the name of the command.
+    
+def pexpect_spawn(command, args):
+    print command, " \\\n    ".join(args)
+    return pexpect.spawn(command, args)
 
 # Subclass urllib.FancyURLopener so that we can catch
 # HTTP 404 errors
@@ -543,7 +552,7 @@ class ISO(Version):
 
 class DomUKiller:
     def __init__(self, domain_id):
-        self.domain_id = domain.id
+        self.domain_id = domain_id
     def __del__(self):
         spawn("xm", ["xm", "destroy", self.domain_id])
 
@@ -607,7 +616,7 @@ class Anita:
 	self.child = child
 
     def start_qemu(self, vmm_args, snapshot_system_disk):
-        child = pexpect.spawn(self.qemu, [
+        child = pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
             "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
@@ -618,7 +627,7 @@ class Anita:
 
     def start_xen_domu(self, vmm_args):
         name = "anita-%i" % os.getpid()
-        child = pexpect.spawn("xm", [
+        child = pexpect_spawn("xm", [
             "create",
             "-c",
             "/dev/null",
