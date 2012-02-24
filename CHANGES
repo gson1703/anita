@@ -1,6 +1,6 @@
-Untested, experimental support for using Xen instead of qemu as the
-virtual machine monitor.  Enabled by specifying "--vmm xen" on the
-anita command line while running as root in a Xen dom0.
+Added experimental support for using Xen instead of qemu as the
+virtual machine monitor.  This is enabled by specifying "--vmm xen" on
+the anita command line while running as root in a Xen dom0.
 
 New command line option "--persist".
 

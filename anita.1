@@ -1,4 +1,4 @@
-.Dd January 27, 2012
+.Dd February 24, 2012
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -7,6 +7,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar work_directory
+.Op Fl -vmm Ar qemu | xen
 .Op Fl -vmm-args Ar vmm_arguments
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
@@ -17,13 +18,11 @@
 .Ar URL
 .Sh DESCRIPTION
 .Nm
-is an experimental tool for automated testing of the NetBSD
-installation procedure.  Using 
+is a tool for automated testing of the NetBSD installation procedure.  Using 
 .Nm , 
 you can fully automate the process of downloading a NetBSD
-distribution, installing it in a
-.Ic qemu 
-virtual machine, and booting the installed system.
+distribution, installing it in a virtual machine, and booting the 
+installed system.
 .Pp
 The NetBSD ports currently supported as targets (i.e., as the 
 system to install and run under emulation) are i386, amd64, and
@@ -32,6 +31,11 @@ sparc.  The host (the system running
 can be any NetBSD port or even a different Unix-like system such 
 as Linux, FreeBSD, or Mac OS X.
 .Pp
+The default virtual machine monitor used by 
+.Nm 
+is
+.Ic qemu ,
+but there is also experimental support for Xen.
 .Sh EXAMPLES
 To install NetBSD 5.0.2/i386 from the master NetBSD FTP site, enter
 .Pp
@@ -179,6 +183,27 @@ The following command line options are supported:
 .It Fl -workdir Ar directory
 The work directory.  The default is an automatically generated
 name under ".".
+.It Fl -vmm Ar qemu | xen
+Specify the virtual machine monitor.  The default is
+.Cm qemu .
+If
+.Nm
+is running in a Xen dom0 and the target system system architecture
+is i386 or amd64, it is also possible to
+specify
+.Cm xen ,
+which will make
+.Nm
+install the target system in a Xen domU.  This requires
+running
+.Nm
+as root.  Any changes made to the system disk image will
+be persistent whether or not the 
+.Fl -persist
+option was given.  The Xen support should be considered experimental
+and may not be fully tested.
+.Nm
+release.
 .It Fl -vmm-args Ar string
 Additional arguments to pass to the virtual machine monitor (currently
 qemu, but others may be supported in the future).  The arguments are given
