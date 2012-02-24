@@ -64,7 +64,7 @@ def mkdir_p(dir):
 # Run a shell command safely and with error checking
 
 def spawn(command, args):
-    print command, " \\\n    ".join(args[1:])
+    #print command, " \\\n    ".join(args[1:])
     ret = os.spawnvp(os.P_WAIT, command, args)
     if ret != 0:
         raise RuntimeError("could not run " + command)
@@ -74,7 +74,7 @@ def spawn(command, args):
 # the name of the command.
     
 def pexpect_spawn(command, args):
-    print command, " \\\n    ".join(args)
+    #print command, " \\\n    ".join(args)
     return pexpect.spawn(command, args)
 
 # Subclass urllib.FancyURLopener so that we can catch
