@@ -519,7 +519,7 @@ class ISO(Version):
 	# basename of it.
 	self.m_iso_basename = os.path.basename(
 	    urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
-	m = re.match(r"(.*)cd.*iso|NetBSD-[0-9\.]+-(.*).iso", self.m_iso_basename)
+	m = re.match(r"(.*)cd.*iso|NetBSD-[0-9\._A-Z]+-(.*).iso", self.m_iso_basename)
 	if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'"
 	        % self.m_iso_basename)

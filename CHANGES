@@ -1,3 +1,6 @@
+Support installing SPARC ISOs having a non-numeric suffix following
+the version number, such as NetBSD-6.0_BETA-sparc.iso.
+
 Added experimental support for using Xen instead of qemu as the
 virtual machine monitor.  This is enabled by specifying "--vmm xen" on
 the anita command line while running as root in a Xen dom0.

@@ -49,4 +49,6 @@ $python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee st
 grep 'passed test cases' stdout
 rm -f stdout
 
+# http://nyftp.netbsd.org/pub/NetBSD-daily/netbsd-6/201203020050Z/iso/NetBSD-6.0_BETA-sparc.iso
+
 echo "pass"
