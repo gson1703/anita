@@ -618,6 +618,10 @@ class Anita:
         child.log_file = sys.stdout
         child.timeout = 300
         child.setecho(False)
+        # Xen installs sometimes fail without this
+        child.delayafterclose = 1.0
+        # Also increase this just in case
+        child.delayafterterminate = 1.0
 	self.child = child
 
     def start_qemu(self, vmm_args, snapshot_system_disk):
