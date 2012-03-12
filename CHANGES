@@ -1,3 +1,7 @@
+Before running a shell command on the system under test, change the
+shell prompt to a more distinctive one to reduce the risk of command
+output being mistaken for a prompt.
+
 Support installing SPARC ISOs having a non-numeric suffix following
 the version number, such as NetBSD-6.0_BETA-sparc.iso.
 

@@ -244,11 +244,9 @@ or
 .Ar interact
 command.  Since the command is sent to an interactive shell over the
 console tty, it should be kept short and simple to avoid running into tty
-limitations or quoting issues.  Also, any output from the command that
-looks similar to a root shell "# " prompt is liable to be interpreted
-as such.  Complex commands may be executed by preparing a disk
-image containing a file system containing a shell script, and specifying
-something like
+limitations or quoting issues.  Complex commands may be executed by
+preparing a disk image containing a file system containing a shell
+script, and specifying something like
 .Pp
 .Dl --vmm-args '-hdb disk.img' --run 'mount /dev/wd1a /mnt && /mnt/script'
 .Pp

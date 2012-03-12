@@ -46,6 +46,16 @@ else:
 
 fnull = open(os.devnull, 'w')
 
+# A root shell prompt string that is less likely to appear in the
+# console output by accident than the default of "# ".  First, the
+# prompt as a quoted string in /bin/sh syntax, with some extra quotes
+# in the middle so that an echoed command to set the prompt is not
+# mistaken for the prompt itself.
+distinctive_prompt_sh_string = "'anita-ro''ot-shell# '"
+
+# A regular expression to match the above prompt
+distinctive_prompt_re = r"anita-root-shell# "
+
 # Return true if the given program (+args) can be successfully run
 
 def try_program(argv):
@@ -1130,8 +1140,10 @@ def net_setup(child):
     child.expect("bound to.*\n# ")
 
 def shell_cmd(child, cmd, timeout = -1):
+    child.send("PS1=" + distinctive_prompt_sh_string + "\n")
+    child.expect(distinctive_prompt_re, timeout)    
     child.send(cmd + "\n")
-    child.expect("# ", timeout)
+    child.expect(distinctive_prompt_re, timeout)
     child.send("echo $?\n")
     child.expect("(\d+)")
     return int(child.match.group(1))
