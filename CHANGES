@@ -1,3 +1,5 @@
+- 1.25 released -
+
 Before running a shell command on the system under test, change the
 shell prompt to a more distinctive one to reduce the risk of command
 output being mistaken for a prompt.
