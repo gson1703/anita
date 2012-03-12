@@ -360,7 +360,6 @@ class Version:
         else:
             return None
 
-
     # The list of boot floppies we should try downloading;
     # not all may actually exist.  amd64 currently has five,
     # i386 has three, and older versions may have fewer.
@@ -403,14 +402,6 @@ class Version:
                                       self.download_local_mi_dir(),
                                       self.set_path(set['filename']),
                                       set['optional'])
-
-        # Download XEN kernels in case we want to do a Xen domU install
-        xenkernels = [k for k in [self.xen_kernel(), self.xen_install_kernel()] if k]
-        for kernel in xenkernels:
-            download_if_missing_3(self.dist_url(),
-                    self.download_local_arch_dir(),
-                    ["binary", "kernel", kernel],
-                    True)
 
     # Create an install ISO image to install from
     def make_iso(self):
@@ -672,6 +663,14 @@ class Anita:
         make_dense_image(self.wd0_path(), parse_size(self.disk_size))
 
         if self.vmm == 'xen':
+            # Download XEN kernels
+            xenkernels = [k for k in [self.dist.xen_kernel(), self.dist.xen_install_kernel()] if k]
+            for kernel in xenkernels:
+                download_if_missing_3(self.dist.dist_url(),
+                        self.dist.download_local_arch_dir(),
+                        ["binary", "kernel", kernel],
+                        True)
+            
             boot_from_floppy = False
             vmm_args = [
                 "kernel=" + os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
