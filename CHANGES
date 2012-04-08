@@ -1,7 +1,7 @@
 - 1.26 released -
 
-Track the sysinst changes of Apr 4 2012 introducing the new
-configuration menu.
+Track the sysinst changes of 2012-04-06 introducing the new
+post-install configuration menu.
 
 Print a message before creating the disk image, as it can take
 a long time and make it appear that anita has hung.
