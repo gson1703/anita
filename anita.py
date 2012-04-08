@@ -664,6 +664,7 @@ class Anita:
 	arch = self.dist.arch()
 	
 	# Create a disk image file
+        print "Creating disk image..."
         make_dense_image(self.wd0_path(), parse_size(self.disk_size))
 
         if self.vmm == 'xen':
