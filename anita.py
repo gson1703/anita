@@ -902,6 +902,10 @@ class Anita:
 	# Versions older than 2010/03/30 20:09:25 will display a menu for
 	# choosing the CD-ROM device (newer versions will choose automatically)
 	#
+        # Versions older than Fri Apr 6 23:48:53 2012 UTC will ask
+	# you to "Please choose the timezone", wheras newer ones will
+	# instead as you to "Configure the additional items".
+	#
 	# At various points, we may or may not get "Hit enter to continue"
 	# prompts (and some of them seem to appear nondeterministically)
 	#
@@ -924,7 +928,12 @@ class Anita:
         # then after "sysinst will give you the opportunity to configure 
         # some essential things first".  We match the latter text separately
         # so that the "Hit enter to continue" matches are not consecutive.
+        #
+        # The changes of Apr 6 2012 broght with them a new redraw problem,
+	# which is worked around using the seen_essential_things variable.
+	#
 	prevmatch = []
+	seen_essential_things = 0
 	loop = 0
         while True:
 	    loop = loop + 1
@@ -936,7 +945,9 @@ class Anita:
                          "(Hit enter to continue)|" +
                          "(b: Use serial port com0)|" +
                          "(Please choose the timezone)|" +
-                         "(essential things)", 3600)
+                         "(essential things)|" +
+			 "(Configure the additional items)",
+			 3600)
 	    if child.match.groups() == prevmatch:
 	        continue
 	    prevmatch = child.match.groups()
@@ -957,69 +968,95 @@ class Anita:
 		child.send(child.match.group(4) + "\n")
 	    elif child.match.group(5):
 	        # (Hit enter to continue)
-		child.send("\n")
+		if seen_essential_things >= 2:
+		    # This must be a redraw
+		    pass
+		else:
+		    child.send("\n")
             elif child.match.group(6):
 	        # (b: Use serial port com0)
                 child.send("bx\n")
 	    elif child.match.group(7):
 	        # (Please choose the timezone)
+	        # "Press 'x' followed by RETURN to quit the timezone selection"
+		child.send("x\n")
+		# The strange non-deterministic "Hit enter to continue" prompt has
+		# also been spotted after executing the sed commands to set the
+		# root password cipher, with 2010.10.27.10.42.12 source.
+		while True:
+		    child.expect("(([a-z]): DES)|(root password)|(Hit enter to continue)")
+		    if child.match.group(1):
+			# DES
+			child.send(child.match.group(2) + "\n")
+		    elif child.match.group(3):
+			# root password
+			break
+		    elif child.match.group(4):
+			# (Hit enter to continue)
+			child.send("\n")
+		    else:
+			raise AssertionError
+		# Don't set a root password
+		child.expect("b: No")
+		child.send("b\n")
+		child.expect("a: /bin/sh")
+		child.send("\n")
+
+		# "The installation of NetBSD-3.1 is now complete.  The system
+		# should boot from hard disk.  Follow the instructions in the
+		# INSTALL document about final configuration of your system.
+		# The afterboot(8) manpage is another recommended reading; it
+		# contains a list of things to be checked after the first
+		# complete boot."
+		#
+		# We are supposed to get a single "Hit enter to continue"
+		# prompt here, but sometimes we get a weird spurious one
+		# after running chpass above.
+
+		while True:        
+		    child.expect("(Hit enter to continue)|(x: Exit)")
+		    if child.match.group(1):
+			child.send("\n")
+		    elif child.match.group(2):
+			child.send("x\n")
+			break
+		    else:
+			raise AssertionError                
 		break
 	    elif child.match.group(8):
                 # (essential things)
-                pass
+		seen_essential_things += 1
+	    elif child.match.group(9):
+	        # (Configure the additional items)
+		child.expect("x: Finished configuring")
+		child.send("x\n")
+		break
 	    else:
 	        raise AssertionError
 
-        # "Press 'x' followed by RETURN to quit the timezone selection"
-        child.send("x\n")
+        # Installation is finished, halt the system.
+	# Historically, i386 and amd64, you get a root shell,
+	# while sparc just halts.
+	# Since Fri Apr 6 23:48:53 2012 UTC, you are kicked
+	# back into the main menu.
+	prevmatch = []
+	while True:
+            child.expect("(Hit enter to continue)|(x: Exit Install System)|(#)|(halting machine)|(halted by root)")
+	    if child.match.groups() == prevmatch:
+	        continue
+	    prevmatch = child.match.groups()
+	    if child.match.group(1):
+	        child.send("\n")
+	    elif child.match.group(2):
+		# Back in menu
+		child.send("x\n")
+	    elif child.match.group(3):
+	        # Root shell prompt
+	        child.send("halt\n")
+	    else:
+	        # group 4 or 5: halted
+		break
 
-        # The strange non-deterministic "Hit enter to continue" prompt has
-        # also been spotted after executing the sed commands to set the
-        # root password cipher, with 2010.10.27.10.42.12 source.
-        while True:
-            child.expect("(([a-z]): DES)|(root password)|(Hit enter to continue)")
-            if child.match.group(1):
-                # DES
-                child.send(child.match.group(2) + "\n")
-            elif child.match.group(3):
-                # root password
-                break
-            elif child.match.group(4):
-	        # (Hit enter to continue)
-		child.send("\n")
-            else:
-                raise AssertionError
-        # Don't set a root password
-        child.expect("b: No")
-        child.send("b\n")
-        child.expect("a: /bin/sh")
-        child.send("\n")
-
-        # "The installation of NetBSD-3.1 is now complete.  The system
-        # should boot from hard disk.  Follow the instructions in the
-        # INSTALL document about final configuration of your system.
-        # The afterboot(8) manpage is another recommended reading; it
-        # contains a list of things to be checked after the first
-        # complete boot."
-        #
-        # We are supposed to get a single "Hit enter to continue"
-        # prompt here, but sometimes we get a weird spurious one
-        # after running chpass above.
-        while True:        
-            child.expect("(Hit enter to continue)|(x: Exit)")
-            if child.match.group(1):
-                child.send("\n")
-            elif child.match.group(2):
-                child.send("x\n")
-                break
-            else:
-                raise AssertionError                
-            
-	# On i386 and amd64, you get a root shell; sparc halts.
-        child.expect("(#)|(halting machine)")
-	if child.match.group(1):
-	    child.send("halt\n")
-	    child.expect("halted by root")
         child.close()
         # Make sure all refs go away
         child = None

@@ -1,3 +1,6 @@
+Track new sysinst changes committed on Apr 4 2012, introducing
+the new configuration menu.
+
 - 1.25 released -
 
 Before running a shell command on the system under test, change the
