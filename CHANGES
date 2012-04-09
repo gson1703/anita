@@ -1,3 +1,9 @@
+- 1.27 released -
+
+Run shell commands on the target system using /bin/sh rather
+than root's login shell, as sysinst no longer sets the login
+shell to /bin/sh by default.
+
 - 1.26 released -
 
 Track the sysinst changes of 2012-04-06 introducing the new

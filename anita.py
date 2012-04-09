@@ -1181,6 +1181,7 @@ def net_setup(child):
     child.expect("bound to.*\n# ")
 
 def shell_cmd(child, cmd, timeout = -1):
+    child.send("exec /bin/sh\n")
     child.send("PS1=" + distinctive_prompt_sh_string + "\n")
     child.expect(distinctive_prompt_re, timeout)    
     child.send(cmd + "\n")

@@ -236,7 +236,7 @@ with a large
 you may also have to increase
 .Fl -disk-size .
 .It Fl -run Ar command
-Log in to the virtual machine and execute the given shell
+Log in to the virtual machine as root and execute the given shell
 .Ar command
 in it once it has booted.  This is only meaningful when used with the
 .Ar boot
@@ -250,7 +250,10 @@ script, and specifying something like
 .Pp
 .Dl --vmm-args '-hdb disk.img' --run 'mount /dev/wd1a /mnt && /mnt/script'
 .Pp
-The exit status of the shell command will be returned as the exit status
+The shell command is run using
+.Cm /bin/sh
+regardless of the login shell of the root user on the target system.
+The exit status of the shell command is returned as the exit status
 of
 .Nm .
 .It Fl -sets Ar sets
