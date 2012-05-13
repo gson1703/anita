@@ -577,7 +577,10 @@ class Anita:
 
 	# Set the default memory size if none was given.
         if memory_size is None:
-            memory_size = "32M"
+            if dist.arch() == 'amd64':
+                memory_size = "128M"
+            else:
+                memory_size = "32M"
 	self.memory_size_bytes = parse_size(memory_size)
 
         self.persist = persist

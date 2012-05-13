@@ -1,3 +1,5 @@
+Increase the default memory size for amd64 to 128M.
+
 - 1.27 released -
 
 Run shell commands on the target system using /bin/sh rather
