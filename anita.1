@@ -123,7 +123,7 @@ enables the
 snapshotting feature for the system disk by default (but not for other disks).
 Therefore, if you log in and make changes to the system, they will not
 be saved to the disk image file.  To override this behavior, specify the
-.Ar -persist
+.Fl -persist
 option.
 .Pp
 .Sh MODES
@@ -188,7 +188,7 @@ Specify the virtual machine monitor.  The default is
 .Cm qemu .
 If
 .Nm
-is running in a Xen dom0 and the target system system architecture
+is running in a Xen dom0 and the target system architecture
 is i386 or amd64, it is also possible to
 specify
 .Cm xen ,
