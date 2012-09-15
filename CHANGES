@@ -1,5 +1,10 @@
 Increase the default memory size for amd64 to 128M.
 
+Improve progress messages when creating the disk image.
+
+When execing /bin/sh, wait for its prompt before sending
+it a command.
+
 - 1.27 released -
 
 Run shell commands on the target system using /bin/sh rather
