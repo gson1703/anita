@@ -1,3 +1,5 @@
+- 1.28 released -
+
 The "xl" Xen interface can now be selected with "--vmm xl".
 
 Increase the default memory size for amd64 to 128M.
