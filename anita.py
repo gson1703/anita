@@ -555,11 +555,15 @@ class ISO(Version):
 # child process is dropped
     
 class DomUKiller:
-    def __init__(self, name):
+    def __init__(self, frontend, name):
         self.name = name
+        self.frontend = frontend
     def __del__(self):
         print "destroying domU", self.name
-        spawn("xm", ["xm", "destroy", self.name])
+        spawn(self.frontend, [self.frontend, "destroy", self.name])
+
+def vmm_is_xen(vmm):
+    return vmm == 'xm' or vmm == 'xl'
 
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
@@ -594,6 +598,10 @@ class Anita:
            not try_program(['qemu-system-i386', '--version']) \
            and try_program(['qemu', '--version']): \
                self.qemu = 'qemu'
+
+        # Backwards compatibility
+        if vmm == 'xen':
+            vmm = 'xm'
 
         self.vmm = vmm
 
@@ -637,16 +645,41 @@ class Anita:
         self.configure_child(child)
         return child
 
+    def xen_disk_arg(self, path, devno = 0, writable = True):
+        if self.vmm == 'xm':
+            return "disk=file:" + path +  + ",0x%x,%s" % (devno, "rw"[writable])
+        else: # xl
+            return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
+
+    def string_arg(self, name, value):
+        return '%s="%s"' % (name, value)
+    
     def start_xen_domu(self, vmm_args):
+        frontend = self.vmm
         name = "anita-%i" % os.getpid()
-        child = pexpect_spawn("xm", [
-            "create",
+        args = [
+	    frontend,
+	    "create",
             "-c",
             "/dev/null",
-            "disk=file:" + os.path.abspath(self.wd0_path()) + ",0x0,w",
+            self.xen_disk_arg(os.path.abspath(self.wd0_path()), 0, True),
 	    "memory=" + str(self.memory_megs()),
-            "name=" + name
-        ] + vmm_args + self.extra_vmm_args)
+            self.string_arg('name', name)
+        ] + vmm_args + self.extra_vmm_args
+        
+        # Multiple "disk=" arguments are no longer supported with xl;
+        # combine them
+        if self.vmm == 'xl':
+            disk_args = []
+            no_disk_args = []
+            for arg in args:
+                if arg.startswith('disk='):
+                    disk_args.append(arg[5:])
+                else:
+                    no_disk_args.append(arg)
+            args = no_disk_args + [ "disk=[%s]" % (','.join(["'%s'" % arg for arg in disk_args]))]
+        
+        child = pexpect_spawn(args[0], args[1:])
         self.configure_child(child)
         # This is ugly; we reach into the child object and set an
         # additional attribute.  The name of the attribute,
@@ -656,7 +689,7 @@ class Anita:
         # DomUKiller object, such that when the child object is
         # destroyed, the destructor of the DomUKiller object
         # is also invoked.
-        child.garbage_collector = DomUKiller(name)
+        child.garbage_collector = DomUKiller(frontend, name)
         return child
 
     def _install(self):
@@ -672,7 +705,7 @@ class Anita:
         make_dense_image(self.wd0_path(), parse_size(self.disk_size))
         print "done."
 
-        if self.vmm == 'xen':
+        if vmm_is_xen(self.vmm):
             # Download XEN kernels
             xenkernels = [k for k in [self.dist.xen_kernel(), self.dist.xen_install_kernel()] if k]
             for kernel in xenkernels:
@@ -683,9 +716,9 @@ class Anita:
             
             boot_from_floppy = False
             vmm_args = [
-                "kernel=" + os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-                    "binary", "kernel", self.dist.xen_install_kernel())),
-                "disk=file:" + os.path.abspath(self.dist.iso_path()) + ",0x1,r",
+                self.string_arg('kernel', os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                    "binary", "kernel", self.dist.xen_install_kernel()))),
+                self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)
             ]
             child = self.start_xen_domu(vmm_args)
             
@@ -965,7 +998,7 @@ class Anita:
 		child.send("\n")
             elif child.match.group(3):
 	        # CDROM device selection
-                if self.vmm == 'xen':
+                if vmm_is_xen(self.vmm):
                     # change the device from the default of cd0a to xbd1d
                     child.send("a\nxbd1d\n")
 	        # (([cx]): Continue)
@@ -1098,10 +1131,10 @@ class Anita:
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
-        elif self.vmm == 'xen':
-            child = self.start_xen_domu(vmm_args + ["kernel=" +
+        elif vmm_is_xen(self.vmm):
+            child = self.start_xen_domu(vmm_args + [self.string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-                             "binary", "kernel", self.dist.xen_kernel()))])
+                             "binary", "kernel", self.dist.xen_kernel())))])
         else:
             raise RuntimeError('unknown vmm')
             
@@ -1122,7 +1155,7 @@ class Anita:
         # and easier to manipulate than a file system image, especially if the
         # host is a non-NetBSD system.
 	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
-        if self.vmm == 'xen':
+        if vmm_is_xen(self.vmm):
             scratch_disk = 'xbd1d'
         else:
             scratch_disk = self.dist.scratch_disk()
@@ -1132,8 +1165,8 @@ class Anita:
         mkdir_p(self.workdir)
         make_dense_image(scratch_disk_path, parse_size('10M'))
 
-        if self.vmm == 'xen':
-            scratch_disk_args = ["disk=file:" + os.path.abspath(scratch_disk_path) + ",0x1,w"]
+        if vmm_is_xen(self.vmm):
+            scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
         elif self.vmm == 'qemu':
             scratch_disk_args = ["-drive", "file=%s,index=1,media=disk,snapshot=off" % scratch_disk_path]
         else:

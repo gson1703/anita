@@ -1,4 +1,4 @@
-.Dd March 12, 2012
+.Dd Sep 22, 2012
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar work_directory
-.Op Fl -vmm Ar qemu | xen
+.Op Fl -vmm Ar qemu | xm | xl
 .Op Fl -vmm-args Ar vmm_arguments
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
@@ -183,7 +183,7 @@ The following command line options are supported:
 .It Fl -workdir Ar directory
 The work directory.  The default is an automatically generated
 name under ".".
-.It Fl -vmm Ar qemu | xen
+.It Fl -vmm Ar qemu | xm | xl
 Specify the virtual machine monitor.  The default is
 .Cm qemu .
 If
@@ -191,25 +191,31 @@ If
 is running in a Xen dom0 and the target system architecture
 is i386 or amd64, it is also possible to
 specify
-.Cm xen ,
+.Cm xm or
+.Cm xl ,
 which will make
 .Nm
-install the target system in a Xen domU.  This requires
+install the target system in a Xen domU using the 
+.Cm xm
+or
+.Cm xl
+interface to Xen, respectively.  This requires
 running
 .Nm
 as root.  Any changes made to the system disk image will
 be persistent whether or not the 
 .Fl -persist
 option was given.  The Xen support should be considered experimental
-and may not be fully tested.
-.Nm
-release.
+and may not be fully tested.  For backwards compatibility,
+.Ar xen
+is accepted as a synonym for 
+.Ar xm .
 .It Fl -vmm-args Ar string
-Additional arguments to pass to the virtual machine monitor (currently
-qemu, but others may be supported in the future).  The arguments are given
+Additional arguments to pass to the virtual machine monitor (qemu, xm, or xl).  
+The arguments are given
 as a single string, which may contain multiple arguments separated
 by whitespace.  There is no way to pass an argument containing
-whitespace.  This option was previously called
+whitespace.  This option was formerly called
 .Fl -qemu-args ;
 the old name is still accepted for backwards compatibility.
 .It Fl -disk-size Ar size
@@ -330,6 +336,7 @@ during the install kernel boot due to a regression in qemu's
 emulation of the PCI configuration registers.  The work-around 
 is to use qemu 0.xx.  See PR 45671 and 
 https://bugs.launchpad.net/qemu/+bug/897771 for details.
+The bug has since been fixed on the qemu mainline.
 .Pp
 Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
 time with recent versions of qemu because the bootloader countdown
