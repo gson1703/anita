@@ -31,6 +31,8 @@ runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 
+runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0_RC2/i386/
+
 # Anita 1.2 compatibility.
 $python <<END
 import anita
