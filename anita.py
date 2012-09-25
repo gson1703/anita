@@ -647,12 +647,15 @@ class Anita:
 
     def xen_disk_arg(self, path, devno = 0, writable = True):
         if self.vmm == 'xm':
-            return "disk=file:" + path +  + ",0x%x,%s" % (devno, "rw"[writable])
+            return "disk=file:%s,0x%x,%s" % (path, devno, "rw"[writable])
         else: # xl
             return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
 
     def string_arg(self, name, value):
-        return '%s="%s"' % (name, value)
+        if self.vmm == 'xm':    
+            return '%s=%s' % (name, value)
+        else: # xl
+            return '%s="%s"' % (name, value)	
     
     def start_xen_domu(self, vmm_args):
         frontend = self.vmm
