@@ -1,6 +1,6 @@
 #!/bin/sh
 
-logfile=testsuite.log.`date +%Y%m%d`
+logfile=log/testsuite.log.`date +%Y%m%d`
 echo "logging to $logfile"
 
 exec >$logfile 2>&1
