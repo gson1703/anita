@@ -27,3 +27,6 @@ _$*
 core
 # CVS default ignores end
 build
+log
+work-*
+
