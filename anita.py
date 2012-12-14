@@ -445,8 +445,12 @@ class Release(NumberedVersion):
     def __init__(self, ver, **kwargs):
         NumberedVersion.__init__(self, ver, **kwargs)
         pass
+    def arch(self):
+        return "i386"
+    def mi_url(self):
+        return netbsd_mirror_url + "NetBSD-" + self.ver + "/"
     def dist_url(self):
-        return netbsd_mirror_url + "NetBSD-" + self.ver + "/i386/"
+        return self.mi_url() + self.arch() + "/"
 
 # A daily build
 

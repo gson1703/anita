@@ -1,3 +1,5 @@
+Fix Anita 1.2 backwards compatibility.
+
 - 1.29 released -
 
 Fix "xm" Xen interface support broken in 1.28.
