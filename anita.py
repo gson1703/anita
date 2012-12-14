@@ -257,8 +257,7 @@ class Version:
     # Information about the available installation file sets.  As the
     # set of sets (sic) has evolved over time, this actually represents
     # the union of those sets of sets, in other words, this list should
-    # contain all currently and historically known sets.  The X11 sets
-    # are not included.
+    # contain all currently and historically known sets.
     #
     # This list is used for to determine
     # - Which sets we should attempt to download
