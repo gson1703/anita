@@ -332,6 +332,9 @@ class Version:
     def floppy_dir(self):
         return os.path.join(self.download_local_arch_dir(),
 	    "installation/floppy")
+    def boot_iso_dir(self):
+        return os.path.join(self.download_local_arch_dir(),
+	    "installation/cdrom")
     def boot_from_floppy(self):
         return True
     def scratch_disk(self):
@@ -371,6 +374,9 @@ class Version:
         return [f for f in self.potential_floppies() \
             if os.path.exists(os.path.join(self.floppy_dir(), f))]
 
+    def boot_isos(self):
+        return ['boot-com.iso']
+
     def cleanup(self):
         for fn in self.tempfiles:
             os.unlink(fn)
@@ -384,7 +390,7 @@ class Version:
     # Download this release
     # The ISO class overrides this to download the ISO only
     def download(self):
-        # Depending on the NetBSD version, there may be two or three
+        # Depending on the NetBSD version, there may be two or more
         # boot floppies.  Treat any floppies past the first two as
         # optional files.
         i = 0
@@ -394,6 +400,12 @@ class Version:
                 ["installation", "floppy", floppy],
                 i >= 2)
             i = i + 1
+
+	for bootcd in (self.boot_isos()):
+            download_if_missing_3(self.dist_url(),
+                self.download_local_arch_dir(),
+                ["installation", "cdrom", bootcd],
+		True)
 
         for set in self.flat_sets:
             if set['install']:
@@ -444,8 +456,6 @@ class Release(NumberedVersion):
     def __init__(self, ver, **kwargs):
         NumberedVersion.__init__(self, ver, **kwargs)
         pass
-    def arch(self):
-        return "i386"
     def mi_url(self):
         return netbsd_mirror_url + "NetBSD-" + self.ver + "/"
     def dist_url(self):
@@ -654,6 +664,12 @@ class Anita:
         else: # xl
             return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
 
+    def qemu_disk_args(self, path, devno = 0, writable = True, snapshot = False):
+        return ["-drive", "file=%s,index=%i,media=disk,snapshot=%s" % (path, devno, "on" if snapshot else "off")]
+
+    def qemu_cdrom_args(self, path, devno):
+        return ["-drive", "file=%s,index=%i,media=cdrom" % (path, devno)]
+
     def string_arg(self, name, value):
         if self.vmm == 'xm':    
             return '%s=%s' % (name, value)
@@ -704,7 +720,7 @@ class Anita:
         self.dist.make_iso()
 
 	arch = self.dist.arch()
-	
+
 	# Create a disk image file
         print "Creating disk image...",
         sys.stdout.flush()
@@ -729,30 +745,49 @@ class Anita:
             child = self.start_xen_domu(vmm_args)
             
         elif self.vmm == 'qemu':
-            vmm_args = ["-cdrom", self.dist.iso_path()]
-
             boot_from_floppy = self.dist.boot_from_floppy()
-            if boot_from_floppy:
+	    if False: # Dual CD boot
+	        boot_from_floppy = False
+	        vmm_args = self.qemu_cdrom_args(
+		    os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0]), 1)
+                vmm_args += self.qemu_cdrom_args(self.dist.iso_path(), 2)
+                vmm_args += ["-boot", "d"]
+            elif boot_from_floppy:
+                vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
                     for f in self.dist.floppies() ]
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
                 vmm_args += ["-fda", floppy_paths[0], "-boot", "a"]
             else:
+	        # Single CD
+                vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 vmm_args += ["-boot", "d"]
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
         else:
             raise RuntimeError('unknown vmm')
                                
-        if boot_from_floppy:
-	    # Do the floppy swapping dance
-	    floppy0_name = None
-	    while True:
-		child.expect("(insert disk (\d+), and press return...)|" +
-		    "(a: Installation messages in English)")
-		if not child.match.group(1):
-		    break
+	term = None
+
+        # Do the floppy swapping dance and other pre-sysinst interaction
+	
+        floppy0_name = None
+	while True:
+	    # NetBSD/i386 will prompt for a terminal type if booted from a
+	    # CD-ROM, but not when booted from floppies.  Sigh.
+	    child.expect(
+	        # Group 1-2
+	        "(insert disk (\d+), and press return...)|" +
+		# Group 3
+		"(a: Installation messages in English)|" +
+		# Group 4
+		"(Terminal type)|" +
+		# Group 5
+                "(Installation medium to load the additional utilities from: )"
+		)
+	    if child.match.group(1):
+		# We got the "insert disk" prompt
 		# There is no floppy 0, hence the "- 1"
 		floppy_index = int(child.match.group(2)) - 1
 
@@ -776,10 +811,17 @@ class Anita:
 		    (floppy0_name, floppy_paths[floppy_index]))
 		# Exit qemu command mode
 		child.send("\001c\n")
-        else:
-	    if self.dist.arch() == 'sparc':
-	        child.expect("Installation medium to load the " +
-		    "additional utilities from: ")
+	    elif child.match.group(3):
+	        # "Installation messages in English"
+		break
+	    elif child.match.group(4):
+	        # "Terminal type"
+		child.send("xterm\n")
+		term = "xterm"
+		continue
+	    elif child.match.group(5):
+	        # "Installation medium to load the additional utilities from"
+		# (SPARC)
 		child.send("cdrom\n")
 	        child.expect("CD-ROM device to use")
 		child.send("\n")
@@ -790,12 +832,13 @@ class Anita:
 		# in an xterm or some other ansi-like terminal than on
 		# a sun console.
 		child.send("xterm\n")
+		term = "xterm"
 	        child.expect("nstall/Upgrade")
 		child.send("I\n")
-	    child.expect("a: Installation messages in English")
 
         # Confirm "Installation messages in English"
         child.send("\n")
+
 	# i386 and amd64 ask for keyboard type here; sparc doesn't
 	while True:
             child.expect("(Keyboard type)|(a: Install NetBSD to hard disk)|" +
@@ -821,8 +864,8 @@ class Anita:
         else:
             raise AssertionError
 
-        # Custom installation is choice "c" in -current,
-        # choice "b" in older versions
+        # Custom installation is choice "d" in 6.0,
+        # but choice "c" or "b" in older versions
         # We could use "Minimal", but it doesn't exist in
         # older versions.
         child.expect("([a-z]): Custom installation")
@@ -888,7 +931,7 @@ class Anita:
 
         while True:
             # On non-Xen i386/amd64 we first get group 1 or 2,
-            # then group 3; on sparc an Xen, we just get group 3.
+            # then group 3; on sparc and Xen, we just get group 3.
 	    child.expect("(a: This is the correct geometry)|" +
 	        "(a: Use one of these disks)|" +
                 "(a: Set sizes of NetBSD partitions)")
@@ -917,7 +960,7 @@ class Anita:
         # but if it gets echoed (which has happened), it is interpreted by
         # the terminal as "enable line drawing character set", leaving the
         # terminal in an unusable state.
-	if arch == 'sparc':
+	if term == 'xterm':
 	    # For unknown reasons, when using a terminal type of "xterm",
 	    # sysinst puts the terminal in "application mode", causing the
 	    # cursor keys to send a different escape sequence than the default.
@@ -991,8 +1034,10 @@ class Anita:
                          "(b: Use serial port com0)|" +
                          "(Please choose the timezone)|" +
                          "(essential things)|" +
-			 "(Configure the additional items)",
+			 "(Configure the additional items)|" +
+			 "(Multiple CDs found)",
 			 3600)
+
 	    if child.match.groups() == prevmatch:
 	        continue
 	    prevmatch = child.match.groups()
@@ -1076,6 +1121,11 @@ class Anita:
 		child.expect("x: Finished configuring")
 		child.send("x\n")
 		break
+	    elif child.match.group(10):
+	        # (Multiple CDs found)
+		# This happens if we have a boot CD and a CD with sets;
+		# we need to choose the latter.
+	        child.send("b\n")
 	    else:
 	        raise AssertionError
 
@@ -1174,7 +1224,7 @@ class Anita:
         if vmm_is_xen(self.vmm):
             scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
         elif self.vmm == 'qemu':
-            scratch_disk_args = ["-drive", "file=%s,index=1,media=disk,snapshot=off" % scratch_disk_path]
+            scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
         else:
             raise RuntimeError('unknown vmm')
         child = self.boot(scratch_disk_args)
