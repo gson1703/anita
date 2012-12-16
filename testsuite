@@ -33,6 +33,9 @@ runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
 
+# Test floppy boot
+runtest "--boot-from floppy boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
+
 # Anita 1.2 compatibility.
 $python <<END
 import anita
