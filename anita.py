@@ -335,8 +335,8 @@ class Version:
     def boot_iso_dir(self):
         return os.path.join(self.download_local_arch_dir(),
 	    "installation/cdrom")
-    def boot_from_floppy(self):
-        return True
+    def boot_from_default(self):
+        return None
     def scratch_disk(self):
         arch = self.arch()
         if arch == 'i386' or arch == 'amd64':
@@ -559,8 +559,8 @@ class ISO(Version):
 	    mkdir_p(self.workdir)
     def arch(self):
         return self.m_arch
-    def boot_from_floppy(self):
-        return False
+    def boot_from_default(self):
+        return 'cdrom-with-sets'
 
 #############################################################################
 
@@ -580,7 +580,7 @@ def vmm_is_xen(vmm):
 
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
-        disk_size = None, memory_size = None, persist = False):
+        disk_size = None, memory_size = None, persist = False, boot_from = None):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -601,6 +601,8 @@ class Anita:
 	self.memory_size_bytes = parse_size(memory_size)
 
         self.persist = persist
+
+	self.boot_from = boot_from
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -727,6 +729,9 @@ class Anita:
         make_dense_image(self.wd0_path(), parse_size(self.disk_size))
         print "done."
 
+	# The name of the CD-ROM device holding the sets
+	cd_device = None
+
         if vmm_is_xen(self.vmm):
             # Download XEN kernels
             xenkernels = [k for k in [self.dist.xen_kernel(), self.dist.xen_install_kernel()] if k]
@@ -736,33 +741,45 @@ class Anita:
                         ["binary", "kernel", kernel],
                         True)
             
-            boot_from_floppy = False
             vmm_args = [
                 self.string_arg('kernel', os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                     "binary", "kernel", self.dist.xen_install_kernel()))),
                 self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)
             ]
             child = self.start_xen_domu(vmm_args)
+	    cd_device = 'xbd1d';
             
         elif self.vmm == 'qemu':
-            boot_from_floppy = self.dist.boot_from_floppy()
-	    if False: # Dual CD boot
-	        boot_from_floppy = False
+	    # Determine what kind of media to boot from.
+	    if self.boot_from is None:
+	        self.boot_from = self.dist.boot_from_default()
+	    boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
+	    if self.boot_from is None:
+	        if os.path.exists(boot_cd_path):
+		    self.boot_from = 'cdrom'
+		else:
+		    self.boot_from = 'floppy'
+
+            # Set up VM arguments based on the chosen boot media
+	    if self.boot_from == 'cdrom':
 	        vmm_args = self.qemu_cdrom_args(
-		    os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0]), 1)
+		    boot_cd_path, 1)
                 vmm_args += self.qemu_cdrom_args(self.dist.iso_path(), 2)
                 vmm_args += ["-boot", "d"]
-            elif boot_from_floppy:
+		cd_device = 'cd1a';
+            elif self.boot_from == 'floppy':
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
                     for f in self.dist.floppies() ]
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
                 vmm_args += ["-fda", floppy_paths[0], "-boot", "a"]
-            else:
+		cd_device = 'cd0a';		
+            elif self.boot_from == 'cdrom-with-sets':
 	        # Single CD
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 vmm_args += ["-boot", "d"]
+		cd_device = 'cd0a';
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
         else:
@@ -784,7 +801,9 @@ class Anita:
 		# Group 4
 		"(Terminal type)|" +
 		# Group 5
-                "(Installation medium to load the additional utilities from: )"
+                "(Installation medium to load the additional utilities from: ).|"
+		# Group 6
+		"(1. Install NetBSD)"
 		)
 	    if child.match.group(1):
 		# We got the "insert disk" prompt
@@ -835,6 +854,9 @@ class Anita:
 		term = "xterm"
 	        child.expect("nstall/Upgrade")
 		child.send("I\n")
+	    elif child.match.group(6):
+	        # "1. Install NetBSD"
+	        child.send("1\n");
 
         # Confirm "Installation messages in English"
         child.send("\n")
@@ -1027,14 +1049,24 @@ class Anita:
 	    loop = loop + 1
 	    if loop == 20:
 	        raise RuntimeError("loop detected")
-	    child.expect("(a: Progress bar)|" +
+	    child.expect(
+	                 # Group 1
+			 "(a: Progress bar)|" +
+			 # Group 2
                          "(a: CD-ROM)|" +
+			 # Group 3-4
                          "(([cx]): Continue)|" +
+			 # Group 5
                          "(Hit enter to continue)|" +
+			 # Group 6
                          "(b: Use serial port com0)|" +
+			 # Group 7
                          "(Please choose the timezone)|" +
+			 # Group 8
                          "(essential things)|" +
+			 # Group 9
 			 "(Configure the additional items)|" +
+			 # Group 10
 			 "(Multiple CDs found)",
 			 3600)
 
@@ -1049,9 +1081,8 @@ class Anita:
 		child.send("\n")
             elif child.match.group(3):
 	        # CDROM device selection
-                if vmm_is_xen(self.vmm):
-                    # change the device from the default of cd0a to xbd1d
-                    child.send("a\nxbd1d\n")
+                if cd_device != 'cd0a':
+                    child.send("a\n" + cd_device + "\n")
 	        # (([cx]): Continue)
 		# In 3.0.1, you type "c" to continue, whereas in -current,
 		# you type "x".  Handle both cases.

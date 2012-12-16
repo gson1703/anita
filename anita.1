@@ -14,6 +14,7 @@
 .Op Fl -sets Ar sets
 .Op Fl -test-timeout Ar timeout
 .Op Fl -persist
+.Op Fl -boot-from Ar cdrom | floppy
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -282,14 +283,20 @@ runs, instead of the default behavior where only the
 .Ar install
 mode can modify the disk contents and all other modes work with
 an ephemeral snapshot copy of the freshly installed system.
+.It Fl -boot-from Ar cdrom | floppy
+For architectures that support booting from either CD-ROM or floppies,
+specify which one to use.  The default is to boot from CD-ROM if
+the NetBSD distrution contains a 
+.Pa boot-com.iso ,
+or from floppies otherwise.
 .El
 .Sh BUGS
 .Nm
 is still a work in progress.  Currently,
 .Nm 
-only knows how to install the i386, amd64, and sparc ports, and only
-i386 and amd64 have been extensively tested.  It should be possible to
-add support for installing other ports - patches are welcome.
+only knows how to install the i386, amd64, and sparc ports.
+It should be possible to add support for installing other ports -
+patches are welcome.
 .Pp
 .Nm
 is likely to break whenever any significant change is made to
@@ -327,8 +334,7 @@ boots, but the ATF tests occasionally fail to complete; see PR 44176.
 Running multithreaded programs (such as the ATF test suite) on
 an emulated i386 or amd64 system requires qemu patches that are in
 pkgsrc beginning with qemu 0.12.3nb3. They were finally integrated 
-into qemu on 2011-12-11, but are not yet in any official qemu 
-release at the time of this writing.  See PR 42158 and 
+into qemu on 2011-12-11.  See PR 42158 and 
 https://bugs.launchpad.net/bugs/569760 for details.
 .Pp
 When attempting to install NetBSD-current in qemu 1.0, it panics
@@ -336,7 +342,7 @@ during the install kernel boot due to a regression in qemu's
 emulation of the PCI configuration registers.  The work-around 
 is to use qemu 0.xx.  See PR 45671 and 
 https://bugs.launchpad.net/qemu/+bug/897771 for details.
-The bug has since been fixed on the qemu mainline.
+This bug has since been fixed on the qemu mainline.
 .Pp
 Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
 time with recent versions of qemu because the bootloader countdown

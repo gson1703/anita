@@ -1,4 +1,9 @@
-Fix Anita 1.2 backwards compatibility.
+Support booting i386 and amd64 from boot-com.iso instead
+of the boot floppies, attaching a second virtual CD-ROM drive
+for the install sets, and do so by default.  For the old
+behavior, specify "--boot-from floppy".
+
+Fix the Anita 1.2 backwards compatibility Release class.
 
 - 1.29 released -
 
