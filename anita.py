@@ -667,7 +667,7 @@ class Anita:
             return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
 
     def qemu_disk_args(self, path, devno = 0, writable = True, snapshot = False):
-        return ["-drive", "file=%s,index=%i,media=disk,snapshot=%s" % (path, devno, "on" if snapshot else "off")]
+        return ["-drive", "file=%s,index=%i,media=disk,snapshot=%s" % (path, devno, ["off", "on"][snapshot])
 
     def qemu_cdrom_args(self, path, devno):
         return ["-drive", "file=%s,index=%i,media=cdrom" % (path, devno)]
