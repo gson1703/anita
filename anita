@@ -44,9 +44,14 @@ def main(argv = None):
 		      help="make changes to disk contents persistent", action="store_true")
     parser.add_option("--boot-from",
 		      help="boot from MEDIA (floppy/cdrom)", metavar="MEDIA")
-		      
+    parser.add_option("--version", action="store_true",
+		      help="print the antia version number and exit")
 
     (options, args) = parser.parse_args()
+
+    if options.version:
+        print anita.__version__
+	sys.exit(0)
 
     if len(args) < 2:
 	raise Usage("not enough arguments")

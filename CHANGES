@@ -1,3 +1,5 @@
+New command line option "--version".
+
 Support booting i386 and amd64 from boot-com.iso instead
 of the boot floppies, attaching a second virtual CD-ROM drive
 for the install sets, and do so by default.  For the old
