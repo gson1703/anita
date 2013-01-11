@@ -803,7 +803,7 @@ class Anita:
 		# Group 4
 		"(Terminal type)|" +
 		# Group 5
-                "(Installation medium to load the additional utilities from: ).|"
+                "(Installation medium to load the additional utilities from: )|"
 		# Group 6
 		"(1. Install NetBSD)"
 		)
