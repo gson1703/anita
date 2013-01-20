@@ -757,10 +757,7 @@ class Anita:
 	        self.boot_from = self.dist.boot_from_default()
 	    boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
 	    if self.boot_from is None:
-	        if os.path.exists(boot_cd_path):
-		    self.boot_from = 'cdrom'
-		else:
-		    self.boot_from = 'floppy'
+	        self.boot_from = 'floppy'
 
             # Set up VM arguments based on the chosen boot media
 	    if self.boot_from == 'cdrom':
