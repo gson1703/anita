@@ -43,7 +43,10 @@ ver = anita.Release("5.0.2")
 ver.install()
 END
 
-$python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso | tee stdout
+
+sparc_url=http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso 
+rm -f `$python ./anita --print-workdir $sparc_url`/wd0.img
+$python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot | tee stdout
 grep "127 9721" stdout
 rm -f stdout
 
