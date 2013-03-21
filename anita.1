@@ -1,4 +1,4 @@
-.Dd Sep 22, 2012
+.Dd Mar 9, 2013
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -59,7 +59,7 @@ with
 When you are done interacting with the virtual machine, you can kill it by
 typing control-a x.
 .Pp
-To run the ATF regression test suite on the installed system, use
+To run the NetBSD test suite on the installed system, use
 .Pp
 .Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 .Pp
@@ -149,13 +149,31 @@ control-a x to exit, control-a c to enter the
 monitor, or control-a b to send a break (useful for entering DDB).
 .It Ar test
 Install NetBSD if not already installed, then boot it and 
-run the ATF test suite.  The 
+run the test suite from
+.Pa /usr/tests .
+The test suite is run using Kyua if NetBSD has been built with
+.Sq MKKYUA=yes
+and otherwise is run using ATF.
+The raw output of the test execution and various other test reports are
+stored in a
+.Pa tests/
+subdirectory under the work directory.
+.Pp
+When Kyua is used to run the test suite, the
+.Pa tests/
+subdirectory contains the raw output of the tests execution, a copy of
+the Kyua database in the
+.Pa store.db
+file with the results of the tests, and an itemized HTML report in the
+.Pa html/
+subdirectory.
+.Pp
+When the ATF tools are used to run the test suite, the
 .Cm atf-report 
-output will be displayed on standard output.  Additionally, a
-subdirectory
-.Pa atf/
-is created under the work directory, and will contain
-output files from the ATF test suite: the raw
+output will be displayed on standard output and the following output
+files are placed in the
+.Pa tests/
+subdirectory: the raw
 .Cm atf-run 
 output in
 .Pa test.tps ,
@@ -290,7 +308,13 @@ the NetBSD distrution contains a
 .Pa boot-com.iso ,
 or from floppies otherwise.
 .El
-.Sh BUGS
+.Sh SEE ALSO
+.Xr atf-report 1 ,
+.Xr atf-run 1 ,
+.Xr qemu 1 ,
+.Xr kyua 1 ,
+.Xr tests 7
+.Sh BUGS IN ANITA
 .Nm
 is still a work in progress.  Currently,
 .Nm 
@@ -309,11 +333,15 @@ gigabyte per installed NetBSD version.
 .Pp
 Installing NetBSD releases older than 2.1 has not been tested.
 .Pp
+.Sh BUGS IN NETBSD
+.Pp
 NetBSD/i386 releases older than 4.0 will install, but when booting
 the installed image, they hang after the "root on ffs" message.
 .Pp
 NetBSD/i386 versions older than 2009-06-13 13:35:11 fail to find 
 any PCI buses when run under qemu; see PRs 38729 and 42681.
+.Pp
+.Sh BUGS IN KVM
 .Pp
 When 
 .Nm
@@ -329,9 +357,11 @@ to disable kvm.  The alternative
 .Fl -vmm-args 
 .Ar -no-kvm-irqchip
 performs better but doesn't quite work: the system installs and
-boots, but the ATF tests occasionally fail to complete; see PR 44176.
+boots, but the test suite occasionally fail to complete; see PR 44176.
 .Pp
-Running multithreaded programs (such as the ATF test suite) on
+.Sh BUGS IN QEMU
+.Pp
+Running multithreaded programs (such as the NetBSD test suite) on
 an emulated i386 or amd64 system requires qemu patches that are in
 pkgsrc beginning with qemu 0.12.3nb3. They were finally integrated 
 into qemu on 2011-12-11.  See PR 42158 and 
@@ -343,6 +373,18 @@ emulation of the PCI configuration registers.  The work-around
 is to use qemu 0.xx.  See PR 45671 and 
 https://bugs.launchpad.net/qemu/+bug/897771 for details.
 This bug has since been fixed on the qemu mainline.
+.Pp
+In addition to the above, there have been several further
+regression in the 1.x series of qemu that have impacted
+.Nm :
+.Pp
+.Dl https://bugs.launchpad.net/qemu/+bug/1089996
+.Dl https://bugs.launchpad.net/qemu/+bug/1091241
+.Dl https://bugs.launchpad.net/qemu/+bug/1127369
+.Dl https://bugs.launchpad.net/qemu/+bug/1154328
+.Pp
+These may or may not be fixed in any given qemu 1.x release.  
+When in doubt, use qemu 0.xx.
 .Pp
 Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
 time with recent versions of qemu because the bootloader countdown

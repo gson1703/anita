@@ -13,7 +13,7 @@ import time
 import urllib
 import urlparse
 
-__version__='1.29'
+__version__='1.30'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -646,10 +646,11 @@ class Anita:
         child.log_file = sys.stdout
         child.timeout = 300
         child.setecho(False)
-        # Xen installs sometimes fail without this
-        child.delayafterclose = 1.0
+        # Xen installs sometimes fail if we don't increase this
+	# from the default of 0.1 seconds
+        child.delayafterclose = 5.0
         # Also increase this just in case
-        child.delayafterterminate = 1.0
+        child.delayafterterminate = 5.0
 	self.child = child
 
     def start_qemu(self, vmm_args, snapshot_system_disk):
@@ -1235,21 +1236,22 @@ class Anita:
         child = self.boot()
         console_interaction(child)
 
-    def run_atf_tests(self, timeout = 7200):
+    def run_tests(self, timeout = 7200):
 	# Create a scratch disk image for exporting test results from the VM.
         # The results are stored in tar format because that is more portable
         # and easier to manipulate than a file system image, especially if the
         # host is a non-NetBSD system.
-	scratch_disk_path = os.path.join(self.workdir, "atf-results.img")
+	scratch_disk_path = os.path.join(self.workdir, "tests-results.img")
         if vmm_is_xen(self.vmm):
             scratch_disk = 'xbd1d'
         else:
             scratch_disk = self.dist.scratch_disk()
-        atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
-                         '/usr/share/xml/atf/tests-results.dtd',
-                         '/usr/share/examples/atf/tests-results.css']
         mkdir_p(self.workdir)
-        make_dense_image(scratch_disk_path, parse_size('10M'))
+
+	scratch_image_megs = 100
+        make_dense_image(scratch_disk_path, parse_size('%dM' % scratch_image_megs))
+	# Leave a 10% safety margin
+	max_result_size_k = scratch_image_megs * 900
 
         if vmm_is_xen(self.vmm):
             scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
@@ -1257,37 +1259,75 @@ class Anita:
             scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
         else:
             raise RuntimeError('unknown vmm')
+
         child = self.boot(scratch_disk_args)
 	login(child)
+
+        have_kyua = shell_cmd(child,
+                              "grep -q 'MKKYUA.*=.*yes' /etc/release") == 0
+        if have_kyua:
+	    # For backwards compatibility, point workdir/atf to workdir/tests.
+	    compat_link = os.path.join(self.workdir, 'atf')
+	    if not os.path.lexists(compat_link):
+		os.symlink('tests', compat_link)
+	    test_cmd = (
+		"kyua " + 
+		    "--loglevel=error " +
+		    "--logfile=/tmp/tests/kyua-test.log " +
+		    "test " +
+		    "--store=/tmp/tests/store.db; " +
+		"echo $? >/tmp/tests/test.status; " +
+		"kyua " +
+		    "report " +
+		    "--store=/tmp/tests/store.db " +
+		    "| tail -n 3; " +
+		"kyua " +
+		    "--loglevel=error " +
+		    "--logfile=/tmp/tests/kyua-report-html.log " +
+		    "report-html " +
+		    "--store=/tmp/tests/store.db " +
+		    "--output=/tmp/tests/html; ")
+        else:
+	    atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
+			     '/usr/share/xml/atf/tests-results.dtd',
+			     '/usr/share/examples/atf/tests-results.css']
+ 	    test_cmd = (
+		"{ atf-run; echo $? >/tmp/tests/test.status; } | " +
+		"tee /tmp/tests/test.tps | " +
+		"atf-report -o ticker:- -o xml:/tmp/tests/test.xml; " +
+                "(cd /tmp && for f in %s; do cp $f tests/; done;); " % ' '.join(atf_aux_files))
+
         exit_status = shell_cmd(child,
 	    "df -k | sed 's/^/df-pre-test /'; " +
-	    "mkdir /tmp/atf && " +
+	    "mkdir /tmp/tests && " +
 	    "cd /usr/tests && " +
-            "{ atf-run; echo $? >/tmp/atf/test.status; } | " +
-	    "tee /tmp/atf/test.tps | " +
-	    "atf-report -o ticker:- -o xml:/tmp/atf/test.xml; " +
+	    test_cmd +
 	    "{ cd /tmp && " +
-                "for f in %s; do cp $f atf/; done; " % ' '.join(atf_aux_files) +
                 # Make sure the files will fit on the scratch disk
-                "test `du -sk atf | awk '{print $1}'` -lt 9000 && " +
+                "test `du -sk tests | awk '{print $1}'` -lt %d && " % max_result_size_k +
                 # To guard against accidentally overwriting the wrong
                 # disk image, check that the disk contains nothing
                 # but nulls.
                 "test `</dev/r%s tr -d '\\000' | wc -c` = 0 && " % scratch_disk +
                 # "disklabel -W /dev/rwd1d && " +
-                "tar cf /dev/r%s atf; " % scratch_disk +
+                "tar cf /dev/r%s tests; " % scratch_disk +
             "}; " +
 	    "df -k | sed 's/^/df-post-test /'; " +
 	    "ps -glaxw | sed 's/^/ps-post-test /'; " +
-            "sh -c 'exit `cat /tmp/atf/test.status`'",
+            "sh -c 'exit `cat /tmp/tests/test.status`'",
             timeout)
-	# We give tar an explicit path to extract to guard against
-	# the possibility of an arbitrary file overwrite attack if
-	# anita is used to test an untrusted virtual machine.
+
+        # We give tar an explicit path to extract to guard against
+        # the possibility of an arbitrary file overwrite attack if
+        # anita is used to test an untrusted virtual machine.
         tarfile = open(scratch_disk_path, "r")
-        subprocess.call(["tar", "xf", "-", "atf"],
-	    cwd = self.workdir, stdin = tarfile)
+        subprocess.call(["tar", "xf", "-", "tests"],
+                        cwd = self.workdir, stdin = tarfile)
+
         return exit_status
+
+    # Backwards compatibility
+    run_atf_tests = run_tests
 
 def console_interaction(child):
     # We need this in pexpect 2.x or everything will be printed twice

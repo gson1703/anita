@@ -1,3 +1,8 @@
+Organize the BUGS section of the man page into sections,
+and add links to four more qemu 1.x regressions.
+
+Add Kuya support, based on patch from Julio Merino.
+
 New command line option "--version".
 
 Support booting i386 and amd64 from boot-com.iso instead

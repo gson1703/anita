@@ -106,7 +106,7 @@ def main(argv = None):
 	status = maybe_run_command(child)    
 	anita.console_interaction(child)
     elif mode == 'test':
-	status = a.run_atf_tests(timeout = options.test_timeout)
+	status = a.run_tests(timeout = options.test_timeout)
     elif mode == 'print-workdir':
         print a.workdir
     else:
