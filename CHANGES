@@ -1,3 +1,5 @@
+- 1.30 released -
+
 Increase the default timeout for running the NetBSD test
 suite from 2 hours to 3 hours.
 
