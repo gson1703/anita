@@ -1,4 +1,4 @@
-.Dd Mar 9, 2013
+.Dd Apr 23, 2013
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -38,15 +38,15 @@ is
 .Ic qemu ,
 but there is also experimental support for Xen.
 .Sh EXAMPLES
-To install NetBSD 5.0.2/i386 from the master NetBSD FTP site, enter
+To install NetBSD 6.0.1/i386 from the master NetBSD FTP site, enter
 .Pp
-.Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
+.Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.0.1/i386/
 .Pp
 Installing NetBSD/sparc works a bit differently from i386 and amd64:
 it uses an ISO image instead of a directory containing boot floppies
 and sets:
 .Pp
-.Dl anita install http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso
+.Dl anita install http://ftp.netbsd.org/pub/NetBSD/iso/6.0.1/sparccd-6.0.1.iso
 .Pp
 To boot the newly installed hard disk image and get a login prompt,
 replace
@@ -54,14 +54,14 @@ replace
 with
 .Ar interact :
 .Pp
-.Dl anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
+.Dl anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.0.1/i386/
 .Pp
 When you are done interacting with the virtual machine, you can kill it by
 typing control-a x.
 .Pp
 To run the NetBSD test suite on the installed system, use
 .Pp
-.Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
+.Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.0.1/i386/
 .Pp
 .Pp
 To install a snapshot, use something like the following (adjusting
@@ -93,7 +93,7 @@ floppies, and a hard disk image in it.  By default, the work directory
 is a subdirectory of the current working directory, with a unique
 name automatically generated from the distribution URL, for example,
 .Pp
-.Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-5.0.2-i386-+a4c39
+.Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-6.0.1-i386-+a4c39
 .Pp
 You can also specify the name of the work directory explicitly using
 the 
@@ -152,8 +152,8 @@ Install NetBSD if not already installed, then boot it and
 run the test suite from
 .Pa /usr/tests .
 The test suite is run using Kyua if NetBSD has been built with
-.Sq MKKYUA=yes
-and otherwise is run using ATF.
+.Sq MKKYUA=yes ,
+or using ATF otherwise.
 The raw output of the test execution and various other test reports are
 stored in a
 .Pa tests/
@@ -210,7 +210,8 @@ If
 is running in a Xen dom0 and the target system architecture
 is i386 or amd64, it is also possible to
 specify
-.Cm xm or
+.Cm xm
+or
 .Cm xl ,
 which will make
 .Nm
@@ -218,7 +219,7 @@ install the target system in a Xen domU using the
 .Cm xm
 or
 .Cm xl
-interface to Xen, respectively.  This requires
+interface, respectively.  This requires
 running
 .Nm
 as root.  Any changes made to the system disk image will
@@ -303,11 +304,36 @@ mode can modify the disk contents and all other modes work with
 an ephemeral snapshot copy of the freshly installed system.
 .It Fl -boot-from Ar cdrom | floppy
 For architectures that support booting from either CD-ROM or floppies,
-specify which one to use.  The default is to boot from CD-ROM if
-the NetBSD distrution contains a 
-.Pa boot-com.iso ,
-or from floppies otherwise.
+specify which one to use.  The default is to boot from floppies.
 .El
+.Sh DEBUGGING NETBSD USING ANITA
+.Nm
+can serve as a convenient platform of installing and booting NetBSD
+for debugging purposes.  When doing this, it is useful to build NetBSD
+with debug symbols and to install the source on the virtual machine to
+enable source-level debugging.
+.Pp
+The procedure for building NetBSD with debug symbols is
+not well documented and keeps changing, but the following
+procuedure works for -current as of 2013-03-22.
+.Pp
+Invoke build.sh with the options 
+.Pp
+.Dl -V MKDEBUG=YES release sourcesets
+.Pp
+to built NetBSD with debug symbols and source sets.  Then, invoke
+.Nm
+with the options
+.Pp
+.Dl --disk-size 4G --memory-size 256M --sets kern-GENERIC,modules,base,etc,comp,games,man,misc,tests,text,syssrc,src,sharesrc,gnusrc,debug
+.Pp
+to install with source and debug symbols.
+.Pp
+For instructions on how to use
+.Nm
+for kernel debugging with kgdb, see
+.Pp
+.Dl http://wiki.netbsd.org/netbsd_kernel_development_setup/ .
 .Sh SEE ALSO
 .Xr atf-report 1 ,
 .Xr atf-run 1 ,
@@ -365,7 +391,10 @@ Running multithreaded programs (such as the NetBSD test suite) on
 an emulated i386 or amd64 system requires qemu patches that are in
 pkgsrc beginning with qemu 0.12.3nb3. They were finally integrated 
 into qemu on 2011-12-11.  See PR 42158 and 
-https://bugs.launchpad.net/bugs/569760 for details.
+.Pp
+.Dl https://bugs.launchpad.net/bugs/569760 
+.Pp
+for details.
 .Pp
 When attempting to install NetBSD-current in qemu 1.0, it panics
 during the install kernel boot due to a regression in qemu's
@@ -384,7 +413,8 @@ regression in the 1.x series of qemu that have impacted
 .Dl https://bugs.launchpad.net/qemu/+bug/1154328
 .Pp
 These may or may not be fixed in any given qemu 1.x release.  
-When in doubt, use qemu 0.xx.
+Qemu version 1.2 has been used with some success; when in
+doubt, use qemu 0.xx (emulators/qemu0 in pkgsrc).
 .Pp
 Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
 time with recent versions of qemu because the bootloader countdown

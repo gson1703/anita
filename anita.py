@@ -297,6 +297,8 @@ class Version:
           ['sharesrc', 'Share sources', 0, 1],
           ['gnusrc', 'GNU sources', 0, 1],
           ['xsrc', 'X11 sources', 0, 1],
+          ['debug', 'debug sets', 0, 1],
+          ['xdebug', 'debug X11 sets', 0, 1],
       ]]
     ])
 
@@ -1165,6 +1167,7 @@ class Anita:
 	# while sparc just halts.
 	# Since Fri Apr 6 23:48:53 2012 UTC, you are kicked
 	# back into the main menu.
+
 	prevmatch = []
 	while True:
             child.expect("(Hit enter to continue)|(x: Exit Install System)|(#)|(halting machine)|(halted by root)")
@@ -1266,10 +1269,6 @@ class Anita:
         have_kyua = shell_cmd(child,
                               "grep -q 'MKKYUA.*=.*yes' /etc/release") == 0
         if have_kyua:
-	    # For backwards compatibility, point workdir/atf to workdir/tests.
-	    compat_link = os.path.join(self.workdir, 'atf')
-	    if not os.path.lexists(compat_link):
-		os.symlink('tests', compat_link)
 	    test_cmd = (
 		"kyua " + 
 		    "--loglevel=error " +
@@ -1323,6 +1322,11 @@ class Anita:
         tarfile = open(scratch_disk_path, "r")
         subprocess.call(["tar", "xf", "-", "tests"],
                         cwd = self.workdir, stdin = tarfile)
+
+	# For backwards compatibility, point workdir/atf to workdir/tests.
+	compat_link = os.path.join(self.workdir, 'atf')
+	if not os.path.lexists(compat_link):
+	    os.symlink('tests', compat_link)
 
         return exit_status
 

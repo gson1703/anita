@@ -1,3 +1,7 @@
+
+Add support for installing the new "debug" set, and add a new
+section on using anita for debugging NetBSD to the man page.
+
 Organize the BUGS section of the man page into sections,
 and add links to four more qemu 1.x regressions.
 
