@@ -39,7 +39,7 @@ def main(argv = None):
 		      metavar="SETS")
     parser.add_option("--test-timeout",
 		      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
-                      type="int", default=7200)
+                      type="int", default=10800)
     parser.add_option("--persist",
 		      help="make changes to disk contents persistent", action="store_true")
     parser.add_option("--boot-from",

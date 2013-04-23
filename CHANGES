@@ -1,6 +1,8 @@
+Increase the default timeout for running the NetBSD test
+suite from 2 hours to 3 hours.
 
 Add support for installing the new "debug" set, and add a new
-section on using anita for debugging NetBSD to the man page.
+man page section on using anita for debugging NetBSD.
 
 Organize the BUGS section of the man page into sections,
 and add links to four more qemu 1.x regressions.
