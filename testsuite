@@ -31,10 +31,13 @@ runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 
+# Fails with "piixide0:0:0: lost interrupt"
+# runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.2/i386/
+
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
 
-# Test floppy boot
-runtest "--boot-from floppy boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
+# Test CD boot, 6.0.1
+runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0.1/amd64/
 
 # Anita 1.2 compatibility.
 $python <<END
@@ -43,9 +46,9 @@ ver = anita.Release("5.0.2")
 ver.install()
 END
 
-
 sparc_url=http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso 
-rm -f `$python ./anita --print-workdir $sparc_url`/wd0.img
+workdir=`$python ./anita print-workdir $url`
+rm -f $workdir/wd0.img
 $python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot | tee stdout
 grep "127 9721" stdout
 rm -f stdout
