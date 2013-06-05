@@ -1,3 +1,8 @@
+Omit drive index from qemu command line for backwards compatibility
+with scripts written for anita 1.29 or older.
+
+Fix X11 set names.
+
 - 1.30 released -
 
 Increase the default timeout for running the NetBSD test
