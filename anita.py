@@ -286,10 +286,10 @@ class Version:
       [ 'text', 'Text Processing Tools', 0, 0 ],
       [ '_x11', 'X11 sets', 0, [
           ['xbase',   'X11 base and clients', 0, 1 ],
-          ['xcomp',   'X11 configuration', 0, 1 ],
-          ['xetc',    'X11 fonts', 0, 1 ],
-          ['xfont',   'X11 servers', 0, 1 ],
-          ['xserver', 'X11 programming', 0, 1 ],
+          ['xcomp',   'X11 programming', 0, 1 ],
+          ['xetc',    'X11 configuration', 0, 1 ],
+          ['xfont',   'X11 fonts', 0, 1 ],
+          ['xserver', 'X11 servers', 0, 1 ],
       ]],
       [ '_src', 'Source sets', 0, [
           ['syssrc', 'Kernel sources', 0, 1],
@@ -658,7 +658,7 @@ class Anita:
     def start_qemu(self, vmm_args, snapshot_system_disk):
         child = pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
-            "-drive", "file=%s,index=0,media=disk,snapshot=%s" %
+            "-drive", "file=%s,media=disk,snapshot=%s" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
@@ -672,10 +672,10 @@ class Anita:
             return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
 
     def qemu_disk_args(self, path, devno = 0, writable = True, snapshot = False):
-        return ["-drive", "file=%s,index=%i,media=disk,snapshot=%s" % (path, devno, ["off", "on"][snapshot])]
+        return ["-drive", "file=%s,media=disk,snapshot=%s" % (path, ["off", "on"][snapshot])]
 
     def qemu_cdrom_args(self, path, devno):
-        return ["-drive", "file=%s,index=%i,media=cdrom" % (path, devno)]
+        return ["-drive", "file=%s,media=cdrom" % (path)]
 
     def string_arg(self, name, value):
         if self.vmm == 'xm':    
