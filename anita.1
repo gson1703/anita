@@ -1,4 +1,4 @@
-.Dd Apr 23, 2013
+.Dd Jun 5, 2013
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -38,15 +38,15 @@ is
 .Ic qemu ,
 but there is also experimental support for Xen.
 .Sh EXAMPLES
-To install NetBSD 6.0.1/i386 from the master NetBSD FTP site, enter
+To install NetBSD 6.1/i386 from the master NetBSD FTP site, enter
 .Pp
-.Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.0.1/i386/
+.Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.1/i386/
 .Pp
 Installing NetBSD/sparc works a bit differently from i386 and amd64:
 it uses an ISO image instead of a directory containing boot floppies
 and sets:
 .Pp
-.Dl anita install http://ftp.netbsd.org/pub/NetBSD/iso/6.0.1/sparccd-6.0.1.iso
+.Dl anita install http://ftp.netbsd.org/pub/NetBSD/iso/6.1/sparccd-6.1.iso
 .Pp
 To boot the newly installed hard disk image and get a login prompt,
 replace
@@ -54,14 +54,14 @@ replace
 with
 .Ar interact :
 .Pp
-.Dl anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.0.1/i386/
+.Dl anita interact http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.1/i386/
 .Pp
 When you are done interacting with the virtual machine, you can kill it by
 typing control-a x.
 .Pp
 To run the NetBSD test suite on the installed system, use
 .Pp
-.Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.0.1/i386/
+.Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-6.1/i386/
 .Pp
 .Pp
 To install a snapshot, use something like the following (adjusting
@@ -93,7 +93,7 @@ floppies, and a hard disk image in it.  By default, the work directory
 is a subdirectory of the current working directory, with a unique
 name automatically generated from the distribution URL, for example,
 .Pp
-.Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-6.0.1-i386-+a4c39
+.Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-6.1-i386-+a4c39
 .Pp
 You can also specify the name of the work directory explicitly using
 the 
