@@ -1,3 +1,7 @@
+Fix a failure to consume a shell prompt which would cause it to remain
+buffered and later be mistaken for one that had not yet issued.  For
+added protection, add a unique serial number to each prompt.
+
 Omit drive index from qemu command line for backwards compatibility
 with scripts written for anita 1.29 or older.
 

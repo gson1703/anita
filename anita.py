@@ -48,16 +48,6 @@ else:
 
 fnull = open(os.devnull, 'w')
 
-# A root shell prompt string that is less likely to appear in the
-# console output by accident than the default of "# ".  First, the
-# prompt as a quoted string in /bin/sh syntax, with some extra quotes
-# in the middle so that an echoed command to set the prompt is not
-# mistaken for the prompt itself.  Must end with "# ".
-distinctive_prompt_sh_string = "'anita-ro''ot-shell# '"
-
-# A regular expression to match the above prompt.
-distinctive_prompt_re = r"anita-root-shell# "
-
 # Return true if the given program (+args) can be successfully run
 
 def try_program(argv):
@@ -1348,16 +1338,38 @@ def net_setup(child):
     child.send("dhclient ne2\n")
     child.expect("bound to.*\n# ")
 
+shell_prompt_no = 0
+
+# Generate a root shell prompt string that is less likely to appear in
+# the console output by accident than the default of "# ".  Must end with "# ".
+
+def gen_shell_prompt():
+    global shell_prompt_no
+    shell_prompt_no += 1
+    return 'anita-root-shell-prompt-%i# ' % shell_prompt_no
+
+# Quote a prompt in /bin/sh syntax, with some extra quotes
+# in the middle so that an echoed command to set the prompt is not
+# mistaken for the prompt itself.
+
+def quote_prompt(s):
+    midpoint = len(s) / 2
+    return "".join("'%s'" % part for part in (s[0:midpoint], s[midpoint:]))
+
 def shell_cmd(child, cmd, timeout = -1):
     child.send("exec /bin/sh\n")
     child.expect("# ")
-    child.send("PS1=" + distinctive_prompt_sh_string + "\n")
-    child.expect(distinctive_prompt_re, timeout)    
+    prompt = gen_shell_prompt()
+    child.send("PS1=" + quote_prompt(prompt) + "\n")
+    prompt_re = prompt
+    child.expect(prompt_re, timeout)
     child.send(cmd + "\n")
-    child.expect(distinctive_prompt_re, timeout)
+    child.expect(prompt_re, timeout)
     child.send("echo $?\n")
     child.expect("(\d+)")
-    return int(child.match.group(1))
+    r = int(child.match.group(1))
+    child.expect(prompt_re, timeout)
+    return r
 
 # Deprecated, use Anita.run_atf_tests
 def test(child):
