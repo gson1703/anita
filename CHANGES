@@ -1,3 +1,5 @@
+- 1.31 released -
+
 Fix a failure to consume a shell prompt which would cause it to remain
 buffered and later be mistaken for one that had not yet issued.  For
 added protection, add a unique serial number to each prompt.
