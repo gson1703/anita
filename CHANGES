@@ -1,3 +1,7 @@
+Restore the ability to install source and debug sets, which had been
+broken since the label displayed by sysinst was changed from "Source
+sets" to "Source and debug sets."
+
 - 1.31 released -
 
 Fix a failure to consume a shell prompt which would cause it to remain

@@ -95,6 +95,7 @@ def my_urlretrieve(url, filename):
 def download_file(file, url):
     try:
         print "Downloading", url + "..."
+	sys.stdout.flush()
         my_urlretrieve(url, file)
     except:
         if os.path.exists(file):
@@ -257,17 +258,18 @@ class Version:
     #
     # Each array element is a tuple of four fields:
     #   - the file name
-    #   - the label used by sysinst
+    #   - a regular expression matching the label used by sysinst
+    #     (taking into account that it may differ between sysinst versions)
     #   - a flag indicating that the set should be installed by default
     #   - a flag indicating that the set is not present in all versions
     #
     
     sets = make_set_dict_list([
       [ 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ],
-      [ 'kern-GENERIC.NOACPI', 'Kernel (GENERIC.NOACPI)', 0, 1 ],
+      [ 'kern-GENERIC.NOACPI', 'Kernel \(GENERIC\.NOACPI\)', 0, 1 ],
       [ 'modules', 'Kernel Modules', 1, 1 ],
       [ 'base', 'Base', 1, 0 ],
-      [ 'etc', 'System (/etc)', 1, 0 ],
+      [ 'etc', 'System \(/etc\)', 1, 0 ],
       [ 'comp', 'Compiler Tools', 1, 0 ],
       [ 'games', 'Games', 0, 0 ],
       [ 'man', 'Online Manual Pages', 0, 0 ],
@@ -281,14 +283,14 @@ class Version:
           ['xfont',   'X11 fonts', 0, 1 ],
           ['xserver', 'X11 servers', 0, 1 ],
       ]],
-      [ '_src', 'Source sets', 0, [
+      [ '_src', 'Source (and debug )?sets', 0, [
           ['syssrc', 'Kernel sources', 0, 1],
           ['src', 'Base sources', 0, 1],
           ['sharesrc', 'Share sources', 0, 1],
           ['gnusrc', 'GNU sources', 0, 1],
           ['xsrc', 'X11 sources', 0, 1],
-          ['debug', 'debug sets', 0, 1],
-          ['xdebug', 'debug X11 sets', 0, 1],
+          ['debug', '(debug sets)|(Debug symbols)', 0, 1],
+          ['xdebug', '(debug X11 sets)|(X11 debug symbols)', 0, 1],
       ]]
     ])
 
@@ -915,8 +917,7 @@ class Anita:
                         break
                 else:
                     for set in set_list:
-                        # Could use RE match here for more flexibility
-                        if label == set['label'] and label not in labels_seen:
+                        if re.match(set['label'], label) and label not in labels_seen:
                             sets_this_screen.append({
                                 'set': set,
                                 'letter': letter,
