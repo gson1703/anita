@@ -94,10 +94,14 @@ def my_urlretrieve(url, filename):
 
 def download_file(file, url):
     try:
-        print "Downloading", url + "..."
+        print "Downloading", url + "...",
 	sys.stdout.flush()
         my_urlretrieve(url, file)
+	print "OK"
+	sys.stdout.flush()	
     except:
+        print "failed"
+	sys.stdout.flush()	
         if os.path.exists(file):
             os.unlink(file)
         raise
