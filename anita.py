@@ -963,9 +963,19 @@ class Anita:
                     child.send("0\n")
                 child.expect("b: Use the entire disk")
                 child.send("b\n")
-                child.expect("Do you want to install the NetBSD bootcode")
-                child.expect("a: Yes")
-                child.send("\n")
+		while True:
+		    child.expect(r'(Your disk currently has a non-NetBSD partition)|' +
+			r'(Do you want to install the NetBSD bootcode)|' +
+			r'(Do you want to update the bootcode)')
+		    if child.match.group(1):
+		        # Your disk currently has a non-NetBSD partition
+			child.expect("a: Yes")
+			child.send("\n")
+		    elif child.match.group(2) or child.match.group(3):
+		        # Install or replace bootcode
+			child.expect("a: Yes")
+			child.send("\n")
+			break
             elif child.match.group(3):
                 child.send("a\n")
                 break
