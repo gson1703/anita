@@ -1,4 +1,4 @@
-.Dd Jun 5, 2013
+.Dd Feb 19, 2014
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -366,25 +366,16 @@ the installed image, they hang after the "root on ffs" message.
 NetBSD/i386 versions older than 2009-06-13 13:35:11 fail to find 
 any PCI buses when run under qemu; see PRs 38729 and 42681.
 .Pp
-.Sh BUGS IN KVM
-.Pp
-When 
-.Nm
-is run on a Linux host using a version of qemu that enables the
-"kvm" kernel-mode virtualization by default, and is used to
-boot a version of NetBSD-current newer than 2009-11-04 
-14:39:17, the emulated NetBSD system hangs during boot; see
-PR 44069 for details.  This issue can be worked 
-around by passing Anita the command line option
-.Fl -vmm-args 
-.Ar -no-kvm
-to disable kvm.  The alternative 
-.Fl -vmm-args 
-.Ar -no-kvm-irqchip
-performs better but doesn't quite work: the system installs and
-boots, but the test suite occasionally fail to complete; see PR 44176.
-.Pp
 .Sh BUGS IN QEMU
+.Pp
+Versions of qemu known to work with
+.Nm
+on NetBSD hosts are
+0.xx (emulators/qemu0 in pkgsrc), 1.2, and 1.4.1.
+.Pp
+Even with these versions, timing is off by a factor of two,
+which causes some of the tests in the NetBSD test suite to fail.
+Some floating point tests also fail.
 .Pp
 Running multithreaded programs (such as the NetBSD test suite) on
 an emulated i386 or amd64 system requires qemu patches that are in
@@ -411,10 +402,7 @@ regression in the 1.x series of qemu that have impacted
 .Dl https://bugs.launchpad.net/qemu/+bug/1127369
 .Dl https://bugs.launchpad.net/qemu/+bug/1154328
 .Pp
-These are believed to be fixed in qemu 1.5,
-but may or may not be  fixed in any other given qemu 1.x release.
-Qemu version 1.2 has been used with some success; when in
-doubt, use qemu 0.xx (emulators/qemu0 in pkgsrc).  
+These are believed to be fixed in qemu 1.5.
 .Pp
 Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
 time with recent versions of qemu because the bootloader countdown
@@ -423,3 +411,25 @@ loading the kernel and the kernel printing its first console output,
 which can easily be mistaken for a hang.  Please be patient. This
 issue has been worked around in NetBSD-current; see PR 43156 for
 details.
+.Pp
+Installing using qemu version 1.5.1 or 1.6.0 from pkgsrc on
+NetBSD fails due to the serial console dropping characters; see 
+PR 48071.  The same qemu versions work when hosted on Linux.
+.Pp
+.Sh BUGS IN KVM
+.Pp
+When 
+.Nm
+is run on a Linux host using a version of qemu that enables the
+"kvm" kernel-mode virtualization by default, and is used to
+boot a version of NetBSD-current newer than 2009-11-04 
+14:39:17, the emulated NetBSD system hangs during boot; see
+PR 44069 for details.  This issue can be worked 
+around by passing Anita the command line option
+.Fl -vmm-args 
+.Ar -no-kvm
+to disable kvm.  The alternative 
+.Fl -vmm-args 
+.Ar -no-kvm-irqchip
+performs better but doesn't quite work: the system installs and
+boots, but the test suite occasionally fail to complete; see PR 44176.

@@ -13,7 +13,7 @@ import time
 import urllib
 import urlparse
 
-__version__='1.31'
+__version__='1.32'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -717,6 +717,13 @@ class Anita:
         child.garbage_collector = DomUKiller(frontend, name)
         return child
 
+    def start_noemu(self, vmm_args):
+        # XXX hardcoded path
+        child = pexpect_spawn('./noemu.sh', [
+            ] + vmm_args + self.extra_vmm_args)
+        self.configure_child(child)
+        return child
+
     def _install(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
@@ -780,6 +787,8 @@ class Anita:
 		cd_device = 'cd0a';
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
+	elif self.vmm == 'noemu':
+	    child = self.start_noemu(vmm_args)
         else:
             raise RuntimeError('unknown vmm')
                                
@@ -1074,7 +1083,25 @@ class Anita:
 			 # Group 9
 			 "(Configure the additional items)|" +
 			 # Group 10
-			 "(Multiple CDs found)",
+			 "(Multiple CDs found)|" +
+			 # Group 11
+			 "(The following are the http site)|" +
+			 # Group 12
+			 "(Network media type)|" +
+			 # Group 13
+			 "(Which device shall)|" +
+			 # Group 14
+			 "(Perform DHCP autoconfiguration)|" +
+			 # Group 15
+			 "(Your DNS domain:)|" +
+			 # Group 16
+			 "(Your host name:)|" +
+			 # Group 17
+			 "(IPv6 name server:)|" +
+			 # Group 18
+			 "(Perform IPv6 autoconfiguration)|" +
+			 # Group 19
+			 "(Are they OK)",
 			 3600)
 
 	    if child.match.groups() == prevmatch:
@@ -1085,7 +1112,10 @@ class Anita:
 		child.send("\n")
 	    elif child.match.group(2):
 	        # (a: CD-ROM)
-		child.send("\n")
+		if self.vmm == 'noemu':
+		    child.send("c\n") # install from HTTP
+		else:
+		    child.send("a\n") # install from CD-ROM
             elif child.match.group(3):
 	        # CDROM device selection
                 if cd_device != 'cd0a':
@@ -1164,6 +1194,28 @@ class Anita:
 		# This happens if we have a boot CD and a CD with sets;
 		# we need to choose the latter.
 	        child.send("b\n")
+	    elif child.match.group(11):
+	        # (The follwoing are the http site)
+		# \037 is control-w, which clears the field
+		child.send("a\n\03710.169.0.1\n") # IP address
+		child.send("b\n\037\n") # Directory = empty string
+		child.send("x\n") # Continue
+	    elif child.match.group(12):
+	        child.send("\n")
+	    elif child.match.group(13):
+	        child.send("\n")
+	    elif child.match.group(14):
+	        child.send("\n")
+	    elif child.match.group(15):
+	        child.send("netbsd.org\n")
+	    elif child.match.group(16):
+	        child.send("anita-test\n")
+	    elif child.match.group(17):
+    	        child.send("\n")
+	    elif child.match.group(18):	
+    	        child.send("\n")
+	    elif child.match.group(19):
+    	        child.send("\n")
 	    else:
 	        raise AssertionError
 
@@ -1200,15 +1252,19 @@ class Anita:
     # Install NetBSD if not installed already
 
     def install(self):
-        # Already installed?
-        if os.path.exists(self.wd0_path()):
-            return
-        try:
-            self._install()
-        except:
-            if os.path.exists(self.wd0_path()):
-                os.unlink(self.wd0_path())
-            raise
+        if self.vmm == 'noemu':
+	    self.download()
+	    pass
+	else:
+	    # Already installed?
+	    if os.path.exists(self.wd0_path()):
+		return
+	    try:
+		self._install()
+	    except:
+		if os.path.exists(self.wd0_path()):
+		    os.unlink(self.wd0_path())
+		raise
 
     # Boot the virtual machine (installing it first if it's not
     # installed already).  The vmm_args argument applies when

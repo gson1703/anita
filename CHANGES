@@ -1,6 +1,8 @@
-Restore the ability to install source and debug sets, which had been
-broken since the label displayed by sysinst was changed from "Source
-sets" to "Source and debug sets."
+- 1.32 released -
+
+Fix installation of source and debug sets, which had been broken since
+the label displayed by sysinst was changed from "Source sets" to
+"Source and debug sets".
 
 - 1.31 released -
 
