@@ -71,13 +71,12 @@ def spawn(command, args):
     if ret != 0:
         raise RuntimeError("could not run " + command)
 
-# Wrapper around pexpect.spawn to let us log the command for
-# debugging.  Note that unlike os.spawnvp, args[0] is not
-# the name of the command.
-    
-def pexpect_spawn(command, args):
-    #print command, " \\\n    ".join(args)
-    return pexpect.spawn(command, args)
+# Subclass pexpect.spawn to add logging of expect() calls
+
+class pexpect_spawn_log(pexpect.spawn):
+    def expect(self, match_re, *args, **kwargs):
+        print >>sys.stdout, "expect(" + repr(match_re) + ")"
+        return pexpect.spawn.expect(self, match_re, *args, **kwargs)
 
 # Subclass urllib.FancyURLopener so that we can catch
 # HTTP 404 errors
@@ -578,9 +577,22 @@ class DomUKiller:
 def vmm_is_xen(vmm):
     return vmm == 'xm' or vmm == 'xl'
 
+# A file-like object that escapes unprintable data and prefixes each
+# line with a tag, for logging I/O.
+
+class Logger:
+    def __init__(self, tag, fd):
+        self.tag = tag
+	self.fd = fd
+    def write(self, data):
+        print >>self.fd, self.tag, repr(data)
+    def __getattr__(self, name):
+        return getattr(self.fd, name)
+
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
-        disk_size = None, memory_size = None, persist = False, boot_from = None):
+        disk_size = None, memory_size = None, persist = False, boot_from = None,
+	verbose_log = False):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -601,8 +613,8 @@ class Anita:
 	self.memory_size_bytes = parse_size(memory_size)
 
         self.persist = persist
-
 	self.boot_from = boot_from
+	self.verbose_log = verbose_log
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -624,6 +636,17 @@ class Anita:
             vmm_args = []
         self.extra_vmm_args = vmm_args
 
+    # Wrapper around pexpect.spawn to let us log the command for
+    # debugging.  Note that unlike os.spawnvp, args[0] is not
+    # the name of the command.
+
+    def pexpect_spawn(self, command, args):
+	#print command, " \\\n    ".join(args)
+	if self.verbose_log:
+	    return pexpect_spawn_log(command, args)
+	else:
+	    return pexpect.spawn(command, args)
+
     # The path to the NetBSD hard disk image
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
@@ -638,10 +661,18 @@ class Anita:
         return megs
 
     def configure_child(self, child):
-	# pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
-	# "child.log_file", so we set both variables for portability
-        child.logfile = sys.stdout
-        child.log_file = sys.stdout
+        if self.verbose_log:
+	    # Log I/O in a structured format, separating input and output
+	    # Log reads from child
+	    child.logfile_read = Logger(' ', sys.stdout)
+	    # Log writes to child
+	    child.logfile_send = Logger('>', sys.stdout)
+	else:
+	    # Just log the I/O as such, intermixing input and output
+	    # pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
+	    # "child.log_file", so we set both variables for portability
+	    child.logfile = sys.stdout
+	    child.log_file = sys.stdout
         child.timeout = 300
         child.setecho(False)
         # Xen installs sometimes fail if we don't increase this
@@ -652,7 +683,7 @@ class Anita:
 	self.child = child
 
     def start_qemu(self, vmm_args, snapshot_system_disk):
-        child = pexpect_spawn(self.qemu, [
+        child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
             "-drive", "file=%s,media=disk,snapshot=%s" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
@@ -704,7 +735,7 @@ class Anita:
                     no_disk_args.append(arg)
             args = no_disk_args + [ "disk=[%s]" % (','.join(["'%s'" % arg for arg in disk_args]))]
         
-        child = pexpect_spawn(args[0], args[1:])
+        child = self.pexpect_spawn(args[0], args[1:])
         self.configure_child(child)
         # This is ugly; we reach into the child object and set an
         # additional attribute.  The name of the attribute,
@@ -719,7 +750,7 @@ class Anita:
 
     def start_noemu(self, vmm_args):
         # XXX hardcoded path
-        child = pexpect_spawn('./noemu.sh', [
+        child = self.pexpect_spawn('./noemu.sh', [
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
         return child
