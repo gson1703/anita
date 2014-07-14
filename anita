@@ -44,8 +44,10 @@ def main(argv = None):
 		      help="make changes to disk contents persistent", action="store_true")
     parser.add_option("--boot-from",
 		      help="boot from MEDIA (floppy/cdrom)", metavar="MEDIA")
+    parser.add_option("--verbose-log", action="store_true",
+		      help="log console traffic in a structured format")
     parser.add_option("--version", action="store_true",
-		      help="print the antia version number and exit")
+		      help="print the anita version number and exit")
 
     (options, args) = parser.parse_args()
 
@@ -85,7 +87,8 @@ def main(argv = None):
         disk_size = options.disk_size,
 	memory_size = options.memory_size,
 	persist = options.persist,
-	boot_from = options.boot_from)
+	boot_from = options.boot_from,
+	verbose_log = options.verbose_log)
 
     def maybe_run_command(child):
         if options.run:
