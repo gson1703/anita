@@ -44,7 +44,7 @@ def main(argv = None):
 		      help="make changes to disk contents persistent", action="store_true")
     parser.add_option("--boot-from",
 		      help="boot from MEDIA (floppy/cdrom)", metavar="MEDIA")
-    parser.add_option("--verbose-log", action="store_true",
+    parser.add_option("--structured-log", action="store_true",
 		      help="log console traffic in a structured format")
     parser.add_option("--version", action="store_true",
 		      help="print the anita version number and exit")
@@ -88,7 +88,7 @@ def main(argv = None):
 	memory_size = options.memory_size,
 	persist = options.persist,
 	boot_from = options.boot_from,
-	verbose_log = options.verbose_log)
+	structured_log = options.structured_log)
 
     def maybe_run_command(child):
         if options.run:

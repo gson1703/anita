@@ -592,7 +592,7 @@ class Logger:
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	verbose_log = False):
+	structured_log = False):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -614,7 +614,7 @@ class Anita:
 
         self.persist = persist
 	self.boot_from = boot_from
-	self.verbose_log = verbose_log
+	self.structured_log = structured_log
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -642,7 +642,7 @@ class Anita:
 
     def pexpect_spawn(self, command, args):
 	#print command, " \\\n    ".join(args)
-	if self.verbose_log:
+	if self.structured_log:
 	    return pexpect_spawn_log(command, args)
 	else:
 	    return pexpect.spawn(command, args)
@@ -661,7 +661,7 @@ class Anita:
         return megs
 
     def configure_child(self, child):
-        if self.verbose_log:
+        if self.structured_log:
 	    # Log I/O in a structured format, separating input and output
 	    # Log reads from child
 	    child.logfile_read = Logger(' ', sys.stdout)

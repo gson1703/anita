@@ -1,3 +1,5 @@
+New command line option --structured-log.
+
 - 1.32 released -
 
 Fix installation of source and debug sets, which had been broken since
