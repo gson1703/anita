@@ -15,6 +15,7 @@
 .Op Fl -test-timeout Ar timeout
 .Op Fl -persist
 .Op Fl -boot-from Ar cdrom | floppy
+.Op Fl -structured-log
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -304,6 +305,10 @@ an ephemeral snapshot copy of the freshly installed system.
 .It Fl -boot-from Ar cdrom | floppy
 For architectures that support booting from either CD-ROM or floppies,
 specify which one to use.  The default is to boot from floppies.
+.It Fl -structured-log
+Generate log output in a structured format similar to Python code.
+The default is to log the console output as raw terminal data, with 
+the console input only visible if echoed by the virtual machine.
 .El
 .Sh DEBUGGING NETBSD USING ANITA
 .Nm
