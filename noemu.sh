@@ -11,7 +11,7 @@ arch="$2"
 
 child_pids=''
 
-trap 'echo kill $child_pids; kill $child_pids' 0 1 15
+trap 'echo trap killing kill $child_pids; kill $child_pids; exit 1' 0 1 15
 
 test $(id -u) = 0 || exit 1
 
@@ -70,8 +70,11 @@ inetd_pid=$!
 echo "inetd pid $inet_pid"
 child_pids="$child_pids $inetd_pid"
 
+echo "powering on"
+python2.7 noemu_power.py
+
 echo "connecting"
-tip puc &
+tip $etc_remote_hostname &
 tip_pid=$!
 child_pids="$child_pids $tip_pid"
 
