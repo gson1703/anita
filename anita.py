@@ -762,11 +762,11 @@ class Anita:
 
 	arch = self.dist.arch()
 
-	# Create a disk image file
-        print "Creating disk image...",
-        sys.stdout.flush()
-        make_dense_image(self.wd0_path(), parse_size(self.disk_size))
-        print "done."
+	if self.vmm != 'noemu':
+	    print "Creating hard disk image...",
+	    sys.stdout.flush()
+	    make_dense_image(self.wd0_path(), parse_size(self.disk_size))
+	    print "done."
 
 	# The name of the CD-ROM device holding the sets
 	cd_device = None
@@ -819,9 +819,10 @@ class Anita:
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 	elif self.vmm == 'noemu':
+	    vmm_args = [self.workdir, self.dist.arch()]
 	    child = self.start_noemu(vmm_args)
         else:
-            raise RuntimeError('unknown vmm')
+            raise RuntimeError('unknown vmm %s' % self.vmm)
                                
 	term = None
 
@@ -1284,8 +1285,8 @@ class Anita:
 
     def install(self):
         if self.vmm == 'noemu':
-	    self.download()
-	    pass
+	    self.dist.download()
+	    self._install()	    
 	else:
 	    # Already installed?
 	    if os.path.exists(self.wd0_path()):
@@ -1309,7 +1310,7 @@ class Anita:
         self.dist.set_workdir(self.workdir)
 
         self.install()
-
+	
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
@@ -1318,7 +1319,7 @@ class Anita:
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                              "binary", "kernel", self.dist.xen_kernel())))])
         else:
-            raise RuntimeError('unknown vmm')
+            raise RuntimeError('unknown vmm %s' % vmm)
             
         child.expect("login:")
         # Can't close child here because we still need it if called from
