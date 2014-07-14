@@ -419,7 +419,8 @@ details.
 .Pp
 Installing using qemu version 1.5.1, 1.6.0, 1.7.0, or 2.0.0 on
 NetBSD fails due to the serial console dropping characters; see 
-PR 48071.  The same qemu versions work when hosted on Linux.
+PR 48071.  The same qemu versions work when hosted on Linux, but
+only by accident.  This bug is fixed in qemu 2.0.0nb4 in pkgsrc.
 .Pp
 .Sh BUGS IN KVM
 .Pp
@@ -437,4 +438,4 @@ to disable kvm.  The alternative
 .Fl -vmm-args 
 .Ar -no-kvm-irqchip
 performs better but doesn't quite work: the system installs and
-boots, but the test suite occasionally fail to complete; see PR 44176.
+boots, but the test suite occasionally fails to complete; see PR 44176.
