@@ -307,8 +307,24 @@ For architectures that support booting from either CD-ROM or floppies,
 specify which one to use.  The default is to boot from floppies.
 .It Fl -structured-log
 Generate log output in a structured format similar to Python code.
-The default is to log the console output as raw terminal data, with 
-the console input only visible if echoed by the virtual machine.
+Commands sent to the serial console by
+.Nm
+are logged as 
+.Cm send('command...') ,
+data received are logged
+as 
+.Cm recv('data...') ,
+and regular expressions expected by
+.Nm
+are logged as 
+.Cm expect('regexp...') .
+Unprintable characters in the data strings are escaped using Python 
+string syntax.
+.Pp
+The default is to do unstructured logging where the raw output from
+the virtual machine console is sent to standard output as-is, 
+and the commands sent to the console are only logged if echoed 
+by the virtual machine.
 .El
 .Sh DEBUGGING NETBSD USING ANITA
 .Nm
