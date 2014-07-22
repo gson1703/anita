@@ -585,7 +585,7 @@ class Logger:
         self.tag = tag
 	self.fd = fd
     def write(self, data):
-        print >>self.fd, self.tag, repr(data)
+        print >>self.fd, "%s(%s)" % (self.tag, repr(data))
     def __getattr__(self, name):
         return getattr(self.fd, name)
 
@@ -664,9 +664,9 @@ class Anita:
         if self.structured_log:
 	    # Log I/O in a structured format, separating input and output
 	    # Log reads from child
-	    child.logfile_read = Logger(' ', sys.stdout)
+	    child.logfile_read = Logger('recv', sys.stdout)
 	    # Log writes to child
-	    child.logfile_send = Logger('>', sys.stdout)
+	    child.logfile_send = Logger('send', sys.stdout)
 	else:
 	    # Just log the I/O as such, intermixing input and output
 	    # pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
