@@ -76,7 +76,8 @@ def spawn(command, args):
 class pexpect_spawn_log(pexpect.spawn):
     def expect(self, match_re, *args, **kwargs):
         print >>sys.stdout, "expect(" + repr(match_re) + ")"
-        return pexpect.spawn.expect(self, match_re, *args, **kwargs)
+        r = pexpect.spawn.expect(self, match_re, *args, **kwargs)
+	print >>sys.stdout, "expect_return(%d)" % r
 
 # Subclass urllib.FancyURLopener so that we can catch
 # HTTP 404 errors
@@ -1257,12 +1258,8 @@ class Anita:
 	# Since Fri Apr 6 23:48:53 2012 UTC, you are kicked
 	# back into the main menu.
 
-	prevmatch = []
 	while True:
             child.expect("(Hit enter to continue)|(x: Exit Install System)|(#)|(halting machine)|(halted by root)")
-	    if child.match.groups() == prevmatch:
-	        continue
-	    prevmatch = child.match.groups()
 	    if child.match.group(1):
 	        child.send("\n")
 	    elif child.match.group(2):
