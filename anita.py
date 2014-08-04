@@ -13,7 +13,7 @@ import time
 import urllib
 import urlparse
 
-__version__='1.32'
+__version__='1.33'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -915,7 +915,7 @@ class Anita:
 	        raise AssertionError
 
         # Depending on the number of disks attached, we get either
-        # "Found only one disk" followed by "Hit enter to continue",
+        # "found only one disk" followed by "Hit enter to continue",
         # or "On which disk do you want to install".
         child.expect("(Hit enter to continue)|" +
 	    "(On which disk do you want to install)")
@@ -925,15 +925,6 @@ class Anita:
 	    child.send("a\n")
         else:
             raise AssertionError
-
-        # Custom installation is choice "d" in 6.0,
-        # but choice "c" or "b" in older versions
-        # We could use "Minimal", but it doesn't exist in
-        # older versions.
-        child.expect("([a-z]): Custom installation")
-        child.send(child.match.group(1) + "\n")
-
-        # Enable/disable sets.  
 
         # Keep track of sets we have already handled, by label.
         # This is needed so that parsing a pop-up submenu is not
@@ -988,70 +979,6 @@ class Anita:
             # Exit the set selection menu
             child.send("x\n")
 
-        choose_sets(self.dist.sets)
-
-        while True:
-            # On non-Xen i386/amd64 we first get group 1 or 2,
-            # then group 3; on sparc and Xen, we just get group 3.
-	    child.expect("(a: This is the correct geometry)|" +
-	        "(a: Use one of these disks)|" +
-                "(a: Set sizes of NetBSD partitions)")
-            if child.match.group(1) or child.match.group(2):
-                if child.match.group(1):
-                    child.send("\n")
-                elif child.match.group(2):
-                    child.send("a\n")
-                    child.expect("Choose disk")
-                    child.send("0\n")
-                child.expect("b: Use the entire disk")
-                child.send("b\n")
-		while True:
-		    child.expect(r'(Your disk currently has a non-NetBSD partition)|' +
-			r'(Do you want to install the NetBSD bootcode)|' +
-			r'(Do you want to update the bootcode)')
-		    if child.match.group(1):
-		        # Your disk currently has a non-NetBSD partition
-			child.expect("a: Yes")
-			child.send("\n")
-		    elif child.match.group(2) or child.match.group(3):
-		        # Install or replace bootcode
-			child.expect("a: Yes")
-			child.send("\n")
-			break
-            elif child.match.group(3):
-                child.send("a\n")
-                break
-	    else:
-		raise AssertionError
-
-        child.expect("Accept partition sizes")
-        # Press cursor-down enough times to get to the end of the list,
-	# to the "Accept partition sizes" entry, then press
-        # enter to continue.  Previously, we used control-N ("\016"),
-        # but if it gets echoed (which has happened), it is interpreted by
-        # the terminal as "enable line drawing character set", leaving the
-        # terminal in an unusable state.
-	if term == 'xterm':
-	    # For unknown reasons, when using a terminal type of "xterm",
-	    # sysinst puts the terminal in "application mode", causing the
-	    # cursor keys to send a different escape sequence than the default.
-	    cursor_down = "\033OB"
-	else:
-	    # Use the default ANSI cursor-down escape sequence
-	    cursor_down = "\033[B"
-        child.send(cursor_down * 8 + "\n")
-
-        child.expect("x: Partition sizes ok")
-        child.send("\n")
-        child.expect("Please enter a name for your NetBSD disk")
-        child.send("\n")
-
-        # "This is your last chance to quit this process..."
-        child.expect("Shall we continue")
-        child.expect("b: Yes")
-        child.send("b\n")
-
-	# newfs is run at this point
 
 	# Many different things can happen at this point:
         #
@@ -1134,7 +1061,15 @@ class Anita:
 			 # Group 18
 			 "(Perform IPv6 autoconfiguration)|" +
 			 # Group 19
-			 "(Are they OK)",
+			 "(Are they OK)|" +
+			 # Group 20-21
+			 "(([a-z]): Custom installation)|" +
+			 # Group 22
+			 "(a: This is the correct geometry)|" +
+			 # Group 23
+		         "(a: Use one of these disks)|" +
+			 # Group 24
+                	 "(a: Set sizes of NetBSD partitions)",
 			 3600)
 
 	    if child.match.groups() == prevmatch:
@@ -1249,6 +1184,69 @@ class Anita:
     	        child.send("\n")
 	    elif child.match.group(19):
     	        child.send("\n")
+	    elif child.match.group(20):
+		# Custom installation is choice "d" in 6.0,
+		# but choice "c" or "b" in older versions
+		# We could use "Minimal", but it doesn't exist in
+		# older versions.
+		child.send(child.match.group(21) + "\n")
+		# Enable/disable sets.  
+		choose_sets(self.dist.sets)
+            # On non-Xen i386/amd64 we first get group 22 or 23,
+            # then group 24; on sparc and Xen, we just get group 24.
+	    elif (child.match.group(22) or child.match.group(23)):
+                if child.match.group(22):
+                    child.send("\n")
+                elif child.match.group(23):
+                    child.send("a\n")
+                    child.expect("Choose disk")
+                    child.send("0\n")
+                child.expect("b: Use the entire disk")
+                child.send("b\n")
+		while True:
+		    child.expect(r'(Your disk currently has a non-NetBSD partition)|' +
+			r'(Do you want to install the NetBSD bootcode)|' +
+			r'(Do you want to update the bootcode)')
+		    if child.match.group(1):
+		        # Your disk currently has a non-NetBSD partition
+			child.expect("a: Yes")
+			child.send("\n")
+		    elif child.match.group(2) or child.match.group(3):
+		        # Install or replace bootcode
+			child.expect("a: Yes")
+			child.send("\n")
+			break
+	    elif child.match.group(24):
+	        # (a: Set sizes of NetBSD partitions)
+                child.send("a\n")
+		child.expect("Accept partition sizes")
+		# Press cursor-down enough times to get to the end of the list,
+		# to the "Accept partition sizes" entry, then press
+		# enter to continue.  Previously, we used control-N ("\016"),
+		# but if it gets echoed (which has happened), it is interpreted by
+		# the terminal as "enable line drawing character set", leaving the
+		# terminal in an unusable state.
+		if term == 'xterm':
+		    # For unknown reasons, when using a terminal type of "xterm",
+		    # sysinst puts the terminal in "application mode", causing the
+		    # cursor keys to send a different escape sequence than the default.
+		    cursor_down = "\033OB"
+		else:
+		    # Use the default ANSI cursor-down escape sequence
+		    cursor_down = "\033[B"
+		child.send(cursor_down * 8 + "\n")
+
+		child.expect("x: Partition sizes ok")
+		child.send("\n")
+		child.expect("Please enter a name for your NetBSD disk")
+		child.send("\n")
+
+		# "This is your last chance to quit this process..."
+		child.expect("Shall we continue")
+		child.expect("b: Yes")
+		child.send("b\n")
+
+		# newfs is run at this point
 	    else:
 	        raise AssertionError
 
