@@ -313,11 +313,13 @@ are logged as
 .Cm send('command...') ,
 data received are logged
 as 
-.Cm recv('data...') ,
-and regular expressions expected by
-.Nm
-are logged as 
-.Cm expect('regexp...') .
+.Cm recv('data...') .
+Calls to pexpect's
+.Fn expect
+function are logged as
+.Cm expect('regexp...') ,
+and their return values as
+.Cm expect_return(value) .
 Unprintable characters in the data strings are escaped using Python 
 string syntax.
 .Pp
