@@ -1,3 +1,5 @@
+- 1.33 released -
+
 Support recent versions of sysinst (CVS date 2014.08.03.16.09.38 or
 newer), where set selection happens after disk partitioning rather
 than before.
