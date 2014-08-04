@@ -17,7 +17,7 @@ runtest() {
     shift
     workdir=`$python ./anita print-workdir "$@"`
     rm -f $workdir/wd0.img
-    $python ./anita $mode "$@"
+    $python ./anita --structured-log $mode "$@"
 }
 
 # Test an installation with debug symbols and partial source
