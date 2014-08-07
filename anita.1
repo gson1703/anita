@@ -318,8 +318,8 @@ Calls to pexpect's
 .Fn expect
 function are logged as
 .Cm expect('regexp...') ,
-and their return values as
-.Cm expect_return(value) .
+and the actual strings matched by them as
+.Cm match('...') .
 Unprintable characters in the data strings are escaped using Python 
 string syntax.
 .Pp

@@ -1,3 +1,7 @@
+In --structured-log mode, log the string matched by expect() instead
+of the return value, as the latter is always zero and therefore
+conveys no useful information.
+
 - 1.33 released -
 
 Support recent versions of sysinst (CVS date 2014.08.03.16.09.38 or

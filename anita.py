@@ -77,7 +77,8 @@ class pexpect_spawn_log(pexpect.spawn):
     def expect(self, match_re, *args, **kwargs):
         print >>sys.stdout, "expect(" + repr(match_re) + ")"
         r = pexpect.spawn.expect(self, match_re, *args, **kwargs)
-	print >>sys.stdout, "expect_return(%d)" % r
+	print >>sys.stdout, "match(" + repr(self.match.group(0)) + ")"
+	return r
 
 # Subclass urllib.FancyURLopener so that we can catch
 # HTTP 404 errors
@@ -406,6 +407,16 @@ class Version:
                 self.download_local_arch_dir(),
                 ["installation", "cdrom", bootcd],
 		True)
+
+        # These are used with noemu only
+        download_if_missing_3(self.dist_url(),
+            self.download_local_arch_dir(),
+            ["installation", "misc", "pxeboot_ia32.bin"],
+            True)
+        download_if_missing_3(self.dist_url(),
+            self.download_local_arch_dir(),
+            ["binary", "kernel", "netbsd-INSTALL.gz"],
+            True)
 
         for set in self.flat_sets:
             if set['install']:
@@ -751,7 +762,7 @@ class Anita:
 
     def start_noemu(self, vmm_args):
         # XXX hardcoded path
-        child = self.pexpect_spawn('./noemu.sh', [
+        child = self.pexpect_spawn('./noemu.py', [
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
         return child
@@ -820,7 +831,7 @@ class Anita:
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 	elif self.vmm == 'noemu':
-	    vmm_args = [self.workdir, self.dist.arch()]
+	    vmm_args = [os.path.join(self.workdir, 'download'), self.dist.arch()]
 	    child = self.start_noemu(vmm_args)
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
@@ -828,7 +839,7 @@ class Anita:
 	term = None
 
         # Do the floppy swapping dance and other pre-sysinst interaction
-	
+
         floppy0_name = None
 	while True:
 	    # NetBSD/i386 will prompt for a terminal type if booted from a
@@ -979,6 +990,35 @@ class Anita:
             # Exit the set selection menu
             child.send("x\n")
 
+        def configure_network():
+           child.expect("Which network device would you like to use")
+	   child.expect("Available interfaces")
+	   child.expect("a:") # first available interface
+	   child.send("\n")
+	   child.expect("Network media type")
+	   child.send("\n")
+	   child.expect("Perform DHCP autoconfiguration")
+	   child.expect("([a-z]): No")
+	   child.send(child.match.group(1) + "\n")
+	   child.expect("Your DNS domain")
+	   child.send("netbsd.org\n")
+	   child.expect("Your host name")
+	   child.send("anita-test\n")
+	   child.expect("Your IPv4 number")
+	   child.send("10.169.0.2\n");
+	   child.expect("IPv4 Netmask")
+	   child.send("255.255.255.0\n")
+	   child.expect("IPv4 gateway")
+	   child.send("10.169.0.1\n");
+	   child.expect("IPv4 name server")
+	   child.send("10.169.0.1\n")
+	   child.expect("Perform IPv6 autoconfiguration")
+	   # Yes/no are the other way round from the IPv4 case!
+	   child.expect("([a-z]): No")	   
+	   child.send(child.match.group(1) + "\n")
+	   child.expect("Are they OK")
+	   child.expect("([a-z]): Yes")
+	   child.send(child.match.group(1) + "\n")
 
 	# Many different things can happen at this point:
         #
@@ -1047,21 +1087,21 @@ class Anita:
 			 # Group 11
 			 "(The following are the http site)|" +
 			 # Group 12
-			 "(Network media type)|" +
+			 "(Is the network information you entered accurate)|" +
 			 # Group 13
-			 "(Which device shall)|" +
+			 "(not-in-use)|" +
 			 # Group 14
-			 "(Perform DHCP autoconfiguration)|" +
+			 "(not-in-use)|" +
 			 # Group 15
-			 "(Your DNS domain:)|" +
+			 "(not-in-use)|" +
 			 # Group 16
-			 "(Your host name:)|" +
+			 "(not-in-use)|" +
 			 # Group 17
-			 "(IPv6 name server:)|" +
+			 "(not-in-use)|" +
 			 # Group 18
-			 "(Perform IPv6 autoconfiguration)|" +
+			 "(not-in-use)|" +
 			 # Group 19
-			 "(Are they OK)|" +
+			 "(not-in-use)|" +
 			 # Group 20-21
 			 "(([a-z]): Custom installation)|" +
 			 # Group 22
@@ -1163,27 +1203,25 @@ class Anita:
 		# we need to choose the latter.
 	        child.send("b\n")
 	    elif child.match.group(11):
-	        # (The follwoing are the http site)
-		# \037 is control-w, which clears the field
-		child.send("a\n\03710.169.0.1\n") # IP address
-		child.send("b\n\037\n") # Directory = empty string
-		child.send("x\n") # Continue
+	        # (The following are the http site)
+		# \027 is control-w, which clears the field
+		child.send("a\n\02710.169.0.1\n") # IP address
+		child.send("b\n\027\n") # Directory = empty string
+		child.send("j\n") # Configure network
+		configure_network();
+		child.expect("x: Get Distribution")
+		child.send("x\n")
+		# -> and I'm back at the "Install from" menu??
+		child.expect("Install from")
+		child.send("c\n") # HTTP
+		# And again...
+		child.expect("The following are the http site")
+		child.expect("x: Get Distribution")
+		child.send("x\n")
 	    elif child.match.group(12):
-	        child.send("\n")
-	    elif child.match.group(13):
-	        child.send("\n")
-	    elif child.match.group(14):
-	        child.send("\n")
-	    elif child.match.group(15):
-	        child.send("netbsd.org\n")
-	    elif child.match.group(16):
-	        child.send("anita-test\n")
-	    elif child.match.group(17):
-    	        child.send("\n")
-	    elif child.match.group(18):	
-    	        child.send("\n")
-	    elif child.match.group(19):
-    	        child.send("\n")
+	       # "Is the network information you entered accurate"
+	       child.expect("([a-z]): Yes")
+	       child.send(child.match.group(1) + "\n")
 	    elif child.match.group(20):
 		# Custom installation is choice "d" in 6.0,
 		# but choice "c" or "b" in older versions
@@ -1279,6 +1317,10 @@ class Anita:
     # Install NetBSD if not installed already
 
     def install(self):
+        # This is needed for Xen and noemu, where we get the kernel
+        # from the dist rather than the installed image
+        self.dist.set_workdir(self.workdir)
+
         if self.vmm == 'noemu':
 	    self.dist.download()
 	    self._install()	    
@@ -1299,10 +1341,6 @@ class Anita:
     def boot(self, vmm_args = None):
         if vmm_args is None:
             vmm_args = []
-
-        # This is needed only for Xen, where we get the kernel
-        # from the dist rather than the installed image
-        self.dist.set_workdir(self.workdir)
 
         self.install()
 	
