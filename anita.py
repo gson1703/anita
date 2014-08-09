@@ -604,7 +604,7 @@ class Logger:
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	structured_log = False):
+	structured_log = False, no_install = False):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -627,6 +627,7 @@ class Anita:
         self.persist = persist
 	self.boot_from = boot_from
 	self.structured_log = structured_log
+	self.no_install = no_install
 
 	self.qemu = arch_qemu_map.get(dist.arch())
 	if self.qemu is None:
@@ -799,7 +800,6 @@ class Anita:
             ]
             child = self.start_xen_domu(vmm_args)
 	    cd_device = 'xbd1d';
-            
         elif self.vmm == 'qemu':
 	    # Determine what kind of media to boot from.
 	    if self.boot_from is None:
@@ -831,7 +831,7 @@ class Anita:
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 	elif self.vmm == 'noemu':
-	    vmm_args = [os.path.join(self.workdir, 'download'), self.dist.arch()]
+	    vmm_args = ['net', os.path.join(self.workdir, 'download'), self.dist.arch()]
 	    child = self.start_noemu(vmm_args)
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
@@ -1342,7 +1342,8 @@ class Anita:
         if vmm_args is None:
             vmm_args = []
 
-        self.install()
+	if not self.no_install:
+            self.install()
 	
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
@@ -1351,6 +1352,9 @@ class Anita:
             child = self.start_xen_domu(vmm_args + [self.string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                              "binary", "kernel", self.dist.xen_kernel())))])
+        elif self.vmm == 'noemu':
+	    vmm_args = ['disk', os.path.join(self.workdir, 'download'), self.dist.arch()]	
+	    child = self.start_noemu(vmm_args)
         else:
             raise RuntimeError('unknown vmm %s' % vmm)
             
