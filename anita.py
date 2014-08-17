@@ -831,7 +831,7 @@ class Anita:
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 	elif self.vmm == 'noemu':
-	    vmm_args = ['net', os.path.join(self.workdir, 'download'), self.dist.arch()]
+	    vmm_args = ['net', self.workdir, os.path.join(self.workdir, 'download'), self.dist.arch()]
 	    child = self.start_noemu(vmm_args)
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
@@ -1353,7 +1353,7 @@ class Anita:
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                              "binary", "kernel", self.dist.xen_kernel())))])
         elif self.vmm == 'noemu':
-	    vmm_args = ['disk', os.path.join(self.workdir, 'download'), self.dist.arch()]	
+	    vmm_args = ['disk', self.workdir, os.path.join(self.workdir, 'download'), self.dist.arch()]	
 	    child = self.start_noemu(vmm_args)
         else:
             raise RuntimeError('unknown vmm %s' % vmm)
