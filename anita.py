@@ -762,9 +762,14 @@ class Anita:
         return child
 
     def start_noemu(self, vmm_args):
+	always_vmm_args = [
+	    '--workdir', self.workdir,
+	    '--releasedir', os.path.join(self.workdir, 'download'),
+	    '--arch', self.dist.arch()
+	]
         # XXX hardcoded path
         child = self.pexpect_spawn('./noemu.py', [
-            ] + vmm_args + self.extra_vmm_args)
+            ] + always_vmm_args + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
         return child
 
@@ -831,8 +836,7 @@ class Anita:
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 	elif self.vmm == 'noemu':
-	    vmm_args = ['net', self.workdir, os.path.join(self.workdir, 'download'), self.dist.arch()]
-	    child = self.start_noemu(vmm_args)
+	    child = self.start_noemu(vmm_args + '--boot-from', 'net')
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
                                
@@ -1353,8 +1357,7 @@ class Anita:
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                              "binary", "kernel", self.dist.xen_kernel())))])
         elif self.vmm == 'noemu':
-	    vmm_args = ['disk', self.workdir, os.path.join(self.workdir, 'download'), self.dist.arch()]	
-	    child = self.start_noemu(vmm_args)
+	    child = self.start_noemu(vmm_args + ['--boot-from', 'disk'])
         else:
             raise RuntimeError('unknown vmm %s' % vmm)
             
@@ -1396,7 +1399,7 @@ class Anita:
         elif self.vmm == 'qemu':
             scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
         elif self.vmm == 'noemu':
-	    scratch_disk_args = ''
+	    scratch_disk_args = []
         else:
             raise RuntimeError('unknown vmm')
 
