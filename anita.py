@@ -762,14 +762,13 @@ class Anita:
         return child
 
     def start_noemu(self, vmm_args):
-	always_vmm_args = [
+	noemu_always_args = [
 	    '--workdir', self.workdir,
 	    '--releasedir', os.path.join(self.workdir, 'download'),
 	    '--arch', self.dist.arch()
 	]
-        # XXX hardcoded path
-        child = self.pexpect_spawn('./noemu.py', [
-            ] + always_vmm_args + vmm_args + self.extra_vmm_args)
+        child = self.pexpect_spawn('noemu', [
+            ] + noemu_always_args + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
         return child
 
