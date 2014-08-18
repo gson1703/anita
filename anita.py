@@ -1370,10 +1370,15 @@ class Anita:
         console_interaction(child)
 
     def run_tests(self, timeout = 10800):
+        results_by_net = (self.vmm == 'noemu')
+
 	# Create a scratch disk image for exporting test results from the VM.
         # The results are stored in tar format because that is more portable
         # and easier to manipulate than a file system image, especially if the
         # host is a non-NetBSD system.
+	#
+	# If we are getting the results back by tftp, this file will
+	# be overwritten.
 	scratch_disk_path = os.path.join(self.workdir, "tests-results.img")
         if vmm_is_xen(self.vmm):
             scratch_disk = 'xbd1d'
@@ -1390,6 +1395,8 @@ class Anita:
             scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
         elif self.vmm == 'qemu':
             scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
+        elif self.vmm == 'noemu':
+	    scratch_disk_args = ''
         else:
             raise RuntimeError('unknown vmm')
 
@@ -1431,7 +1438,7 @@ class Anita:
 	    "mkdir /tmp/tests && " +
 	    "cd /usr/tests && " +
 	    test_cmd +
-	    "{ cd /tmp && " +
+	    ("{ cd /tmp && " +
                 # Make sure the files will fit on the scratch disk
                 "test `du -sk tests | awk '{print $1}'` -lt %d && " % max_result_size_k +
                 # To guard against accidentally overwriting the wrong
@@ -1440,7 +1447,8 @@ class Anita:
                 "test `</dev/r%s tr -d '\\000' | wc -c` = 0 && " % scratch_disk +
                 # "disklabel -W /dev/rwd1d && " +
                 "tar cf /dev/r%s tests; " % scratch_disk +
-            "}; " +
+            "}; " if not results_by_net else \
+	    "{ cd /tmp && tar cf tests-results.img tests && echo put tests-results.img | tftp 10.169.0.1; };") +
 	    "df -k | sed 's/^/df-post-test /'; " +
 	    "ps -glaxw | sed 's/^/ps-post-test /'; " +
             "sh -c 'exit `cat /tmp/tests/test.status`'",
@@ -1472,7 +1480,9 @@ def login(child):
     child.send("\n")
     child.expect("login:")
     child.send("root\n")
-    child.expect("\n# ")
+    # This used to be "\n# ", but that doesn't work if the machine has
+    # a hostname
+    child.expect("# ")
 
 def net_setup(child):
     child.send("dhclient ne2\n")
