@@ -1,3 +1,11 @@
+Increase installation timeout from 1 hour to 3 hours so that
+a system built with DEBUG and LOCKDEBUG can be installed under
+qemu without timing out.
+
+Unconditionally print a greeting message including the version number
+of startup, so that logs from automated anita runs will always
+indicate the version used.
+
 In --structured-log mode, log the string matched by expect() instead
 of the return value, as the latter is always zero and therefore
 conveys no useful information.
