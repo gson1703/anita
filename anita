@@ -57,6 +57,8 @@ def main(argv = None):
         print anita.__version__
 	sys.exit(0)
 
+    print "This is anita version", anita.__version__
+
     if len(args) < 2:
 	raise Usage("not enough arguments")
 
