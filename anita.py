@@ -767,8 +767,8 @@ class Anita:
 	    '--releasedir', os.path.join(self.workdir, 'download'),
 	    '--arch', self.dist.arch()
 	]
-        child = self.pexpect_spawn('noemu', [
-            ] + noemu_always_args + vmm_args + self.extra_vmm_args)
+        child = self.pexpect_spawn('sudo', ['noemu'] +
+            noemu_always_args + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
         return child
 
@@ -835,7 +835,7 @@ class Anita:
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 	elif self.vmm == 'noemu':
-	    child = self.start_noemu(vmm_args + '--boot-from', 'net')
+	    child = self.start_noemu(['--boot-from', 'net'])
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
                                
@@ -1000,7 +1000,7 @@ class Anita:
 	   child.send("\n")
 	   child.expect("Network media type")
 	   child.send("\n")
-	   child.expect("Perform DHCP autoconfiguration")
+	   child.expect("Perform (DHCP )?autoconfiguration")
 	   child.expect("([a-z]): No")
 	   child.send(child.match.group(1) + "\n")
 	   child.expect("Your DNS domain")
@@ -1113,7 +1113,7 @@ class Anita:
 		         "(a: Use one of these disks)|" +
 			 # Group 24
                 	 "(a: Set sizes of NetBSD partitions)",
-			 3600)
+			 10800)
 
 	    if child.match.groups() == prevmatch:
 	        continue
