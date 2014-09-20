@@ -74,9 +74,9 @@ def spawn(command, args):
 # Subclass pexpect.spawn to add logging of expect() calls
 
 class pexpect_spawn_log(pexpect.spawn):
-    def expect(self, match_re, *args, **kwargs):
-        print >>sys.stdout, "expect(" + repr(match_re) + ")"
-        r = pexpect.spawn.expect(self, match_re, *args, **kwargs)
+    def expect(self, pattern, *args, **kwargs):
+        print >>sys.stdout, "expect(" + repr(pattern) + ")"
+        r = pexpect.spawn.expect(self, pattern, *args, **kwargs)
 	print >>sys.stdout, "match(" + repr(self.match.group(0)) + ")"
 	return r
 
