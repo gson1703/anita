@@ -1088,9 +1088,6 @@ class Anita:
         #
 	# Try to deal with all of the possible options.
         #
-        # We specify a longer timeout than the default here, because the
-        # set extraction can take a long time on slower machines.
-	#
         # It has happened (at least with NetBSD 3.0.1) that sysinst paints the
 	# screen twice.  This can cause problem because we will then respond
 	# twice, and the second response will be interpreted as a response to
@@ -1138,7 +1135,10 @@ class Anita:
 			 # Group 12
 			 "(Is the network information you entered accurate)|" +
 			 # Group 13
-			 "(not-in-use)|" +
+			 # Match escapes printed as part of the set extraction
+			 # progress messages so that we don't time out if
+			 # extracting takes a long time
+			 "(\x1b)" +
 			 # Group 14
 			 "(not-in-use)|" +
 			 # Group 15
@@ -1159,7 +1159,7 @@ class Anita:
 		         "(a: Use one of these disks)|" +
 			 # Group 24
                 	 "(a: Set sizes of NetBSD partitions)",
-			 10800)
+			 60)
 
 	    if child.match.groups() == prevmatch:
 	        continue
@@ -1275,6 +1275,8 @@ class Anita:
 	       # "Is the network information you entered accurate"
 	       child.expect("([a-z]): Yes")
 	       child.send(child.match.group(1) + "\n")
+	    elif child.match.group(13):
+	       pass
 	    elif child.match.group(20):
 		# Custom installation is choice "d" in 6.0,
 		# but choice "c" or "b" in older versions
