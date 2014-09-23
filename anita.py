@@ -208,6 +208,26 @@ def check_arch_supported(arch, dist_type):
         raise RuntimeError(("NetBSD/%s must be installed from " +
 	"an ISO, not a release tree") % arch)
 
+# Expect any of a set of alternatives.  The *args are alternating
+# patterns and actions; an action can be a string to be sent
+# or a function to be called with no arguments.  The alternatives
+# will be expected repeatedly until the last one in the list has
+# been selected.
+
+def expect_any(child, *args):
+    # http://stackoverflow.com/questions/11702414/split-a-list-into-half-by-even-and-odd-elements
+    patterns = args[0:][::2]
+    actions = args[1:][::2]
+    while True:
+	r = child.expect(list(patterns))
+	action = actions[r]
+	if isinstance(action, str):
+	    child.send(action)
+	else:
+	    action()
+	if r == len(actions) - 1:
+	    break
+
 #############################################################################
 
 # A NetBSD version.
@@ -1003,25 +1023,26 @@ class Anita:
 	   child.expect("Perform (DHCP )?autoconfiguration")
 	   child.expect("([a-z]): No")
 	   child.send(child.match.group(1) + "\n")
-	   child.expect("Your DNS domain")
-	   child.send("netbsd.org\n")
-	   child.expect("Your host name")
-	   child.send("anita-test\n")
-	   child.expect("Your IPv4 number")
-	   child.send("10.169.0.2\n");
-	   child.expect("IPv4 Netmask")
-	   child.send("255.255.255.0\n")
-	   child.expect("IPv4 gateway")
-	   child.send("10.169.0.1\n");
-	   child.expect("IPv4 name server")
-	   child.send("10.169.0.1\n")
-	   child.expect("Perform IPv6 autoconfiguration")
-	   # Yes/no are the other way round from the IPv4 case!
-	   child.expect("([a-z]): No")	   
-	   child.send(child.match.group(1) + "\n")
-	   child.expect("Are they OK")
-	   child.expect("([a-z]): Yes")
-	   child.send(child.match.group(1) + "\n")
+
+           def choose_no():
+	       child.expect("([a-z]): No")	   
+	       child.send(child.match.group(1) + "\n")
+	   def choose_yes():
+	       child.expect("([a-z]): Yes")
+	       child.send(child.match.group(1) + "\n")
+	   def choose_a():
+	       child.send("a\n")
+
+	   expect_any(child,
+	       r"Your host name", "anita-test\n",
+	       r"Your DNS domain", "netbsd.org\n",
+	       r"Your IPv4 number", "10.169.0.2\n",
+	       r"IPv4 Netmask", "255.255.255.0\n",
+	       r"IPv4 gateway", "10.169.0.1\n",
+	       r"IPv4 name server", "10.169.0.1\n",
+	       r"Perform IPv6 autoconfiguration", choose_no,
+	       r"Select (IPv6 )?DNS server", choose_a,
+	       r"Are they OK", choose_yes)
 
 	# Many different things can happen at this point:
         #
@@ -1212,8 +1233,12 @@ class Anita:
 		child.send("b\n\027\n") # Directory = empty string
 		child.send("j\n") # Configure network
 		configure_network();
-		child.expect("x: Get Distribution")
-		child.send("x\n")
+		# We get 'Hit enter to continue' if this sysinst
+		# version tries ping6 even if we have not configured
+		# IPv6
+		expect_any(child,
+		    r'Hit enter to continue', '\r',
+		    r'x: Get Distribution', 'x\n')
 		# -> and I'm back at the "Install from" menu??
 		child.expect("Install from")
 		child.send("c\n") # HTTP
