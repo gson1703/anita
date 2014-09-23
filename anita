@@ -44,8 +44,8 @@ def main(argv = None):
 		      help="make changes to disk contents persistent", action="store_true")
     parser.add_option("--boot-from",
 		      help="boot from MEDIA (floppy/cdrom)", metavar="MEDIA")
-    parser.add_option("--structured-log", action="store_true",
-		      help="log console traffic in a structured format")
+    parser.add_option("--structured-log", metavar="FILE",
+		      help="log console traffic in a structured format in FILE")
     parser.add_option("--no-install", action="store_true",
 		      help="in boot/test/interact mode, assume system is already installed")
     parser.add_option("--version", action="store_true",

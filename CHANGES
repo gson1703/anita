@@ -1,3 +1,7 @@
+The --structured-log option now takes the name of a log file as an
+argument, and the structured logging is now in addition to, not
+instead of, the traditional logging to stdout.
+
 Increase installation timeout from 1 hour to 3 hours so that
 a system built with DEBUG and LOCKDEBUG can be installed under
 qemu without timing out.

@@ -74,10 +74,13 @@ def spawn(command, args):
 # Subclass pexpect.spawn to add logging of expect() calls
 
 class pexpect_spawn_log(pexpect.spawn):
+    def __init__(self, logf, *args, **kwargs):
+        self.structured_log_f = logf
+        return super(pexpect_spawn_log, self).__init__(*args, **kwargs)
     def expect(self, pattern, *args, **kwargs):
-        print >>sys.stdout, "expect(" + repr(pattern) + ")"
+        print >>self.structured_log_f, "expect(" + repr(pattern) + ")"
         r = pexpect.spawn.expect(self, pattern, *args, **kwargs)
-	print >>sys.stdout, "match(" + repr(self.match.group(0)) + ")"
+	print >>self.structured_log_f, "match(" + repr(self.match.group(0)) + ")"
 	return r
 
 # Subclass urllib.FancyURLopener so that we can catch
@@ -621,15 +624,34 @@ class Logger:
     def __getattr__(self, name):
         return getattr(self.fd, name)
 
+# http://stackoverflow.com/questions/616645/how-do-i-duplicate-sys-stdout-to-a-log-file-in-python
+class multifile(object):
+    def __init__(self, files):
+        self._files = files
+    def __getattr__(self, attr, *args):
+        return self._wrap(attr, *args)
+    def _wrap(self, attr, *args):
+        def g(*a, **kw):
+            for f in self._files:
+                res = getattr(f, attr, *args)(*a, **kw)
+            return res
+        return g
+
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	structured_log = False, no_install = False):
+	structured_log = None, no_install = False):
         self.dist = dist
         if workdir:
             self.workdir = workdir
         else:
             self.workdir = dist.default_workdir()
+
+	self.structured_log = structured_log
+        if self.structured_log:
+	    self.structured_log_f = open(self.structured_log, "w")
+	else:
+	    self.structured_log_f = open("/dev/null", "w")
 
 	# Set the default disk size if none was given.
         if disk_size is None:
@@ -646,7 +668,6 @@ class Anita:
 
         self.persist = persist
 	self.boot_from = boot_from
-	self.structured_log = structured_log
 	self.no_install = no_install
 
 	self.qemu = arch_qemu_map.get(dist.arch())
@@ -676,7 +697,7 @@ class Anita:
     def pexpect_spawn(self, command, args):
 	#print command, " \\\n    ".join(args)
 	if self.structured_log:
-	    return pexpect_spawn_log(command, args)
+	    return pexpect_spawn_log(self.structured_log_f, command, args)
 	else:
 	    return pexpect.spawn(command, args)
 
@@ -697,9 +718,9 @@ class Anita:
         if self.structured_log:
 	    # Log I/O in a structured format, separating input and output
 	    # Log reads from child
-	    child.logfile_read = Logger('recv', sys.stdout)
+	    child.logfile_read = multifile([sys.stdout, Logger('recv', self.structured_log_f)])
 	    # Log writes to child
-	    child.logfile_send = Logger('send', sys.stdout)
+	    child.logfile_send = multifile([sys.stdout, Logger('send', self.structured_log_f)])
 	else:
 	    # Just log the I/O as such, intermixing input and output
 	    # pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
@@ -1032,6 +1053,10 @@ class Anita:
 	       child.send(child.match.group(1) + "\n")
 	   def choose_a():
 	       child.send("a\n")
+           def choose_dns_server():
+	       child.expect("([a-z]): other")
+	       child.send(child.match.group(1) + "\n")
+	       child.send("10.169.0.1\n")
 
 	   expect_any(child,
 	       r"Your host name", "anita-test\n",
@@ -1041,7 +1066,7 @@ class Anita:
 	       r"IPv4 gateway", "10.169.0.1\n",
 	       r"IPv4 name server", "10.169.0.1\n",
 	       r"Perform IPv6 autoconfiguration", choose_no,
-	       r"Select (IPv6 )?DNS server", choose_a,
+	       r"Select (IPv6 )?DNS server", choose_dns_server,
 	       r"Are they OK", choose_yes)
 
 	# Many different things can happen at this point:
