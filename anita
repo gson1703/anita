@@ -57,8 +57,6 @@ def main(argv = None):
         print anita.__version__
 	sys.exit(0)
 
-    print "This is anita version", anita.__version__
-
     if len(args) < 2:
 	raise Usage("not enough arguments")
 
@@ -105,6 +103,10 @@ def main(argv = None):
 
     status = 0
     mode = args[0]
+
+    if mode != 'print_workdir':
+        print "This is anita version", anita.__version__
+
     if mode == 'install':
 	a.install()
     elif mode == 'boot':
