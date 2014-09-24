@@ -104,7 +104,7 @@ def main(argv = None):
     status = 0
     mode = args[0]
 
-    if mode != 'print_workdir':
+    if mode != 'print-workdir':
         print "This is anita version", anita.__version__
 
     if mode == 'install':
