@@ -446,7 +446,9 @@ Installing using qemu version 1.5.1, 1.6.0, 1.7.0, or 2.0.0
 prior to 2.0.0nb4 on
 NetBSD fails due to the serial console dropping characters; see 
 PR 48071.  The same qemu versions work when hosted on Linux, but
-only by accident.  This bug is fixed in qemu 2.0.0nb4 in pkgsrc.
+only by accident.  This bug is fixed for i386 and amd64 targets
+in qemu 2.0.0nb4 in pkgsrc and the qemu 6.1 release, but
+remains unfixed for sparc targets.
 .Pp
 .Sh BUGS IN KVM
 .Pp
