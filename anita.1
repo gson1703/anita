@@ -16,6 +16,7 @@
 .Op Fl -persist
 .Op Fl -boot-from Ar cdrom | floppy
 .Op Fl -structured-log
+.Op Fl -structured-log-file Ar file
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -327,6 +328,12 @@ The default is to do unstructured logging where the raw output from
 the virtual machine console is sent to standard output as-is, 
 and the commands sent to the console are only logged if echoed 
 by the virtual machine.
+.It Fl -structured-log-file
+Like
+.Fl -structured-log ,
+but logs to a given file rather than to standard output,
+and in addition to rather than instead of the default
+unstructured logging.
 .El
 .Sh DEBUGGING NETBSD USING ANITA
 .Nm

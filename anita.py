@@ -640,7 +640,7 @@ class multifile(object):
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	structured_log = None, no_install = False):
+	structured_log = None, structured_log_file = None, no_install = False):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -648,10 +648,18 @@ class Anita:
             self.workdir = dist.default_workdir()
 
 	self.structured_log = structured_log
-        if self.structured_log:
-	    self.structured_log_f = open(self.structured_log, "w")
+	self.structured_log_file = structured_log_file
+
+        if self.structured_log_file:
+	    self.structured_log_f = open(self.structured_log_file, "w")
+	    self.unstructured_log_f = sys.stdout
 	else:
-	    self.structured_log_f = open("/dev/null", "w")
+            if self.structured_log:
+	        self.structured_log_f = sys.stdout
+	        self.unstructured_log_f = open("/dev/null", "w")
+            else:
+	        self.structured_log_f = open("/dev/null", "w")
+	        self.unstructured_log_f = sys.stdout
 
 	# Set the default disk size if none was given.
         if disk_size is None:
@@ -696,10 +704,7 @@ class Anita:
 
     def pexpect_spawn(self, command, args):
 	#print command, " \\\n    ".join(args)
-	if self.structured_log:
-	    return pexpect_spawn_log(self.structured_log_f, command, args)
-	else:
-	    return pexpect.spawn(command, args)
+	return pexpect_spawn_log(self.structured_log_f, command, args)
 
     # The path to the NetBSD hard disk image
     def wd0_path(self):
@@ -715,18 +720,10 @@ class Anita:
         return megs
 
     def configure_child(self, child):
-        if self.structured_log:
-	    # Log I/O in a structured format, separating input and output
-	    # Log reads from child
-	    child.logfile_read = multifile([sys.stdout, Logger('recv', self.structured_log_f)])
-	    # Log writes to child
-	    child.logfile_send = multifile([sys.stdout, Logger('send', self.structured_log_f)])
-	else:
-	    # Just log the I/O as such, intermixing input and output
-	    # pexpect 2.1 uses "child.logfile", but pexpect 0.999nb1 uses
-	    # "child.log_file", so we set both variables for portability
-	    child.logfile = sys.stdout
-	    child.log_file = sys.stdout
+	# Log reads from child
+	child.logfile_read = multifile([self.unstructured_log_f, Logger('recv', self.structured_log_f)])
+	# Log writes to child
+	child.logfile_send = multifile([self.unstructured_log_f, Logger('send', self.structured_log_f)])
         child.timeout = 300
         child.setecho(False)
         # Xen installs sometimes fail if we don't increase this
