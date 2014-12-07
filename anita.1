@@ -401,7 +401,8 @@ any PCI buses when run under qemu; see PRs 38729 and 42681.
 Versions of qemu known to work with
 .Nm
 on NetBSD hosts are
-0.xx (emulators/qemu0 in pkgsrc), 1.2, 1.4.1, and 2.0.0nb4.
+0.xx (emulators/qemu0 in pkgsrc), 1.2, 1.4.1, and 2.0.0nb4
+or newer.
 .Pp
 Even with these versions, timing is off by a factor of two,
 which causes some of the tests in the NetBSD test suite to fail.
@@ -445,7 +446,12 @@ details.
 Installing using qemu version 1.5.1, 1.6.0, 1.7.0, or 2.0.0 
 prior to 2.0.0nb4 on
 NetBSD fails due to the serial console dropping characters; see 
-PR 48071.  The same qemu versions work when hosted on Linux, but
+PR 48071 and the qemu bug reports
+.Pp
+.Dl https://bugs.launchpad.net/qemu/+bug/1399943
+.Dl https://bugs.launchpad.net/qemu/+bug/1335444
+.Pp
+The same qemu versions work when hosted on Linux, but
 only by accident.  This bug is fixed for i386 and amd64 targets
 in qemu 2.0.0nb4 in pkgsrc and the qemu 6.1 release, but
 remains unfixed for sparc targets.
