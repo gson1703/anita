@@ -1,3 +1,6 @@
+Increase the default disk size from 768M to 1G, as 768M is no
+longer sufficient for amd64.
+
 New command line option --structured-log-file.  This is like
 --structured-log but takes the name of a log file as an
 argument, and the structured logging is in addition to, not

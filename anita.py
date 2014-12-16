@@ -663,7 +663,7 @@ class Anita:
 
 	# Set the default disk size if none was given.
         if disk_size is None:
-	    disk_size = "768M"
+	    disk_size = "1G"
 	self.disk_size = disk_size
 
 	# Set the default memory size if none was given.
