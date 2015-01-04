@@ -96,16 +96,19 @@ def my_urlretrieve(url, filename):
 # Download a file, cleaning up the partial file if the transfer
 # fails or is aborted before completion.
 
-def download_file(file, url):
+def download_file(file, url, optional = False):
     try:
         print "Downloading", url + "...",
 	sys.stdout.flush()
         my_urlretrieve(url, file)
 	print "OK"
 	sys.stdout.flush()	
-    except:
-        print "failed"
-	sys.stdout.flush()	
+    except IOError:
+        if optional:
+	    print "missing but optional, so that's OK"
+	else:
+            print e
+	sys.stdout.flush()
         if os.path.exists(file):
             os.unlink(file)
         raise
@@ -144,7 +147,7 @@ def download_if_missing_2(url, file, optional = False):
     dir = os.path.dirname(file)
     mkdir_p(dir)
     try:
-        download_file(file, url)
+        download_file(file, url, optional)
     except:
         if optional:
             f = open(file + ".MISSING", "w")

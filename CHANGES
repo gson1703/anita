@@ -1,3 +1,7 @@
+When reporting a failed download of optional files, be clearer that
+this is not an error.  Also, don't treat arbitrary exceptions during
+downloads as indicating a missing file, only the expected IOError.
+
 Increase the default disk size from 768M to 1G, as 768M is no
 longer sufficient for amd64.
 
