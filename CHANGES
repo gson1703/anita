@@ -1,3 +1,9 @@
+Do not require releases to contain install floppies, since amd64 no
+longer has them.
+
+The default value of the --boot-from option is now "cdrom" if the
+install floppies are missing.
+
 When reporting a failed download of optional files, be clearer that
 this is not an error.  Also, don't treat arbitrary exceptions during
 downloads as indicating a missing file, only the expected IOError.

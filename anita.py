@@ -425,7 +425,7 @@ class Version:
             download_if_missing_3(self.dist_url(),
                 self.download_local_arch_dir(),
                 ["installation", "floppy", floppy],
-                i >= 2)
+                True)
             i = i + 1
 
 	for bootcd in (self.boot_isos()):
@@ -847,23 +847,24 @@ class Anita:
 	    cd_device = 'xbd1d';
         elif self.vmm == 'qemu':
 	    # Determine what kind of media to boot from.
+	    floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
+		for f in self.dist.floppies() ]
+	    boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
 	    if self.boot_from is None:
 	        self.boot_from = self.dist.boot_from_default()
-	    boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
+	    if self.boot_from is None and len(floppy_paths) == 0:
+	        self.boot_from = 'cdrom'
 	    if self.boot_from is None:
 	        self.boot_from = 'floppy'
 
             # Set up VM arguments based on the chosen boot media
 	    if self.boot_from == 'cdrom':
-	        vmm_args = self.qemu_cdrom_args(
-		    boot_cd_path, 1)
+	        vmm_args = self.qemu_cdrom_args(boot_cd_path, 1)
                 vmm_args += self.qemu_cdrom_args(self.dist.iso_path(), 2)
                 vmm_args += ["-boot", "d"]
 		cd_device = 'cd1a';
             elif self.boot_from == 'floppy':
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
-                floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
-                    for f in self.dist.floppies() ]
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
                 vmm_args += ["-fda", floppy_paths[0], "-boot", "a"]

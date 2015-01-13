@@ -305,7 +305,8 @@ mode can modify the disk contents and all other modes work with
 an ephemeral snapshot copy of the freshly installed system.
 .It Fl -boot-from Ar cdrom | floppy
 For architectures that support booting from either CD-ROM or floppies,
-specify which one to use.  The default is to boot from floppies.
+specify which one to use.  The default is to boot from floppies
+if they are present, otherwise from CD-ROM.
 .It Fl -structured-log
 Generate log output in a structured format similar to Python code.
 Commands sent to the serial console by
