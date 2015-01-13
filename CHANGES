@@ -1,3 +1,5 @@
+- 1.34 released -
+
 Do not require releases to contain install floppies, since amd64 no
 longer has them.
 
