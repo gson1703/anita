@@ -97,10 +97,10 @@ def main(argv = None):
 	no_install = options.no_install
 	)
 
-    def maybe_run_command(child):
+    def maybe_run_command(a):
         if options.run:
-	    anita.login(child)
-	    return anita.shell_cmd(child, options.run, 3600)
+	    a.login()
+	    return anita.shell_cmd(a.child, options.run, 3600)
 	else:
 	    return 0
 
@@ -114,13 +114,15 @@ def main(argv = None):
 	a.install()
     elif mode == 'boot':
 	child = a.boot()
-	status = maybe_run_command(child)
+	status = maybe_run_command(a)
+	a.halt()
     elif mode == 'interact':
         child = a.boot()
-	status = maybe_run_command(child)    
+	status = maybe_run_command(a)
 	anita.console_interaction(child)
     elif mode == 'test':
 	status = a.run_tests(timeout = options.test_timeout)
+	a.halt()
     elif mode == 'print-workdir':
         print a.workdir
     else:

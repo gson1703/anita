@@ -701,6 +701,8 @@ class Anita:
             vmm_args = []
         self.extra_vmm_args = vmm_args
 
+	self.is_logged_in = False
+
     # Wrapper around pexpect.spawn to let us log the command for
     # debugging.  Note that unlike os.spawnvp, args[0] is not
     # the name of the command.
@@ -1524,10 +1526,20 @@ class Anita:
     # Backwards compatibility
     run_atf_tests = run_tests
 
+    def login(self):
+        login(self.child)
+	self.is_logged_in = True
+
+    def halt(self):
+        # TODO
+        pass
+
 def console_interaction(child):
     # We need this in pexpect 2.x or everything will be printed twice
     child.logfile = None
     child.interact()
+
+# Calling this directly is deprecated, use anita.login()
 
 def login(child):
     child.send("\n")
@@ -1574,7 +1586,7 @@ def shell_cmd(child, cmd, timeout = -1):
     child.expect(prompt_re, timeout)
     return r
 
-# Deprecated, use Anita.run_atf_tests
+# Deprecated, use Anita.run_tests
 def test(child):
     login(child)
     # We go through some contortions here to return the meaningful exit status
