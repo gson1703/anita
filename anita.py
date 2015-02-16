@@ -43,8 +43,11 @@ elif os.uname()[0] == 'Darwin':
 else:
     # Linux distributions differ.  Ubuntu has genisoimage
     # and mkisofs (as an alias of genisoimage); CentOS has
-    # mkisofs only.  Use the latter so we work in both.
-    makefs = ["mkisofs", "-r", "-o"]
+    # mkisofs only.  Debian 7 has genisoimage only.
+    if os.path.isfile('/usr/bin/genisoimage'):
+       makefs = ["genisoimage", "-r", "-o"]
+    else:
+       makefs = ["mkisofs", "-r", "-o"]
 
 fnull = open(os.devnull, 'w')
 
@@ -103,7 +106,7 @@ def download_file(file, url, optional = False):
         my_urlretrieve(url, file)
 	print "OK"
 	sys.stdout.flush()	
-    except IOError:
+    except IOError, e:
         if optional:
 	    print "missing but optional, so that's OK"
 	else:
