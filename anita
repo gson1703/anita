@@ -40,6 +40,9 @@ def main(argv = None):
     parser.add_option("--test-timeout",
 		      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
                       type="int", default=10800)
+    parser.add_option("--run-timeout",
+		      help="allow TIMEOUT seconds for command run using the --run option", metavar="TIMEOUT",
+                      type="int", default=3600)
     parser.add_option("--persist",
 		      help="make changes to disk contents persistent", action="store_true")
     parser.add_option("--boot-from",
@@ -100,7 +103,7 @@ def main(argv = None):
     def maybe_run_command(a):
         if options.run:
 	    a.login()
-	    return anita.shell_cmd(a.child, options.run, 3600)
+	    return anita.shell_cmd(a.child, options.run, options.run_timeout)
 	else:
 	    return 0
 

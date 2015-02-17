@@ -291,6 +291,10 @@ For a minimal install, use something like
 .Dl --sets kern-GENERIC,modules,base,etc
 .Pp
 A kernel, base, and etc must always be included.
+.It Fl -run-timeout Ar timeout
+Set a timeout for the tests run using the
+.Fl -run
+option, in seconds.  The default is 3600 seconds (one hour).
 .It Fl -test-timeout Ar timeout
 Set a timeout for the tests run in the
 .Cm test
