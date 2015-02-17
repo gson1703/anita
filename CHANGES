@@ -1,3 +1,6 @@
+
+- 1.35 released -
+
 Support Linux host systems that have genisoimage but not mkisofs, such
 as Debian 7.
 
