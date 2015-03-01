@@ -347,27 +347,8 @@ for debugging purposes.  When doing this, it is useful to build NetBSD
 with debug symbols and to install the source on the virtual machine to
 enable source-level debugging.
 .Pp
-The procedure for building NetBSD with debug symbols is
-not well documented and keeps changing, but the following
-procuedure works for -current as of 2013-03-22.
-.Pp
-Invoke build.sh with the options 
-.Pp
-.Dl -V MKDEBUG=YES release sourcesets
-.Pp
-to built NetBSD with debug symbols and source sets.  Then, invoke
-.Nm
-with the options
-.Pp
-.Dl --disk-size 4G --memory-size 256M --sets kern-GENERIC,modules,base,etc,comp,games,man,misc,tests,text,syssrc,src,sharesrc,gnusrc,debug
-.Pp
-to install with source and debug symbols.
-.Pp
-For instructions on how to use
-.Nm
-for kernel debugging with kgdb, see
-.Pp
-.Dl http://wiki.netbsd.org/netbsd_kernel_development_setup/ .
+For more details, please see
+.Dl http://wiki.netbsd.org/kernel_debugging_with_qemu/ .
 .Sh SEE ALSO
 .Xr atf-report 1 ,
 .Xr atf-run 1 ,
