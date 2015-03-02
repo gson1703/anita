@@ -1,4 +1,8 @@
 
+Halt the VM when done.
+
+Print the qemu command.
+
 - 1.35 released -
 
 Support Linux host systems that have genisoimage but not mkisofs, such

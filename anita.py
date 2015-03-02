@@ -69,7 +69,7 @@ def mkdir_p(dir):
 # Run a shell command safely and with error checking
 
 def spawn(command, args):
-    #print command, " \\\n    ".join(args[1:])
+    print command, ' '.join(args[1:])
     ret = os.spawnvp(os.P_WAIT, command, args)
     if ret != 0:
         raise RuntimeError("could not run " + command)
@@ -711,7 +711,7 @@ class Anita:
     # the name of the command.
 
     def pexpect_spawn(self, command, args):
-	#print command, " \\\n    ".join(args)
+	print command, " \\\n    ".join(args)
 	return pexpect_spawn_log(self.structured_log_f, command, args)
 
     # The path to the NetBSD hard disk image
@@ -1529,13 +1529,16 @@ class Anita:
     # Backwards compatibility
     run_atf_tests = run_tests
 
+    # Log in, if not logged in already
     def login(self):
-        login(self.child)
-	self.is_logged_in = True
+        if not self.is_logged_in:
+	    login(self.child)
+	    self.is_logged_in = True
 
     def halt(self):
-        # TODO
-        pass
+        self.login()
+        self.child.send("halt\n")
+        self.child.expect("(halted)|(panic)", timeout = 30)
 
 def console_interaction(child):
     # We need this in pexpect 2.x or everything will be printed twice
