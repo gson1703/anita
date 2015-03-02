@@ -1,3 +1,6 @@
+When running a shell command, wrap the exit status in distictive text
+to reduce the risk of accidentally matching other numeric data in the
+output.
 
 Halt the VM when done.
 

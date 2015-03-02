@@ -1586,8 +1586,8 @@ def shell_cmd(child, cmd, timeout = -1):
     child.expect(prompt_re, timeout)
     child.send(cmd + "\n")
     child.expect(prompt_re, timeout)
-    child.send("echo $?\n")
-    child.expect("(\d+)")
+    child.send("echo exit_status=$?=\n")
+    child.expect("exit_status=(\d+)=")
     r = int(child.match.group(1))
     child.expect(prompt_re, timeout)
     return r
