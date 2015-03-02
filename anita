@@ -3,6 +3,7 @@
 import sys
 import re
 import anita
+import os
 import optparse
 
 class Usage(Exception):
@@ -137,6 +138,6 @@ if __name__ == "__main__":
         status = main()
 	sys.exit(status)
     except Usage, err:
-        print >>sys.stderr, err.msg
+        print >>sys.stderr, "%s: %s" % (os.path.basename(sys.argv[0]), err.msg)
         print >>sys.stderr, "for help use --help"
         sys.exit(1)
