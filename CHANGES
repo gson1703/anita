@@ -1,6 +1,6 @@
 When running a shell command, wrap the exit status in distictive text
-to reduce the risk of accidentally matching other numeric data in the
-output.
+so that it can be reliably matched in the presence of buffered output
+containing other numeric strings.
 
 Halt the VM when done.
 
