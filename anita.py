@@ -1535,10 +1535,20 @@ class Anita:
 	    login(self.child)
 	    self.is_logged_in = True
 
+    # Run a shell command 
+    def shell_cmd(self, cmd, timeout = -1):
+        self.login()
+	shell_cmd(self.child, cmd, timeout)
+
+    # Halt the VM
     def halt(self):
         self.login()
         self.child.send("halt\n")
-        self.child.expect("(halted)|(panic)", timeout = 30)
+	try:
+            self.child.expect("(halted)|(panic)", timeout = 30)
+	except pexpect.EOF:
+	    # EOF is expected
+	    print "EOF from child"
 
 def console_interaction(child):
     # We need this in pexpect 2.x or everything will be printed twice
@@ -1576,6 +1586,8 @@ def gen_shell_prompt():
 def quote_prompt(s):
     midpoint = len(s) / 2
     return "".join("'%s'" % part for part in (s[0:midpoint], s[midpoint:]))
+
+# Calling this directly is deprecated, use anita.shell_cmd()
 
 def shell_cmd(child, cmd, timeout = -1):
     child.send("exec /bin/sh\n")

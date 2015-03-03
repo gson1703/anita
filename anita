@@ -103,7 +103,7 @@ def main(argv = None):
 
     def maybe_run_command(a):
         if options.run:
-	    return anita.shell_cmd(a.child, options.run, options.run_timeout)
+	    return a.shell_cmd(options.run, options.run_timeout)
 	else:
 	    return 0
 
