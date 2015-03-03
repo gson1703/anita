@@ -1,3 +1,5 @@
+- 1.36 released -
+
 When running a shell command, wrap the exit status in distictive text
 so that it can be reliably matched in the presence of buffered output
 containing other numeric strings.
