@@ -50,12 +50,13 @@ ver = anita.Release("5.0.2")
 ver.install()
 END
 
-url=http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso 
-workdir=`$python ./anita print-workdir $url`
-rm -f $workdir/wd0.img
-$python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot $url | tee stdout
-grep "127 9721" stdout
-rm -f stdout
+# sparc is broken in recent qemu
+#url=http://ftp.netbsd.org/pub/NetBSD/iso/5.0.2/sparccd-5.0.2.iso 
+#workdir=`$python ./anita print-workdir $url`
+#rm -f $workdir/wd0.img
+#$python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot $url | tee stdout
+#grep "127 9721" stdout
+#rm -f stdout
 
 url=http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.1/i386/
 workdir=`$python ./anita print-workdir $url`
