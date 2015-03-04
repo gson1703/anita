@@ -1569,15 +1569,11 @@ def net_setup(child):
     child.send("dhclient ne2\n")
     child.expect("bound to.*\n# ")
 
-shell_prompt_no = 0
-
 # Generate a root shell prompt string that is less likely to appear in
 # the console output by accident than the default of "# ".  Must end with "# ".
 
 def gen_shell_prompt():
-    global shell_prompt_no
-    shell_prompt_no += 1
-    return 'anita-root-shell-prompt-%i# ' % shell_prompt_no
+    return 'anita-root-shell-prompt-%s# ' % str(time.time())
 
 # Quote a prompt in /bin/sh syntax, with some extra quotes
 # in the middle so that an echoed command to set the prompt is not

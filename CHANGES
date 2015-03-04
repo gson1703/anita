@@ -1,3 +1,8 @@
+Make the distinctive shell prompts different from one invocation of
+anita to another, so that anita can run itself recursively on the VM
+without the outer instance mistaking a shell prompt from an inner
+instance for one of its own.
+
 - 1.36 released -
 
 When running a shell command, wrap the exit status in distictive text
