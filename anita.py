@@ -1459,10 +1459,9 @@ class Anita:
             raise RuntimeError('unknown vmm')
 
         child = self.boot(scratch_disk_args)
-	login(child)
+	self.login()
 
-        have_kyua = shell_cmd(child,
-                              "grep -q 'MKKYUA.*=.*yes' /etc/release") == 0
+        have_kyua = self.shell_cmd("grep -q 'MKKYUA.*=.*yes' /etc/release") == 0
         if have_kyua:
 	    test_cmd = (
 		"kyua " + 
@@ -1491,7 +1490,7 @@ class Anita:
 		"atf-report -o ticker:- -o xml:/tmp/tests/test.xml; " +
                 "(cd /tmp && for f in %s; do cp $f tests/; done;); " % ' '.join(atf_aux_files))
 
-        exit_status = shell_cmd(child,
+        exit_status = self.shell_cmd(
 	    "df -k | sed 's/^/df-pre-test /'; " +
 	    "mkdir /tmp/tests && " +
 	    "cd /usr/tests && " +
@@ -1531,9 +1530,10 @@ class Anita:
 
     # Log in, if not logged in already
     def login(self):
-        if not self.is_logged_in:
-	    login(self.child)
-	    self.is_logged_in = True
+	if self.is_logged_in:
+	    return
+	login(self.child)
+	self.is_logged_in = True
 
     # Run a shell command 
     def shell_cmd(self, cmd, timeout = -1):
@@ -1555,7 +1555,7 @@ def console_interaction(child):
     child.logfile = None
     child.interact()
 
-# Calling this directly is deprecated, use anita.login()
+# Calling this directly is deprecated, use Anita.login()
 
 def login(child):
     child.send("\n")
@@ -1583,7 +1583,7 @@ def quote_prompt(s):
     midpoint = len(s) / 2
     return "".join("'%s'" % part for part in (s[0:midpoint], s[midpoint:]))
 
-# Calling this directly is deprecated, use anita.shell_cmd()
+# Calling this directly is deprecated, use Anita.shell_cmd()
 
 def shell_cmd(child, cmd, timeout = -1):
     child.send("exec /bin/sh\n")
@@ -1600,13 +1600,7 @@ def shell_cmd(child, cmd, timeout = -1):
     child.expect(prompt_re, timeout)
     return r
 
-# Deprecated, use Anita.run_tests
 def test(child):
-    login(child)
-    # We go through some contortions here to return the meaningful exit status
-    # from atf-run rather than the meaningless one from atf-report.
-    return shell_cmd(child, "cd /usr/tests && " +
-        "{ atf-run && :>/tmp/test.ok; } | atf-report && test -f /tmp/test.ok",
-        10800)
+    raise RuntimeError("global test() function is gone, use Anita.run_tests()")
 
 #############################################################################
