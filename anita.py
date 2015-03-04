@@ -1595,7 +1595,7 @@ def shell_cmd(child, cmd, timeout = -1):
     prompt = gen_shell_prompt()
     child.send("PS1=" + quote_prompt(prompt) + "\n")
     prompt_re = prompt
-    child.expect(prompt_re, timeout)
+    child.expect(prompt_re)
     child.send(cmd + "\n")
     child.expect(prompt_re, timeout)
     child.send("echo exit_status=$?=\n")
