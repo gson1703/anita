@@ -1,3 +1,6 @@
+
+- 1.37 released -
+
 The global test() function is no longer supported, use the run_tests()
 method of the Anita object instead.
 
