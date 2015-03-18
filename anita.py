@@ -1545,10 +1545,11 @@ class Anita:
         self.login()
         self.child.send("halt\n")
 	try:
-            self.child.expect("(halted)|(panic)", timeout = 30)
-	except pexpect.EOF:
-	    # EOF is expected
-	    print "EOF from child"
+	    # Wait for EOF
+            self.child.expect("(The operating system has halted)", timeout = 60)
+	except (pexpect.EOF, pexpect.TIMEOUT), e:
+	    # EOF is expected, TIMEOUT is harmless
+	    print "child halted:", e
 
 def console_interaction(child):
     # We need this in pexpect 2.x or everything will be printed twice

@@ -31,9 +31,11 @@ runtest install http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-3.0.1/i38
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-4.0/i386/
 
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
+runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.1.5/i386/
 
-# Fails with "piixide0:0:0: lost interrupt"
+# These fail with "piixide0:0:0: lost interrupt" (tested with qemu 2.2.0)
 # runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.2/i386/
+# runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.2.3/i386/
 
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
 
