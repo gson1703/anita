@@ -1067,7 +1067,7 @@ class Anita:
 	   expect_any(child,
 	       r"Your host name", "anita-test\n",
 	       r"Your DNS domain", "netbsd.org\n",
-	       r"Your IPv4 number", "10.169.0.2\n",
+	       r"Your IPv4 (number)|(address)", "10.169.0.2\n",
 	       r"IPv4 Netmask", "255.255.255.0\n",
 	       r"IPv4 gateway", "10.169.0.1\n",
 	       r"IPv4 name server", "10.169.0.1\n",
