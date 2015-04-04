@@ -1546,7 +1546,7 @@ class Anita:
         self.child.send("halt\n")
 	try:
 	    # Wait for EOF
-            self.child.expect("(The operating system has halted)", timeout = 60)
+            self.child.expect("(The operating system has halted)|(entering state S5)", timeout = 60)
 	except (pexpect.EOF, pexpect.TIMEOUT), e:
 	    # EOF is expected, TIMEOUT is harmless
 	    print "child halted:", e
