@@ -1,3 +1,6 @@
+
+Deal with the sysinst message changes of 2015-04-30.
+
 When halting the VM, don't quit as soon as the text "halted" is seen,
 because it may be part the message "halted by root", which is printed
 before disks have been synced.  Instead look for "The operating system
