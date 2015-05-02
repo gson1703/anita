@@ -1144,7 +1144,7 @@ class Anita:
 			 # Group 12
 			 "(Is the network information you entered accurate)|" +
 			 # Group 13
-			 "(not-in-use)|" +
+			 "(Which device shall I use)|" +
 			 # Group 14
 			 "(not-in-use)|" +
 			 # Group 15
@@ -1281,6 +1281,9 @@ class Anita:
 	       # "Is the network information you entered accurate"
 	       child.expect("([a-z]): Yes")
 	       child.send(child.match.group(1) + "\n")
+	    elif child.match.group(13):
+               # "Which device shall I use?"
+               child.send("\n")
 	    elif child.match.group(20):
 		# Custom installation is choice "d" in 6.0,
 		# but choice "c" or "b" in older versions
