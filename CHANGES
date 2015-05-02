@@ -1,4 +1,6 @@
 
+- 1.38 released -
+
 Deal with the sysinst message changes of 2015-04-30.
 
 When halting the VM, don't quit as soon as the text "halted" is seen,
