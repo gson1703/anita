@@ -334,14 +334,14 @@ class Version:
         self.tempfiles = []
         if sets is not None:
             if not any([re.match('kern-', s) for s in sets]):
-                raise RuntimeError("no kernel set specified");
+                raise RuntimeError("no kernel set specified")
             # Create a Python set containing the names of the NetBSD sets we
             # want for O(1) lookup.  Yes, the multiple meansings of the word
             # "set" here are confusing.
             sets_wanted = set(sets)
             for required in ['base', 'etc']:
                 if not required in sets_wanted:
-                    raise RuntimeError("the '%s' set is required", required);
+                    raise RuntimeError("the '%s' set is required", required)
             for s in self.flat_sets:
                 s['install'] = (s['filename'] in sets_wanted)
                 sets_wanted.discard(s['filename'])
@@ -849,7 +849,7 @@ class Anita:
                 self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)
             ]
             child = self.start_xen_domu(vmm_args)
-	    cd_device = 'xbd1d';
+	    cd_device = 'xbd1d'
         elif self.vmm == 'qemu':
 	    # Determine what kind of media to boot from.
 	    floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
@@ -867,7 +867,7 @@ class Anita:
 	        vmm_args = self.qemu_cdrom_args(boot_cd_path, 1)
                 vmm_args += self.qemu_cdrom_args(self.dist.iso_path(), 2)
                 vmm_args += ["-boot", "d"]
-		cd_device = 'cd1a';
+		cd_device = 'cd1a'
             elif self.boot_from == 'floppy':
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 if len(floppy_paths) == 0:
@@ -878,7 +878,7 @@ class Anita:
 	        # Single CD
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 vmm_args += ["-boot", "d"]
-		cd_device = 'cd0a';
+		cd_device = 'cd0a'
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 	elif self.vmm == 'noemu':
@@ -957,7 +957,7 @@ class Anita:
 		child.send("I\n")
 	    elif child.match.group(6):
 	        # "1. Install NetBSD"
-	        child.send("1\n");
+	        child.send("1\n")
 
         # Confirm "Installation messages in English"
         child.send("\n")
@@ -986,6 +986,13 @@ class Anita:
 	    child.send("a\n")
         else:
             raise AssertionError
+
+	def choose_no():
+	    child.expect("([a-z]): No")
+	    child.send(child.match.group(1) + "\n")
+	def choose_yes():
+	    child.expect("([a-z]): Yes")
+	    child.send(child.match.group(1) + "\n")
 
         # Keep track of sets we have already handled, by label.
         # This is needed so that parsing a pop-up submenu is not
@@ -1040,40 +1047,48 @@ class Anita:
             # Exit the set selection menu
             child.send("x\n")
 
+	def choose_interface():
+	    # Older NetBSD versions show a prompt like [re0] and ask you
+	    # to type in the interface name (or enter for the default);
+	    # newer versions show a menu.
+	    child.expect(r"(\[[a-z]+[0-9]\])|(Available interfaces)")
+	    if child.match.group(1):
+	        # Old-style
+	        print >>self.structured_log_f, "old_style_interface()" #XXX
+	        child.send("\n")
+            else:
+	        # New-style	    
+	        print >>self.structured_log_f, "new_style_interface()" #XXX	    
+		child.expect("a:") # first available interface
+		child.send("\n")
+
         def configure_network():
-           child.expect("Which network device would you like to use")
-	   child.expect("Available interfaces")
-	   child.expect("a:") # first available interface
-	   child.send("\n")
-	   child.expect("Network media type")
-	   child.send("\n")
-	   child.expect("Perform (DHCP )?autoconfiguration")
-	   child.expect("([a-z]): No")
-	   child.send(child.match.group(1) + "\n")
+	    child.expect("Network media type")
+	    child.send("\n")
+	    child.expect("Perform (DHCP )?autoconfiguration")
+	    child.expect("([a-z]): No")
+	    child.send(child.match.group(1) + "\n")
 
-           def choose_no():
-	       child.expect("([a-z]): No")	   
-	       child.send(child.match.group(1) + "\n")
-	   def choose_yes():
-	       child.expect("([a-z]): Yes")
-	       child.send(child.match.group(1) + "\n")
-	   def choose_a():
-	       child.send("a\n")
-           def choose_dns_server():
-	       child.expect("([a-z]): other")
-	       child.send(child.match.group(1) + "\n")
-	       child.send("10.169.0.1\n")
+	    def choose_a():
+		child.send("a\n")
+	    def choose_dns_server():
+		child.expect("([a-z]): other")
+		child.send(child.match.group(1) + "\n")
+		child.send("10.169.0.1\n")
 
-	   expect_any(child,
-	       r"Your host name", "anita-test\n",
-	       r"Your DNS domain", "netbsd.org\n",
-	       r"Your IPv4 (number)|(address)", "10.169.0.2\n",
-	       r"IPv4 Netmask", "255.255.255.0\n",
-	       r"IPv4 gateway", "10.169.0.1\n",
-	       r"IPv4 name server", "10.169.0.1\n",
-	       r"Perform IPv6 autoconfiguration", choose_no,
-	       r"Select (IPv6 )?DNS server", choose_dns_server,
-	       r"Are they OK", choose_yes)
+	    expect_any(child,
+		r"Your host name", "anita-test\n",
+		r"Your DNS domain", "netbsd.org\n",
+		r"Your IPv4 (number)|(address)", "10.169.0.2\n",
+		r"IPv4 Netmask", "255.255.255.0\n",
+		r"IPv4 gateway", "10.169.0.1\n",
+		r"IPv4 name server", "10.169.0.1\n",
+		r"Perform IPv6 autoconfiguration", choose_no,
+		r"Select (IPv6 )?DNS server", choose_dns_server,
+		r"Are they OK", choose_yes)
+	    self.network_configured = True
+
+	self.network_configured = False
 
 	# Many different things can happen at this point:
         #
@@ -1143,12 +1158,10 @@ class Anita:
 			 "(The following are the http site)|" +
 			 # Group 12
 			 "(Is the network information you entered accurate)|" +
-			 # Group 13
-			 "(Which device shall I use)|" +
-			 # Group 14
-			 "(not-in-use)|" +
+			 # Group 13-14
+			 "(Which network device would you like to use)|(Which device shall I)|" +
 			 # Group 15
-			 "(not-in-use)|" +
+			 "(No allows you to continue anyway)|" +
 			 # Group 16
 			 "(not-in-use)|" +
 			 # Group 17
@@ -1168,6 +1181,7 @@ class Anita:
 			 10800)
 
 	    if child.match.groups() == prevmatch:
+	        print >>self.structured_log_f, "ignore_repeat_match()"
 	        continue
 	    prevmatch = child.match.groups()
 	    if child.match.group(1):
@@ -1175,8 +1189,13 @@ class Anita:
 		child.send("\n")
 	    elif child.match.group(2):
 	        # (a: CD-ROM)
+		# XXX
+		#console_interaction(child)
 		if self.vmm == 'noemu':
 		    child.send("c\n") # install from HTTP
+		    # We next end up at either "Which device shall I"
+		    # or "The following are the http site" depending on
+		    # the NetBSD version.
 		else:
 		    child.send("a\n") # install from CD-ROM
             elif child.match.group(3):
@@ -1262,28 +1281,43 @@ class Anita:
 		# \027 is control-w, which clears the field
 		child.send("a\n\02710.169.0.1\n") # IP address
 		child.send("b\n\027\n") # Directory = empty string
-		child.send("j\n") # Configure network
-		configure_network();
+		if not self.network_configured:
+		    child.send("j\n") # Configure network
+		    choose_interface()
+		    configure_network()
 		# We get 'Hit enter to continue' if this sysinst
 		# version tries ping6 even if we have not configured
 		# IPv6
 		expect_any(child,
 		    r'Hit enter to continue', '\r',
 		    r'x: Get Distribution', 'x\n')
-		# -> and I'm back at the "Install from" menu??
-		child.expect("Install from")
-		child.send("c\n") # HTTP
-		# And again...
-		child.expect("The following are the http site")
-		child.expect("x: Get Distribution")
-		child.send("x\n")
+		r = child.expect(["Install from", "/usr/bin/ftp"])
+		if r == 0:
+	            print >>self.structured_log_f, "new_style()" #XXX
+		    # ...and I'm back at the "Install from" menu?
+		    # Probably the same bug reported as install/49440.
+		    child.send("c\n") # HTTP
+		    # And again...
+		    child.expect("The following are the http site")
+		    child.expect("x: Get Distribution")
+		    child.send("x\n")
+		elif r == 1:
+	            print >>self.structured_log_f, "old_style()" #XXX
+		    pass
+		else:
+		    assert(0)
 	    elif child.match.group(12):
-	       # "Is the network information you entered accurate"
-	       child.expect("([a-z]): Yes")
-	       child.send(child.match.group(1) + "\n")
-	    elif child.match.group(13):
-               # "Which device shall I use?"
-               child.send("\n")
+		# "Is the network information you entered accurate"
+		child.expect("([a-z]): Yes")
+		child.send(child.match.group(1) + "\n")
+	    elif child.match.group(13) or child.match.group(14):
+		# "(Which network device would you like to use)|(Which device shall I)"
+		choose_interface()
+		configure_network()
+	    elif child.match.group(15):
+	        choose_no()
+		child.expect("No aborts the install process")
+		choose_yes()
 	    elif child.match.group(20):
 		# Custom installation is choice "d" in 6.0,
 		# but choice "c" or "b" in older versions
