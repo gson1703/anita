@@ -1,3 +1,5 @@
+The structured log file now also contains informational messages,
+of the form info('message').
 
 - 1.38 released -
 

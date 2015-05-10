@@ -618,6 +618,12 @@ class DomUKiller:
 def vmm_is_xen(vmm):
     return vmm == 'xm' or vmm == 'xl'
 
+def slog(fd, tag, data):
+    print >>fd, "%s(%s)" % (tag, repr(data))
+    
+def slog_info(fd, data):
+    slog(fd, 'info', data)
+    
 # A file-like object that escapes unprintable data and prefixes each
 # line with a tag, for logging I/O.
 
@@ -626,7 +632,7 @@ class Logger:
         self.tag = tag
 	self.fd = fd
     def write(self, data):
-        print >>self.fd, "%s(%s)" % (self.tag, repr(data))
+        slog(self.fd, self.tag, data)
     def __getattr__(self, name):
         return getattr(self.fd, name)
 
@@ -705,6 +711,9 @@ class Anita:
         self.extra_vmm_args = vmm_args
 
 	self.is_logged_in = False
+
+    def slog(self, message):
+        slog_info(self.structured_log_f, message)
 
     # Wrapper around pexpect.spawn to let us log the command for
     # debugging.  Note that unlike os.spawnvp, args[0] is not
@@ -1054,11 +1063,9 @@ class Anita:
 	    child.expect(r"(\[[a-z]+[0-9]\])|(Available interfaces)")
 	    if child.match.group(1):
 	        # Old-style
-	        print >>self.structured_log_f, "old_style_interface()" #XXX
 	        child.send("\n")
             else:
 	        # New-style	    
-	        print >>self.structured_log_f, "new_style_interface()" #XXX	    
 		child.expect("a:") # first available interface
 		child.send("\n")
 
@@ -1181,7 +1188,7 @@ class Anita:
 			 10800)
 
 	    if child.match.groups() == prevmatch:
-	        print >>self.structured_log_f, "ignore_repeat_match()"
+	        self.slog('ignoring repeat match')
 	        continue
 	    prevmatch = child.match.groups()
 	    if child.match.group(1):
@@ -1293,7 +1300,6 @@ class Anita:
 		    r'x: Get Distribution', 'x\n')
 		r = child.expect(["Install from", "/usr/bin/ftp"])
 		if r == 0:
-	            print >>self.structured_log_f, "new_style()" #XXX
 		    # ...and I'm back at the "Install from" menu?
 		    # Probably the same bug reported as install/49440.
 		    child.send("c\n") # HTTP
@@ -1302,7 +1308,6 @@ class Anita:
 		    child.expect("x: Get Distribution")
 		    child.send("x\n")
 		elif r == 1:
-	            print >>self.structured_log_f, "old_style()" #XXX
 		    pass
 		else:
 		    assert(0)
