@@ -1,3 +1,9 @@
+New public method start_boot, to facilitate writing test cases that
+interact with the boot prompt.
+
+When a network install fails, run ifconfig -a and netstat -rn
+to help diagnose the cause.
+
 The structured log file now also contains informational messages,
 of the form info('message').
 

@@ -1170,7 +1170,7 @@ class Anita:
 			 # Group 15
 			 "(No allows you to continue anyway)|" +
 			 # Group 16
-			 "(not-in-use)|" +
+			 r"(Can't connect to)|" +
 			 # Group 17
 			 "(not-in-use)|" +
 			 # Group 18
@@ -1323,6 +1323,16 @@ class Anita:
 	        choose_no()
 		child.expect("No aborts the install process")
 		choose_yes()
+	    elif child.match.group(16):
+	        self.slog("network problems detected")
+		child.send("\003") # control-c
+		time.sleep(2)
+		child.send("ifconfig -a\n")
+		time.sleep(2)
+		child.send("netstat -rn\n")
+		time.sleep(5)
+		child.expect("foo") # gather input
+		time.sys.exit(1)
 	    elif child.match.group(20):
 		# Custom installation is choice "d" in 6.0,
 		# but choice "c" or "b" in older versions
@@ -1438,8 +1448,10 @@ class Anita:
 
     # Boot the virtual machine (installing it first if it's not
     # installed already).  The vmm_args argument applies when
-    # booting, but not when installing.
-    def boot(self, vmm_args = None):
+    # booting, but not when installing.  Does not wait for
+    # a login prompt.
+
+    def start_boot(self, vmm_args = None):
         if vmm_args is None:
             vmm_args = []
 
@@ -1457,12 +1469,16 @@ class Anita:
 	    child = self.start_noemu(vmm_args + ['--boot-from', 'disk'])
         else:
             raise RuntimeError('unknown vmm %s' % vmm)
-            
-        child.expect("login:")
+	self.child = child
+	return child
+
+    # Like start_boot(), but wait for a login prompt.
+    def boot(self, vmm_args = None):
+        self.start_boot(vmm_args)
+        self.child.expect("login:")
         # Can't close child here because we still need it if called from
 	# interact()
-	self.child = child
-        return child
+        return self.child
 
     # Deprecated
     def interact(self):
