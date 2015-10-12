@@ -1065,9 +1065,14 @@ class Anita:
 	        # Old-style
 	        child.send("\n")
             else:
-	        # New-style	    
-		child.expect("a:") # first available interface
-		child.send("\n")
+	        # New-style
+		# Choose the first non-fwip interface
+		while True:
+		    child.expect(r"([a-z]): ([a-z]+)")
+	            self.slog('interface <%s>' % child.match.group(2))
+		    if child.match.group(2) != 'fwip':
+		        break
+		child.send(child.match.group(1) + "\n")
 
         def configure_network():
 	    child.expect("Network media type")
