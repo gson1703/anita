@@ -1,3 +1,6 @@
+Fix bug where the exit status of the shell command specified with the
+--run option was not propagated to the exit status of anita.
+
 New public method start_boot, to facilitate writing test cases that
 interact with the boot prompt.
 

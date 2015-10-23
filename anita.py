@@ -1171,7 +1171,7 @@ class Anita:
 			 # Group 12
 			 "(Is the network information you entered accurate)|" +
 			 # Group 13-14
-			 "(Which network device would you like to use)|(Which device shall I)|" +
+			 "(Which network device would you like to use)|(Which device shall)|" +
 			 # Group 15
 			 "(No allows you to continue anyway)|" +
 			 # Group 16
@@ -1601,7 +1601,7 @@ class Anita:
     # Run a shell command 
     def shell_cmd(self, cmd, timeout = -1):
         self.login()
-	shell_cmd(self.child, cmd, timeout)
+	return shell_cmd(self.child, cmd, timeout)
 
     # Halt the VM
     def halt(self):
