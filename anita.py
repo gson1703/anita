@@ -1068,7 +1068,10 @@ class Anita:
 	        # New-style
 		# Choose the first non-fwip interface
 		while True:
-		    child.expect(r"([a-z]): ([a-z]+)")
+		    # Make sure to match the digit after the interface
+		    # name so that we don't accept a partial interface
+		    # name like "fw" from "fwip0".
+		    child.expect(r"([a-z]): ([a-z]+)[0-9]")
 	            self.slog('interface <%s>' % child.match.group(2))
 		    if child.match.group(2) != 'fwip':
 		        break
