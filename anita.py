@@ -1072,7 +1072,6 @@ class Anita:
 		    # name so that we don't accept a partial interface
 		    # name like "fw" from "fwip0".
 		    child.expect(r"([a-z]): ([a-z]+)[0-9]")
-	            self.slog('interface <%s>' % child.match.group(2))
 		    if child.match.group(2) != 'fwip':
 		        break
 		child.send(child.match.group(1) + "\n")
