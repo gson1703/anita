@@ -1,3 +1,5 @@
+- 1.39 released -
+
 Deal with incompatible change in the output format of the "info block"
 command in qemu 2.5.0.
  
