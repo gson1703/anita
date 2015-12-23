@@ -1206,8 +1206,6 @@ class Anita:
 		child.send("\n")
 	    elif child.match.group(2):
 	        # (a: CD-ROM)
-		# XXX
-		#console_interaction(child)
 		if self.vmm == 'noemu':
 		    child.send("c\n") # install from HTTP
 		    # We next end up at either "Which device shall I"
@@ -1484,11 +1482,11 @@ class Anita:
 
     # Like start_boot(), but wait for a login prompt.
     def boot(self, vmm_args = None):
-        self.start_boot(vmm_args)
-        self.child.expect("login:")
-        # Can't close child here because we still need it if called from
+	self.start_boot(vmm_args)
+	self.child.expect("login:")
+	# Can't close child here because we still need it if called from
 	# interact()
-        return self.child
+	return self.child
 
     # Deprecated
     def interact(self):
