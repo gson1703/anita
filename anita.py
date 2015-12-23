@@ -931,9 +931,12 @@ class Anita:
 		    # "fda" to "floppy0" without any provision for backwards
 		    # compatibility.  Deal with it.  Also deal with the fact
 		    # that as of qemu 0.15, "info block" no longer prints
-		    # "type=floppy" for floppy drives.
+		    # "type=floppy" for floppy drives.  And in qemu 2.5.0,
+		    # the format changed again from "floppy0: " to
+		    # "floppy0 (#block544): ", so we no longer match the
+		    # colon and space.
 		    child.send("info block\n")
-		    child.expect(r'\n(fda|floppy0): ')
+		    child.expect(r'\n(fda|floppy0)')
 		    floppy0_name = child.match.group(1)
 		# Now we can change the floppy
 		child.send("change %s %s\n" %

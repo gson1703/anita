@@ -1,3 +1,6 @@
+Deal with incompatible change in the output format of the "info block"
+command in qemu 2.5.0.
+ 
 Fix bug where the exit status of the shell command specified with the
 --run option was not propagated to the exit status of anita.
 
