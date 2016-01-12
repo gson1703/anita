@@ -753,7 +753,7 @@ class Anita:
     def start_qemu(self, vmm_args, snapshot_system_disk):
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
-            "-drive", "file=%s,media=disk,snapshot=%s" %
+            "-drive", "file=%s,format=raw,media=disk,snapshot=%s" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)

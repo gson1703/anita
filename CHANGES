@@ -1,3 +1,6 @@
+Pass format=raw in the qemu -drive option to suppress warnings in
+recent qemu versions.
+
 - 1.39 released -
 
 Deal with incompatible change in the output format of the "info block"
