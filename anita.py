@@ -767,10 +767,10 @@ class Anita:
             return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
 
     def qemu_disk_args(self, path, devno = 0, writable = True, snapshot = False):
-        return ["-drive", "file=%s,media=disk,snapshot=%s" % (path, ["off", "on"][snapshot])]
+        return ["-drive", "file=%s,format=raw,media=disk,snapshot=%s" % (path, ["off", "on"][snapshot])]
 
     def qemu_cdrom_args(self, path, devno):
-        return ["-drive", "file=%s,media=cdrom" % (path)]
+        return ["-drive", "file=%s,format=raw,media=cdrom" % (path)]
 
     def string_arg(self, name, value):
         if self.vmm == 'xm':    
@@ -881,7 +881,7 @@ class Anita:
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
-                vmm_args += ["-fda", floppy_paths[0], "-boot", "a"]
+                vmm_args += ["-drive", "file=%s,format=raw,if=floppy" % floppy_paths[0], "-boot", "a"]
 		cd_device = 'cd0a';		
             elif self.boot_from == 'cdrom-with-sets':
 	        # Single CD
