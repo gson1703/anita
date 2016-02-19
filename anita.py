@@ -1574,6 +1574,7 @@ class Anita:
 	    "{ cd /tmp && tar cf tests-results.img tests && echo put tests-results.img | tftp 10.169.0.1; };") +
 	    "df -k | sed 's/^/df-post-test /'; " +
 	    "ps -glaxw | sed 's/^/ps-post-test /'; " +
+	    "vmstat -s; " +
             "sh -c 'exit `cat /tmp/tests/test.status`'",
             timeout)
 

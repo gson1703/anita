@@ -1,3 +1,9 @@
+Run vmstat -s at the end of the ATF tests to help diagnose issues
+like excessive paging due to insufficient memory.
+
+Increase the default of the --test-timeout option from 3 hours to 8
+hours, since the sparc tests are now taking more than 5 hours.
+
 Increase the default disk size to 1526M, as 1G is no longer enough
 for amd64.
 
