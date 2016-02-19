@@ -1,3 +1,6 @@
+When halting the child results in an EOF, don't print the exception
+since that may be confused with a failure.
+
 Run vmstat -s at the end of the ATF tests to help diagnose issues
 like excessive paging due to insufficient memory.
 
