@@ -13,7 +13,7 @@ import time
 import urllib
 import urlparse
 
-__version__='1.39'
+__version__='1.39a'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -1059,25 +1059,36 @@ class Anita:
             # Exit the set selection menu
             child.send("x\n")
 
-	def choose_interface():
-	    # Older NetBSD versions show a prompt like [re0] and ask you
-	    # to type in the interface name (or enter for the default);
-	    # newer versions show a menu.
-	    child.expect(r"(\[[a-z]+[0-9]\])|(Available interfaces)")
-	    if child.match.group(1):
-	        # Old-style
-	        child.send("\n")
-            else:
-	        # New-style
-		# Choose the first non-fwip interface
-		while True:
-		    # Make sure to match the digit after the interface
-		    # name so that we don't accept a partial interface
-		    # name like "fw" from "fwip0".
-		    child.expect(r"([a-z]): ([a-z]+)[0-9]")
-		    if child.match.group(2) != 'fwip':
-		        break
-		child.send(child.match.group(1) + "\n")
+	# Older NetBSD versions show a prompt like [re0] and ask you
+	# to type in the interface name (or enter for the default);
+	# newer versions show a menu.
+
+	def choose_interface_oldstyle():
+	    self.slog('old-style interface list')
+	    # Choose the first non-fwip interface		
+	    while True:
+		child.expect(r"([a-z]+)([0-9]) ")
+		ifname = child.match.group(1)
+		ifno = child.match.group(2)
+		self.slog('old-style interface: <%s,%s>' % (ifname, ifno))
+		if ifname != 'fwip':
+		    # Found an acceptable interface
+		    child.send("%s%s\n" % (ifname, ifno))
+		    break
+
+	def choose_interface_newstyle():
+	    self.slog('new-style interface list')
+	    child.expect('Available interfaces')
+	    # Choose the first non-fwip interface
+	    while True:
+		# Make sure to match the digit after the interface
+		# name so that we don't accept a partial interface
+		# name like "fw" from "fwip0".
+		child.expect(r"([a-z]): ([a-z]+)[0-9]")
+		if child.match.group(2) != 'fwip':
+		    # Found an acceptable interface
+		    child.send(child.match.group(1) + "\n")
+		    break
 
         def configure_network():
 	    child.expect("Network media type")
@@ -1175,8 +1186,8 @@ class Anita:
 			 "(The following are the http site)|" +
 			 # Group 12
 			 "(Is the network information you entered accurate)|" +
-			 # Group 13-14
-			 "(Which network device would you like to use)|(Which device shall)|" +
+			 # Group 13-14 (old-style / new-style)
+			 "(I have found the following network interfaces)|(Which network device would you like to use)|" +
 			 # Group 15
 			 "(No allows you to continue anyway)|" +
 			 # Group 16
@@ -1298,7 +1309,7 @@ class Anita:
 		child.send("b\n\027\n") # Directory = empty string
 		if not self.network_configured:
 		    child.send("j\n") # Configure network
-		    choose_interface()
+		    choose_interface_newstyle()
 		    configure_network()
 		# We get 'Hit enter to continue' if this sysinst
 		# version tries ping6 even if we have not configured
@@ -1323,9 +1334,13 @@ class Anita:
 		# "Is the network information you entered accurate"
 		child.expect("([a-z]): Yes")
 		child.send(child.match.group(1) + "\n")
-	    elif child.match.group(13) or child.match.group(14):
-		# "(Which network device would you like to use)|(Which device shall I)"
-		choose_interface()
+	    elif child.match.group(13):
+	    	 # "(I have found the following network interfaces)"
+		choose_interface_oldstyle()
+		configure_network()
+	    elif child.match.group(14):
+		# "(Which network device would you like to use)"
+		choose_interface_newstyle()
 		configure_network()
 	    elif child.match.group(15):
 	        choose_no()
@@ -1337,8 +1352,7 @@ class Anita:
 		time.sleep(2)
 		child.send("ifconfig -a\n")
 		time.sleep(2)
-		child.send("netstat -rn\n")
-		time.sleep(5)
+		# would run netstat here but it's not on the install media
 		child.expect("foo") # gather input
 		time.sys.exit(1)
 	    elif child.match.group(20):
