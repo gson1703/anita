@@ -13,7 +13,7 @@ import time
 import urllib
 import urlparse
 
-__version__='1.39a'
+__version__='1.40'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases

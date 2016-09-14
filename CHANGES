@@ -1,3 +1,5 @@
+- 1.40 released -
+
 Work around a bug in the urllib library of Python 2.7.12 that causes
 FTP transfers to fail with the error message "[Errno ftp error] 200
 Type set to I"; see https://bugs.python.org/issue27973.
