@@ -462,12 +462,17 @@ boots, but the test suite occasionally fails to complete; see PR 44176.
 .Pp
 .Sh BUGS IN PYTHON
 .Pp
-If you see the error
+Versions of
+.Nm
+prior to 1.40 may get the error
 .Pp
 .Dl [Errno ftp error] 200 Type set to I
 .Pp
-during the downloading of distribution sets, you are a victim of
-a bug in Python 2.7.12:
+during the downloading of distribution sets; this is a regression in
+Python 2.7.12:
 .Pp
 .Dl http://bugs.python.org/issue27973
 .Pp
+This problem is worked around in
+.Nm 
+1.40.

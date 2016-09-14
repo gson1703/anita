@@ -94,7 +94,11 @@ class MyURLopener(urllib.FancyURLopener):
         raise IOError, 'HTTP error code %d' % errcode
 
 def my_urlretrieve(url, filename):
-    return MyURLopener().retrieve(url, filename)
+    r = MyURLopener().retrieve(url, filename)
+    if sys.version_info >= (2, 7, 12):
+        # Work around https://bugs.python.org/issue27973
+        urllib.urlcleanup()
+    return r
 
 # Download a file, cleaning up the partial file if the transfer
 # fails or is aborted before completion.
