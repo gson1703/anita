@@ -316,16 +316,19 @@ Generate log output in a structured format similar to Python code.
 Commands sent to the serial console by
 .Nm
 are logged as 
-.Cm send('command...') ,
-data received are logged
+.Cm send(t, 'command...') ,
+where 
+.Va t
+is a timestamp in seconds since the Unix epoch.
+Data received are logged
 as 
-.Cm recv('data...') .
+.Cm recv(t, 'data...') .
 Calls to pexpect's
 .Fn expect
 function are logged as
-.Cm expect('regexp...') ,
+.Cm expect(t, 'regexp...') ,
 and the actual strings matched by them as
-.Cm match('...') .
+.Cm match(t, '...') .
 Unprintable characters in the data strings are escaped using Python 
 string syntax.
 .Pp

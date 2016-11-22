@@ -623,7 +623,7 @@ def vmm_is_xen(vmm):
     return vmm == 'xm' or vmm == 'xl'
 
 def slog(fd, tag, data):
-    print >>fd, "%s(%s)" % (tag, repr(data))
+    print >>fd, "%s(%.3f, %s)" % (tag, time.time(), repr(data))
     
 def slog_info(fd, data):
     slog(fd, 'info', data)
