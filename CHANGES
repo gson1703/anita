@@ -1,3 +1,5 @@
+Add timestamps to structured log output.
+
 - 1.40 released -
 
 Work around a bug in the urllib library of Python 2.7.12 that causes
