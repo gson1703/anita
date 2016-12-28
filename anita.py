@@ -1353,12 +1353,18 @@ class Anita:
 	    elif child.match.group(16):
 	        self.slog("network problems detected")
 		child.send("\003") # control-c
-		time.sleep(2)
-		child.send("ifconfig -a\n")
-		time.sleep(2)
+                def gather_input(seconds):
+                    try:
+                        child.expect("timeout", seconds)
+                    except pexpect.TIMEOUT:
+                        pass
+                gather_input(666)
+                for i in range(60):
+                    child.send("ifconfig -a\n")
+                    gather_input(1)
 		# would run netstat here but it's not on the install media
-		child.expect("foo") # gather input
-		time.sys.exit(1)
+                gather_input(30)
+		sys.exit(1)
 	    elif child.match.group(20):
 		# Custom installation is choice "d" in 6.0,
 		# but choice "c" or "b" in older versions
