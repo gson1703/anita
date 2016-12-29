@@ -748,10 +748,11 @@ class Anita:
         child.timeout = 300
         child.setecho(False)
         # Xen installs sometimes fail if we don't increase this
-	# from the default of 0.1 seconds
-        child.delayafterclose = 5.0
+	# from the default of 0.1 seconds.  And powering down noemu
+        # using iLO3 over ssh takes more than 5 seconds.
+        child.delayafterclose = 30.0
         # Also increase this just in case
-        child.delayafterterminate = 5.0
+        child.delayafterterminate = 30.0
 	self.child = child
 
     def start_qemu(self, vmm_args, snapshot_system_disk):

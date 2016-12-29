@@ -1,3 +1,8 @@
+Increase child.delayafterclose and child.delayafterterminate
+to support VMMs where power-down takes a long time.
+
+Run more network diagnostics after failed network installs.
+
 Add timestamps to structured log output.
 
 - 1.40 released -
