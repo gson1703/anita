@@ -1642,7 +1642,7 @@ class Anita:
 	except pexpect.EOF:
 	    # Didn't see the text but got an EOF; that's OK.
 	    print "EOF"
-	except pexpect.TIMEOUT:
+	except pexpect.TIMEOUT, e:
 	    # This is unexpected but mostly harmless
 	    print "timeout waiting for halt confirmation:", e
 
