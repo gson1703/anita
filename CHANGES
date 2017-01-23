@@ -1,7 +1,8 @@
 Fix reference to uninitialized variable when reporting a
 timeout waiting for VM halt confirmation.
 
-Increase default child timeout from 300 to 600 seconds.
+Increase default child timeout from 300 to 600 seconds
+to support VMMs where power-up takes a long time.
 
 Increase child.delayafterclose and child.delayafterterminate
 to support VMMs where power-down takes a long time.
