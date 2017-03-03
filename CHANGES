@@ -1,3 +1,5 @@
+Log the qemu version used to stdout.
+
 Fix reference to uninitialized variable when reporting a
 timeout waiting for VM halt confirmation.
 

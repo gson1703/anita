@@ -756,6 +756,9 @@ class Anita:
 	self.child = child
 
     def start_qemu(self, vmm_args, snapshot_system_disk):
+        # Log the qemu version to stdout
+        subprocess.call([self.qemu, '--version'])
+	# Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
             "-drive", "file=%s,format=raw,media=disk,snapshot=%s" %
