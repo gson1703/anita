@@ -1692,7 +1692,17 @@ def shell_cmd(child, cmd, timeout = -1):
     prompt_re = prompt
     child.expect(prompt_re)
     child.send(cmd + "\n")
-    child.expect(prompt_re, timeout)
+    # Catch EOF to log the signalstatus, to help debug qemu crashes
+    try:
+        child.expect(prompt_re, timeout)
+    except pexpect.EOF:
+        print "pexpect reported EOF - VMM exited unexpectedly"
+        child.close()
+        print "exitstatus", child.exitstatus
+        print "signalstatus", child.signalstatus
+        raise
+    except:
+        raise
     child.send("echo exit_status=$?=\n")
     child.expect("exit_status=(\d+)=")
     r = int(child.match.group(1))

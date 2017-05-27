@@ -1,3 +1,6 @@
+If the VMM exits unexpectedly, log the exit status and the signal that
+caused it to exit (if any).
+
 Log the qemu version used to stdout.
 
 Fix reference to uninitialized variable when reporting a
