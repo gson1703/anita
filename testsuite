@@ -18,6 +18,7 @@ runtest() {
     workdir=`$python ./anita print-workdir "$@"`
     rm -f $workdir/wd0.img
     $python ./anita --structured-log $mode "$@"
+    rm -f $workdir/wd0.img    
 }
 
 # Test an installation with debug symbols and partial source
@@ -67,6 +68,7 @@ $python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee st
 # This is not to check that tests pass, but only that they at least run to completion
 grep 'passed test cases' stdout
 rm -f stdout
+rm -f $workdir/wd0.img
 
 #This panics with qemu 2.0.0
 #runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.1.3/images/NetBSD-6.1.3-sparc.iso
