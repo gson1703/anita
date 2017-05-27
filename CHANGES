@@ -1,5 +1,6 @@
-If the VMM exits unexpectedly, log the exit status and the signal that
-caused it to exit (if any).
+If the VMM exits unexpectedly while running the ATF tests or some
+other shell command, log the exit status and the signal that caused it
+to exit (if any).
 
 Log the qemu version used to stdout.
 
