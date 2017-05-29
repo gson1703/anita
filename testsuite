@@ -1,16 +1,17 @@
 #!/bin/sh
+#
+# Anita test suite.  This mainly tests that installation of historic
+# NetBSD versions still works.
+#
 
 logfile=log/testsuite.log.`date +%Y%m%d-%H%M%S`
 echo "logging to $logfile"
 
 exec >$logfile 2>&1
 
-#python=python2.6	# guido
-python=python2.7	# guru
+python=python2.7
 
 set -x -e
-
-#./anita install /usr/build/20080708-1545/release/iso/i386cd.iso
 
 runtest() {
     mode=$1
@@ -22,7 +23,7 @@ runtest() {
 }
 
 # Test an installation with debug symbols and partial source
-# With 32M of memory, we hit the "stalled" problem
+# With 32M of memory, we hit the "stalled" problem (PR 47030)
 runtest "--memory-size=128M --disk-size=2G --sets=kern-GENERIC,etc,base,tests,games,misc,syssrc boot" `pwd`/release/i386-source-2012.01.09.11.52.43/i386/
 
 # Test a FTP URL, too
@@ -47,7 +48,7 @@ runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
 #runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-7.0.1/amd64/
 runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-7.1/amd64/
 
-# Anita 1.2 compatibility.
+# Test anita 1.2 compatibility.
 $python <<END
 import anita
 ver = anita.Release("7.0.1")
