@@ -4,6 +4,8 @@
 # NetBSD versions still works.
 #
 
+mkdir -p log
+
 logfile=log/testsuite.log.`date +%Y%m%d-%H%M%S`
 echo "logging to $logfile"
 
@@ -24,7 +26,11 @@ runtest() {
 
 # Test an installation with debug symbols and partial source
 # With 32M of memory, we hit the "stalled" problem (PR 47030)
-runtest "--memory-size=128M --disk-size=2G --sets=kern-GENERIC,etc,base,tests,games,misc,syssrc boot" `pwd`/release/i386-source-2012.01.09.11.52.43/i386/
+debug_build=`pwd`/release/i386-source-2012.01.09.11.52.43/i386/
+if test -d $debug_build
+then
+    runtest "--memory-size=128M --disk-size=2G --sets=kern-GENERIC,etc,base,tests,games,misc,syssrc boot" $debug_build
+fi
 
 # Test a FTP URL, too
 runtest install ftp://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-2.1/i386/
@@ -63,7 +69,7 @@ END
 #grep "127 9721" stdout
 #rm -f stdout
 
-url=http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.1/i386/
+url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-5.1/i386/
 workdir=`$python ./anita print-workdir $url`
 rm -f $workdir/wd0.img
 $python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee stdout || true
