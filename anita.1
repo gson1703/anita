@@ -17,6 +17,7 @@
 .Op Fl -boot-from Ar cdrom | floppy
 .Op Fl -structured-log
 .Op Fl -structured-log-file Ar file
+.Op Fl -tests Ar kyua | atf
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -342,6 +343,9 @@ Like
 but logs to a given file rather than to standard output,
 and in addition to rather than instead of the default
 unstructured logging.
+.It Fl -tests Ar kyua | atf
+Specify the testing framework that you want to use for running tests. The default is
+.Cm atf .
 .El
 .Sh DEBUGGING NETBSD USING ANITA
 .Nm

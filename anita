@@ -56,6 +56,7 @@ def main(argv = None):
 		      help="in boot/test/interact mode, assume system is already installed")
     parser.add_option("--version", action="store_true",
 		      help="print the anita version number and exit")
+    parser.add_option("--tests", help='select the tests to run in test mode: \"atf\" or \"kyua\"', type="string", default="atf")
 
     (options, args) = parser.parse_args()
 
@@ -99,6 +100,7 @@ def main(argv = None):
 	structured_log = options.structured_log,
 	structured_log_file = options.structured_log_file,
 	no_install = options.no_install
+	test = options.tests
 	)
 
     def maybe_run_command(a):
