@@ -99,8 +99,8 @@ def main(argv = None):
 	boot_from = options.boot_from,
 	structured_log = options.structured_log,
 	structured_log_file = options.structured_log_file,
-	no_install = options.no_install
-	test = options.tests
+	no_install = options.no_install,
+	tests = options.tests
 	)
 
     def maybe_run_command(a):
