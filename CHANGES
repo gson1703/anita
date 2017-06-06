@@ -1,4 +1,7 @@
 
+New command line option --tests for explicitly selecting the the Kyua
+test framework instead of ATF, from Utkarsh Anand.
+
 - 1.41 released -
 
 If the VMM exits unexpectedly while running the ATF tests or some
