@@ -656,7 +656,7 @@ class multifile(object):
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	structured_log = None, structured_log_file = None, no_install = False, test = 'atf'):
+	structured_log = None, structured_log_file = None, no_install = False, test = 'atf', prefix):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -713,7 +713,7 @@ class Anita:
         if vmm_args is None:
             vmm_args = []
 	if dist.arch() == 'evbearmv7hf-el':
-            vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.dist.download_local_arch_dir(), 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'), '-append', '"root=ld0a"', '-dtb', os.path.join(os.path.realpath(__file__), os.pardir, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
+            vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.dist.download_local_arch_dir(), 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'), '-append', '"root=ld0a"', '-dtb', os.path.join(prefix, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
 	self.is_logged_in = False
@@ -740,7 +740,7 @@ class Anita:
     def sd_path(self):
         path = os.path.abspath(os.path.join(download_local_arch_dir(), 'releasedir', 'binary', 'gzimg'))
         if os.path.exists(os.path.join(path, 'armv7.img.gz')):
-            os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', os.path.join(path, 'armv7.img.gz']))
+            os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', os.path.join(path, 'armv7.img.gz')])
         path = os.path.join(path, 'armv7.img')
         if self.dist.arch() == 'evbearmv7hf-el':
             os.spawnvp(os.P_WAIT, 'qemu-img', ['qemu-img', 'resize', path, '2G'])
