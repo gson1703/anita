@@ -684,7 +684,7 @@ class Anita:
 
 	# Set the default memory size if none was given.
         if memory_size is None:
-            if dist.arch() == 'amd64':
+            if dist.arch() in ['amd64', 'evbearmv7hf-el']:
                 memory_size = "128M"
             else:
                 memory_size = "32M"
@@ -712,10 +712,16 @@ class Anita:
 
         if vmm_args is None:
             vmm_args = []
+	if dist.arch() == 'evbearmv7hf-el':
+            vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.dist.download_local_arch_dir(), 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'), '-append', '"root=ld0a"', '-dtb', os.path.join(os.path.realpath(__file__), os.pardir, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
 	self.is_logged_in = False
 	self.test = test
+	if dist.arch() == 'evbearmv7hf-el':
+            self.boot_from = 'sd'
+            self.no_install = 1
+            self.disk_size = '2G'
 
     def slog(self, message):
         slog_info(self.structured_log_f, message)
@@ -731,6 +737,14 @@ class Anita:
     # The path to the NetBSD hard disk image
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
+    def sd_path(self):
+        path = os.path.abspath(os.path.join(download_local_arch_dir(), 'releasedir', 'binary', 'gzimg'))
+        if os.path.exists(os.path.join(path, 'armv7.img.gz')):
+            os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', os.path.join(path, 'armv7.img.gz']))
+        path = os.path.join(path, 'armv7.img')
+        if self.dist.arch() == 'evbearmv7hf-el':
+            os.spawnvp(os.P_WAIT, 'qemu-img', ['qemu-img', 'resize', path, '2G'])
+        return path
 
     # Return the memory size rounded up to whole megabytes
     def memory_megs(self):
@@ -762,8 +776,8 @@ class Anita:
 	# Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
-            "-drive", "file=%s,format=raw,media=disk,snapshot=%s" %
-	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
+            ("-drive", "-sd")[self.dist.arch() == 'evbearmv7hf-el'], ("file=%s,format=raw,media=disk,snapshot=%s" %
+	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]), self.sd_path())[self.dist.arch() == 'evbearmv7hf-el'],
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
@@ -1468,6 +1482,9 @@ class Anita:
         # This is needed for Xen and noemu, where we get the kernel
         # from the dist rather than the installed image
         self.dist.set_workdir(self.workdir)
+	if self.dist.arch() == 'evbearmv7hf-el':
+            print "NetBSD/evbearmv7hf-el already provides a pre-installed image. An option for regular installation using sysinst will be added later."
+            return
 
         if self.vmm == 'noemu':
 	    self.dist.download()
