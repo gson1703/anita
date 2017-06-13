@@ -154,9 +154,11 @@ monitor, or control-a b to send a break (useful for entering DDB).
 Install NetBSD if not already installed, then boot it and 
 run the test suite from
 .Pa /usr/tests .
-The test suite is run using Kyua if NetBSD has been built with
+By default, the test suite is run using ATF.  If NetBSD was built with
 .Sq MKKYUA=yes ,
-or using ATF otherwise.
+you can use Kyua instead by passing the option
+.Fl -tests
+.Ar kyua .
 The raw output of the test execution and various other test reports are
 stored in a
 .Pa tests/
@@ -344,7 +346,7 @@ but logs to a given file rather than to standard output,
 and in addition to rather than instead of the default
 unstructured logging.
 .It Fl -tests Ar kyua | atf
-Specify the testing framework that you want to use for running tests. The default is
+Specify the test framework to use for running tests. The default is
 .Cm atf .
 .El
 .Sh DEBUGGING NETBSD USING ANITA

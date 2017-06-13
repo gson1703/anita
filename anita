@@ -100,7 +100,7 @@ def main(argv = None):
 	structured_log = options.structured_log,
 	structured_log_file = options.structured_log_file,
 	no_install = options.no_install,
-	test = options.tests,
+	tests = options.tests,
 	prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)
 	)
 

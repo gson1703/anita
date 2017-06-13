@@ -656,7 +656,7 @@ class multifile(object):
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	structured_log = None, structured_log_file = None, no_install = False, test = 'atf', prefix):
+	structured_log = None, structured_log_file = None, no_install = False, tests = 'atf', prefix):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -719,7 +719,7 @@ class Anita:
         self.extra_vmm_args = vmm_args
 
 	self.is_logged_in = False
-	self.test = test
+	self.tests = tests
 	if dist.arch() == 'evbearmv7hf-el':
             self.boot_from = 'sd'
             self.no_install = 1
@@ -1574,7 +1574,7 @@ class Anita:
         child = self.boot(scratch_disk_args)
 	self.login()
 
-        if self.test == "kyua":
+        if self.tests == "kyua":
 	    if self.shell_cmd("grep -q 'MKKYUA.*=.*yes' /etc/release") != 0:
 		raise RuntimeError("kyua is not installed.")
 	    test_cmd = (
@@ -1594,7 +1594,7 @@ class Anita:
 		    "report-html " +
 		    "--store=/tmp/tests/store.db " +
 		    "--output=/tmp/tests/html; ")
-        elif self.test == "atf":
+        elif self.tests == "atf":
 	    atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
 			     '/usr/share/xml/atf/tests-results.dtd',
 			     '/usr/share/examples/atf/tests-results.css']
