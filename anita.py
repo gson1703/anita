@@ -27,6 +27,7 @@ arch_qemu_map = {
     'i386': 'qemu-system-i386',
     'amd64': 'qemu-system-x86_64',
     'sparc': 'qemu-system-sparc',
+    'evbearmv7hf-el': 'qemu-system-arm',
      # The following ones don't actually work
     'sparc64': 'qemu-system-sparc64',
     'macppc': 'qemu-system-ppc',
@@ -656,7 +657,7 @@ class multifile(object):
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	structured_log = None, structured_log_file = None, no_install = False, tests = 'atf', prefix):
+	structured_log = None, structured_log_file = None, no_install = False, tests = 'atf', prefix = ""):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -778,7 +779,7 @@ class Anita:
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
             ("-drive", "-sd")[self.dist.arch() == 'evbearmv7hf-el'], ("file=%s,format=raw,media=disk,snapshot=%s" %
-	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]), self.sd_path())[self.dist.arch() == 'evbearmv7hf-el'],
+	        (self.wd0_path(), ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbearmv7hf-el'],
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
