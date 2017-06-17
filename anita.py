@@ -715,7 +715,7 @@ class Anita:
             vmm_args = []
 	if dist.arch() == 'evbearmv7hf-el':
             vmm_args += ['-M', 'vexpress-a15', '-kernel',
-            os.path.join(self.dist.download_local_arch_dir(), 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'),
+            os.path.join(self.dist.url, 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'),
             '-append', '"root=ld0a"', '-dtb', os.path.join(prefix, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
@@ -778,7 +778,7 @@ class Anita:
 	# Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
-            ("-drive", "-sd")[self.dist.arch() == 'evbearmv7hf-el'], ("file=%s,format=raw,media=disk,snapshot=%s" %
+            "-drive", ("file=%s,format=raw,media=disk,snapshot=%s" %
 	        (self.wd0_path(), ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbearmv7hf-el'],
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
