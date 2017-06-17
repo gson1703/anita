@@ -560,6 +560,7 @@ class URL(Version):
 class LocalDirectory(URL):
     def __init__(self, dir, **kwargs):
         # This could be optimized to avoid copying the files
+        self.dir = dir
         URL.__init__(self, "file://" + dir, **kwargs)
 
 # An URL or local file name pointing at an ISO image
@@ -715,7 +716,7 @@ class Anita:
             vmm_args = []
 	if dist.arch() == 'evbearmv7hf-el':
             vmm_args += ['-M', 'vexpress-a15', '-kernel',
-            os.path.join(self.dist.url, 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'),
+            os.path.join(self.dist.dir, 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'),
             '-append', '"root=ld0a"', '-dtb', os.path.join(prefix, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
@@ -740,7 +741,7 @@ class Anita:
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
     def sd_path(self):
-        path = os.path.abspath(os.path.join(download_local_arch_dir(), 'releasedir', 'binary', 'gzimg'))
+        path = os.path.abspath(os.path.join(self.workdir, 'releasedir', 'evbarm', 'binary', 'gzimg'))
         if os.path.exists(os.path.join(path, 'armv7.img.gz')):
             os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', os.path.join(path, 'armv7.img.gz')])
         path = os.path.join(path, 'armv7.img')
@@ -779,7 +780,7 @@ class Anita:
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
             "-drive", ("file=%s,format=raw,media=disk,snapshot=%s" %
-	        (self.wd0_path(), ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbearmv7hf-el'],
+	        ((self.wd0_path() ,self.sd_path())[self.dist.arch() == 'evbearmv7hf-el'], ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbearmv7hf-el'],
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
