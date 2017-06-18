@@ -428,6 +428,10 @@ class Version:
         # Depending on the NetBSD version, there may be two or more
         # boot floppies.  Treat any floppies past the first two as
         # optional files.
+        if self.url[:7] == 'file://':
+            mkdir_p(os.path.join(self.workdir, 'download'))
+            os.spawnvp(os.P_WAIT, 'ln', ['ln', '-s', self.local_dir, os.path.join(self.workdir, 'download')])
+            return
         i = 0
         for floppy in self.potential_floppies():
             download_if_missing_3(self.dist_url(),
