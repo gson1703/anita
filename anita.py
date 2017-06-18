@@ -430,7 +430,7 @@ class Version:
         # optional files.
         if hasattr(self, 'url') and self.url[:7] == 'file://':
             mkdir_p(os.path.join(self.workdir, 'download'))
-            os.spawnvp(os.P_WAIT, 'ln', ['ln', '-s', self.local_dir, os.path.join(self.workdir, 'download')])
+            os.spawnvp(os.P_WAIT, 'ln', ['ln', '-s', self.local_dir, os.path.abspath(os.path.join(self.workdir, 'download'))])
             return
         i = 0
         for floppy in self.potential_floppies():
