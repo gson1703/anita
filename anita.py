@@ -537,6 +537,7 @@ class URL(Version):
     def __init__(self, url, **kwargs):
         Version.__init__(self, **kwargs)
         self.url = url
+        self.local_dir = url[7:]
 	match = re.match(r'(^.*/)([^/]+)/$', url)
 	if match is None:
             raise RuntimeError(("URL '%s' doesn't look like the URL of a " + \
@@ -560,7 +561,6 @@ class URL(Version):
 class LocalDirectory(URL):
     def __init__(self, dir, **kwargs):
         # This could be optimized to avoid copying the files
-        self.dir = dir
         URL.__init__(self, "file://" + dir, **kwargs)
 
 # An URL or local file name pointing at an ISO image
@@ -716,7 +716,7 @@ class Anita:
             vmm_args = []
 	if dist.arch() == 'evbearmv7hf-el':
             vmm_args += ['-M', 'vexpress-a15', '-kernel',
-            os.path.join(self.dist.dir, 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'),
+            os.path.join(self.dist.local_dir, 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'),
             '-append', '"root=ld0a"', '-dtb', os.path.join(prefix, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
