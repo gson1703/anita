@@ -467,7 +467,7 @@ class Version:
     def make_iso(self):
         self.download()
         spawn(makefs[0], makefs + \
-            [self.iso_path(), os.path.realpath(self.download_local_mi_dir())])
+            [self.iso_path(), os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         self.tempfiles.append(self.iso_path())
 
     # Get the architecture name.  This is a hardcoded default for use
