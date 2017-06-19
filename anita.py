@@ -430,7 +430,7 @@ class Version:
         # optional files.
         if hasattr(self, 'url') and self.url[:7] == 'file://':
             mkdir_p(os.path.join(self.workdir, 'download'))
-            os.spawnvp(os.P_WAIT, 'ln', ['ln', '-s', self.local_dir[:-1], os.path.abspath(os.path.join(self.workdir, 'download', self.arch()))])
+            os.spawnvp(os.P_WAIT, 'ln', ['ln', '-s', self.local_dir[:-1], os.path.join(self.workdir, 'download', self.arch())])
             return
         i = 0
         for floppy in self.potential_floppies():
@@ -800,7 +800,7 @@ class Anita:
         return ["-drive", "file=%s,format=raw,media=disk,snapshot=%s" % (path, ["off", "on"][snapshot])]
 
     def qemu_cdrom_args(self, path, devno):
-        return ["-drive", "file=%s,format=raw,media=cdrom" % (path)]
+        return ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
 
     def string_arg(self, name, value):
         if self.vmm == 'xm':
@@ -911,7 +911,7 @@ class Anita:
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
-                vmm_args += ["-drive", "file=%s,format=raw,if=floppy" % floppy_paths[0], "-boot", "a"]
+                vmm_args += ["-drive", "file=%s,format=raw,if=floppy,readonly=on" % floppy_paths[0], "-boot", "a"]
 		cd_device = 'cd0a';
             elif self.boot_from == 'cdrom-with-sets':
 	        # Single CD
