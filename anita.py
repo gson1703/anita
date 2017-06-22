@@ -729,7 +729,7 @@ class Anita:
             vmm_args = []
 	if dist.arch() == 'evbarm-earmv7hf':
             vmm_args += ['-M', 'vexpress-a15', '-kernel',
-            os.path.join(workdir, 'download', self.dist.arch(), 'binary', 'kernel', 'netbsd-VEXPRESS_A15.ub'),
+            os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel', 'netbsd-VEXPRESS_A15.ub'),
             '-append', '"root=ld0a"', '-dtb', os.path.join(prefix, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
