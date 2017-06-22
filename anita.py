@@ -27,7 +27,7 @@ arch_qemu_map = {
     'i386': 'qemu-system-i386',
     'amd64': 'qemu-system-x86_64',
     'sparc': 'qemu-system-sparc',
-    'evbearmv7hf-el': 'qemu-system-arm',
+    'evbarm-earmv7hf': 'qemu-system-arm',
      # The following ones don't actually work
     'sparc64': 'qemu-system-sparc64',
     'macppc': 'qemu-system-ppc',
@@ -432,6 +432,15 @@ class Version:
             mkdir_p(os.path.join(self.workdir, 'download'))
             os.spawnvp(os.P_WAIT, 'ln', ['ln', '-s', self.local_dir[:-1], os.path.join(self.workdir, 'download', self.arch())])
             return
+        if self.arch() == 'evbarm-earmv7hf':
+            for files in ['netbsd-VEXPRESS_A15.ub.gz']:
+                if not os.path.exists(os.path.join(self.download_local_arch_dir(), 'binary', 'kernel', files[:-3])):
+                    download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", files])
+                    os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', os.path.join(self.download_local_arch_dir(), 'binary', 'kernel', files)])
+            for images in ['armv7.img.gz']:
+                if not os.path.exists(os.path.join(self.download_local_arch_dir(), 'binary', 'gzimg', images[:-3])):
+                    download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", images])
+            return
         i = 0
         for floppy in self.potential_floppies():
             download_if_missing_3(self.dist_url(),
@@ -690,7 +699,7 @@ class Anita:
 
 	# Set the default memory size if none was given.
         if memory_size is None:
-            if dist.arch() in ['amd64', 'evbearmv7hf-el']:
+            if dist.arch() in ['amd64', 'evbarm-earmv7hf']:
                 memory_size = "128M"
             else:
                 memory_size = "32M"
@@ -718,15 +727,15 @@ class Anita:
 
         if vmm_args is None:
             vmm_args = []
-	if dist.arch() == 'evbearmv7hf-el':
+	if dist.arch() == 'evbarm-earmv7hf':
             vmm_args += ['-M', 'vexpress-a15', '-kernel',
-            os.path.join(self.dist.local_dir, 'sys', 'arch', 'evbarm', 'compile', 'VEXPRESS_A15', 'netbsd.ub'),
+            os.path.join(workdir, 'download', self.dist.arch(), 'binary', 'kernel', 'netbsd-VEXPRESS_A15.ub'),
             '-append', '"root=ld0a"', '-dtb', os.path.join(prefix, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
 	self.is_logged_in = False
 	self.tests = tests
-	if dist.arch() == 'evbearmv7hf-el':
+	if dist.arch() == 'evbarm-earmv7hf':
             self.boot_from = 'sd'
             self.no_install = 1
 
@@ -745,11 +754,11 @@ class Anita:
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
     def sd_path(self):
-        path = os.path.abspath(os.path.join(self.workdir, 'releasedir', 'evbarm', 'binary', 'gzimg'))
+        path = os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'gzimg'))
         if os.path.exists(os.path.join(path, 'armv7.img.gz')):
             os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', os.path.join(path, 'armv7.img.gz')])
         path = os.path.join(path, 'armv7.img')
-        if self.dist.arch() == 'evbearmv7hf-el':
+        if self.dist.arch() == 'evbarm-earmv7hf':
             os.spawnvp(os.P_WAIT, 'qemu-img', ['qemu-img', 'resize', path, self.disk_size])
         return path
 
@@ -784,7 +793,7 @@ class Anita:
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
             "-drive", ("file=%s,format=raw,media=disk,snapshot=%s" %
-	        ((self.wd0_path() ,self.sd_path())[self.dist.arch() == 'evbearmv7hf-el'], ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbearmv7hf-el'],
+	        ((self.wd0_path() ,self.sd_path())[self.dist.arch() == 'evbarm-earmv7hf'], ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbarm-earmv7hf'],
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
@@ -1489,8 +1498,8 @@ class Anita:
         # This is needed for Xen and noemu, where we get the kernel
         # from the dist rather than the installed image
         self.dist.set_workdir(self.workdir)
-	if self.dist.arch() == 'evbearmv7hf-el':
-            print "NetBSD/evbearmv7hf-el already provides a pre-installed image. An option for regular installation using sysinst will be added later."
+	if self.dist.arch() == 'evbarm-earmv7hf':
+            print "NetBSD/evbarm-earmv7hf already provides a pre-installed image. An option for regular installation using sysinst will be added later."
             return
 
         if self.vmm == 'noemu':
@@ -1518,6 +1527,10 @@ class Anita:
 
 	if not self.no_install:
             self.install()
+
+        if self.dist.arch() == 'evbarm-earmv7hf':
+            self.dist.set_workdir(self.workdir)
+            self.dist.download()
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
