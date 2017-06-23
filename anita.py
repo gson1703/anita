@@ -430,16 +430,12 @@ class Version:
         # optional files.
         if hasattr(self, 'url') and self.url[:7] == 'file://':
             mkdir_p(os.path.join(self.workdir, 'download'))
-            os.spawnvp(os.P_WAIT, 'ln', ['ln', '-s', self.local_dir[:-1], os.path.join(self.workdir, 'download', self.arch())])
+            os.symlink(self.url[7:], os.path.join(self.workdir, 'download', self.arch()))
             return
         if self.arch() == 'evbarm-earmv7hf':
             for files in ['netbsd-VEXPRESS_A15.ub.gz']:
-                if not os.path.exists(os.path.join(self.download_local_arch_dir(), 'binary', 'kernel', files[:-3])):
-                    download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", files])
-                    os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', '-k', os.path.join(self.download_local_arch_dir(), 'binary', 'kernel', files)])
-            for images in ['armv7.img.gz']:
-                if not os.path.exists(os.path.join(self.download_local_arch_dir(), 'binary', 'gzimg', images[:-3])):
-                    download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", images])
+                download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", files])
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
             return
         i = 0
         for floppy in self.potential_floppies():
@@ -550,7 +546,6 @@ class URL(Version):
     def __init__(self, url, **kwargs):
         Version.__init__(self, **kwargs)
         self.url = url
-        self.local_dir = url[7:]
 	match = re.match(r'(^.*/)([^/]+)/$', url)
 	if match is None:
             raise RuntimeError(("URL '%s' doesn't look like the URL of a " + \
@@ -694,7 +689,7 @@ class Anita:
 
 	# Set the default disk size if none was given.
         if disk_size is None:
-	    disk_size = "1536M"
+	    disk_size = ("1536M", "2G")[self.dist.arch() == 'evbarm-earmv7hf']
 	self.disk_size = disk_size
 
 	# Set the default memory size if none was given.
@@ -728,8 +723,7 @@ class Anita:
         if vmm_args is None:
             vmm_args = []
 	if dist.arch() == 'evbarm-earmv7hf':
-            vmm_args += ['-M', 'vexpress-a15', '-kernel',
-            os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel', 'netbsd-VEXPRESS_A15.ub'),
+            vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.workdir, 'netbsd-VEXPRESS_A15.ub'),
             '-append', "root=ld0a", '-dtb', os.path.join(prefix, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
@@ -861,19 +855,21 @@ class Anita:
     def _install(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
-        if not self.dist.arch() == 'evbarm-earmv7hf':
+        if self.dist.arch() == 'evbarm-earmv7hf':
+            self.dist.download()
+        else:
             self.dist.make_iso()
-
         arch = self.dist.arch()
-
         if self.vmm != 'noemu':
             print "Creating hard disk image...",
             sys.stdout.flush()
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
             print "done."
-
         if self.dist.arch() == 'evbarm-earmv7hf':
-            subprocess.call('gunzip -k <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
+            subprocess.call('gunzip -kc <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(),
+             'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
+            subprocess.call('gunzip -kcf ' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel',
+             'netbsd-VEXPRESS_A15.ub.gz')) + '>' + os.path.abspath(os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")), shell=True)
             return
 
 	# The name of the CD-ROM device holding the sets
@@ -1520,10 +1516,6 @@ class Anita:
 
 	if not self.no_install:
             self.install()
-
-        if self.dist.arch() == 'evbarm-earmv7hf':
-            self.dist.set_workdir(self.workdir)
-            self.dist.download()
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
