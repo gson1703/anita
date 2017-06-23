@@ -436,7 +436,7 @@ class Version:
             for files in ['netbsd-VEXPRESS_A15.ub.gz']:
                 if not os.path.exists(os.path.join(self.download_local_arch_dir(), 'binary', 'kernel', files[:-3])):
                     download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", files])
-                    os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', os.path.join(self.download_local_arch_dir(), 'binary', 'kernel', files)])
+                    os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', '-k', os.path.join(self.download_local_arch_dir(), 'binary', 'kernel', files)])
             for images in ['armv7.img.gz']:
                 if not os.path.exists(os.path.join(self.download_local_arch_dir(), 'binary', 'gzimg', images[:-3])):
                     download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", images])
@@ -737,7 +737,7 @@ class Anita:
 	self.tests = tests
 	if dist.arch() == 'evbarm-earmv7hf':
             self.boot_from = 'sd'
-            self.no_install = 1
+            self.no_install = 0
 
     def slog(self, message):
         slog_info(self.structured_log_f, message)
@@ -753,14 +753,6 @@ class Anita:
     # The path to the NetBSD hard disk image
     def wd0_path(self):
         return os.path.join(self.workdir, "wd0.img")
-    def sd_path(self):
-        path = os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'gzimg'))
-        if os.path.exists(os.path.join(path, 'armv7.img.gz')):
-            os.spawnvp(os.P_WAIT, 'gunzip', ['gunzip', os.path.join(path, 'armv7.img.gz')])
-        path = os.path.join(path, 'armv7.img')
-        if self.dist.arch() == 'evbarm-earmv7hf':
-            os.spawnvp(os.P_WAIT, 'qemu-img', ['qemu-img', 'resize', path, self.disk_size])
-        return path
 
     # Return the memory size rounded up to whole megabytes
     def memory_megs(self):
@@ -793,7 +785,7 @@ class Anita:
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
             "-drive", ("file=%s,format=raw,media=disk,snapshot=%s" %
-	        ((self.wd0_path() ,self.sd_path())[self.dist.arch() == 'evbarm-earmv7hf'], ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbarm-earmv7hf'],
+	        (self.wd0_path(), ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbarm-earmv7hf'],
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
@@ -869,15 +861,20 @@ class Anita:
     def _install(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
-        self.dist.make_iso()
+        if not self.dist.arch() == 'evbarm-earmv7hf':
+            self.dist.make_iso()
 
-	arch = self.dist.arch()
+        arch = self.dist.arch()
 
-	if self.vmm != 'noemu':
-	    print "Creating hard disk image...",
-	    sys.stdout.flush()
-	    make_dense_image(self.wd0_path(), parse_size(self.disk_size))
-	    print "done."
+        if self.vmm != 'noemu':
+            print "Creating hard disk image...",
+            sys.stdout.flush()
+            make_dense_image(self.wd0_path(), parse_size(self.disk_size))
+            print "done."
+
+        if self.dist.arch() == 'evbarm-earmv7hf':
+            subprocess.call('gunzip -k <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
+            return
 
 	# The name of the CD-ROM device holding the sets
 	cd_device = None
@@ -1498,23 +1495,19 @@ class Anita:
         # This is needed for Xen and noemu, where we get the kernel
         # from the dist rather than the installed image
         self.dist.set_workdir(self.workdir)
-	if self.dist.arch() == 'evbarm-earmv7hf':
-            print "NetBSD/evbarm-earmv7hf already provides a pre-installed image. An option for regular installation using sysinst will be added later."
-            return
-
         if self.vmm == 'noemu':
-	    self.dist.download()
-	    self._install()
-	else:
-	    # Already installed?
-	    if os.path.exists(self.wd0_path()):
-		return
-	    try:
-		self._install()
-	    except:
-		if os.path.exists(self.wd0_path()):
-		    os.unlink(self.wd0_path())
-		raise
+            self.dist.download()
+            self._install()
+        else:
+            # Already installed?
+            if os.path.exists(self.wd0_path()):
+                return
+            try:
+                self._install()
+            except:
+                if os.path.exists(self.wd0_path()):
+                    os.unlink(self.wd0_path())
+                raise
 
     # Boot the virtual machine (installing it first if it's not
     # installed already).  The vmm_args argument applies when
