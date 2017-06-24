@@ -866,11 +866,19 @@ class Anita:
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
             print "done."
         if self.dist.arch() == 'evbarm-earmv7hf':
-            subprocess.call('gunzip -kc <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(),
-             'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
-            subprocess.call('gunzip -kcf ' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel',
-             'netbsd-VEXPRESS_A15.ub.gz')) + '>' + os.path.abspath(os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")), shell=True)
-            return
+            try:
+                subprocess.call('gunzip -kc <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(),
+                 'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
+                subprocess.call('gunzip -kcf ' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel',
+                 'netbsd-VEXPRESS_A15.ub.gz')) + '>' + os.path.abspath(os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")), shell=True)
+                return
+            except IOError, e:
+                print e
+                sys.stdout.flush()
+                for files in [os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub"), self.wd0_path()]:
+                    if os.path.exists(files):
+                        os.unlink(files)
+                raise
 
 	# The name of the CD-ROM device holding the sets
 	cd_device = None
