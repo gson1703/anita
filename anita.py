@@ -430,11 +430,12 @@ class Version:
         # optional files.
         if hasattr(self, 'url') and self.url[:7] == 'file://':
             mkdir_p(os.path.join(self.workdir, 'download'))
-            os.symlink(self.url[7:], os.path.join(self.workdir, 'download', self.arch()))
+            if not os.path.lexists(os.path.join(self.workdir, 'download', self.arch())):
+                os.symlink(self.url[7:], os.path.join(self.workdir, 'download', self.arch()))
             return
         if self.arch() == 'evbarm-earmv7hf':
-            for files in ['netbsd-VEXPRESS_A15.ub.gz']:
-                download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", files])
+            for file in ['netbsd-VEXPRESS_A15.ub.gz']:
+                download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
             return
         i = 0
@@ -689,7 +690,10 @@ class Anita:
 
 	# Set the default disk size if none was given.
         if disk_size is None:
-	    disk_size = ("1536M", "2G")[self.dist.arch() == 'evbarm-earmv7hf']
+            if self.dist.arch() == 'evbarm-earmv7hf':
+                disk_size = '2G'
+            else:
+                disk_size = '1536M'
 	self.disk_size = disk_size
 
 	# Set the default memory size if none was given.
@@ -731,7 +735,6 @@ class Anita:
 	self.tests = tests
 	if dist.arch() == 'evbarm-earmv7hf':
             self.boot_from = 'sd'
-            self.no_install = 0
 
     def slog(self, message):
         slog_info(self.structured_log_f, message)
@@ -866,19 +869,11 @@ class Anita:
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
             print "done."
         if self.dist.arch() == 'evbarm-earmv7hf':
-            try:
-                subprocess.call('gunzip -kc <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(),
-                 'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
-                subprocess.call('gunzip -kcf ' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel',
-                 'netbsd-VEXPRESS_A15.ub.gz')) + '>' + os.path.abspath(os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")), shell=True)
-                return
-            except IOError, e:
-                print e
-                sys.stdout.flush()
-                for files in [os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub"), self.wd0_path()]:
-                    if os.path.exists(files):
-                        os.unlink(files)
-                raise
+            subprocess.call('gunzip -kc <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(),
+             'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
+            subprocess.call('gunzip -kcf ' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel',
+             'netbsd-VEXPRESS_A15.ub.gz')) + '>' + os.path.abspath(os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")), shell=True)
+            return
 
 	# The name of the CD-ROM device holding the sets
 	cd_device = None
