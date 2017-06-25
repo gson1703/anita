@@ -1,6 +1,9 @@
 Added target support for NetBSD/evbarm-earmv7hf, from Utkarsh Anand.
 This installs from a pre-built image rather than using sysinst.
 
+When installing from a file: URL or local path, avoid creating
+unnecessary copies of the release files.  From Utkarsh Anand.
+
 New command line option --tests for explicitly selecting the the Kyua
 test framework instead of ATF, from Utkarsh Anand.
 
