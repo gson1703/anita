@@ -27,6 +27,7 @@ arch_qemu_map = {
     'i386': 'qemu-system-i386',
     'amd64': 'qemu-system-x86_64',
     'sparc': 'qemu-system-sparc',
+    'evbarm-earmv7hf': 'qemu-system-arm',
      # The following ones don't actually work
     'sparc64': 'qemu-system-sparc64',
     'macppc': 'qemu-system-ppc',
@@ -109,7 +110,7 @@ def download_file(file, url, optional = False):
 	sys.stdout.flush()
         my_urlretrieve(url, file)
 	print "OK"
-	sys.stdout.flush()	
+	sys.stdout.flush()
     except IOError, e:
         if optional:
 	    print "missing but optional, so that's OK"
@@ -248,7 +249,7 @@ def expect_any(child, *args):
 # Subclasses should define:
 #
 #    dist_url(self)
-#	the top-level URL for the machine-dependent download tree where 
+#	the top-level URL for the machine-dependent download tree where
 #       the version can be downloaded, for example,
 #       ftp://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 #
@@ -301,7 +302,7 @@ class Version:
     #   - a flag indicating that the set should be installed by default
     #   - a flag indicating that the set is not present in all versions
     #
-    
+
     sets = make_set_dict_list([
       [ 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ],
       [ 'kern-GENERIC.NOACPI', 'Kernel \(GENERIC\.NOACPI\)', 0, 1 ],
@@ -351,7 +352,7 @@ class Version:
                 sets_wanted.discard(s['filename'])
             if len(sets_wanted):
                 raise RuntimeError("no such set: " + sets_wanted.pop())
-        
+
     def set_workdir(self, dir):
         self.workdir = dir
     # The directory where we mirror files needed for installation
@@ -386,7 +387,7 @@ class Version:
             return 'netbsd-XEN3_DOMU.gz'
         else:
             return None
-            
+
     def xen_install_kernel(self):
         arch = self.arch()
         if arch == 'i386':
@@ -420,13 +421,23 @@ class Version:
             return ['source', 'sets', setname + '.tgz']
         else:
             return [self.arch(), 'binary', 'sets', setname + '.tgz']
-    
+
     # Download this release
     # The ISO class overrides this to download the ISO only
     def download(self):
         # Depending on the NetBSD version, there may be two or more
         # boot floppies.  Treat any floppies past the first two as
         # optional files.
+        if hasattr(self, 'url') and self.url[:7] == 'file://':
+            mkdir_p(os.path.join(self.workdir, 'download'))
+            if not os.path.lexists(os.path.join(self.workdir, 'download', self.arch())):
+                os.symlink(self.url[7:], os.path.join(self.workdir, 'download', self.arch()))
+            return
+        if self.arch() == 'evbarm-earmv7hf':
+            for file in ['netbsd-VEXPRESS_A15.ub.gz']:
+                download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
+            return
         i = 0
         for floppy in self.potential_floppies():
             download_if_missing_3(self.dist_url(),
@@ -462,7 +473,7 @@ class Version:
     def make_iso(self):
         self.download()
         spawn(makefs[0], makefs + \
-            [self.iso_path(), self.download_local_mi_dir()])
+            [self.iso_path(), os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         self.tempfiles.append(self.iso_path())
 
     # Get the architecture name.  This is a hardcoded default for use
@@ -610,7 +621,7 @@ class ISO(Version):
 
 # Helper class for killing the DomU when the last reference to the
 # child process is dropped
-    
+
 class DomUKiller:
     def __init__(self, frontend, name):
         self.name = name
@@ -624,10 +635,10 @@ def vmm_is_xen(vmm):
 
 def slog(fd, tag, data):
     print >>fd, "%s(%.3f, %s)" % (tag, time.time(), repr(data))
-    
+
 def slog_info(fd, data):
     slog(fd, 'info', data)
-    
+
 # A file-like object that escapes unprintable data and prefixes each
 # line with a tag, for logging I/O.
 
@@ -656,7 +667,7 @@ class multifile(object):
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	structured_log = None, structured_log_file = None, no_install = False, tests = 'atf'):
+	structured_log = None, structured_log_file = None, no_install = False, tests = 'atf', prefix = ""):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -679,12 +690,15 @@ class Anita:
 
 	# Set the default disk size if none was given.
         if disk_size is None:
-	    disk_size = "1536M"
+            if self.dist.arch() == 'evbarm-earmv7hf':
+                disk_size = '2G'
+            else:
+                disk_size = '1536M'
 	self.disk_size = disk_size
 
 	# Set the default memory size if none was given.
         if memory_size is None:
-            if dist.arch() == 'amd64':
+            if dist.arch() in ['amd64', 'evbarm-earmv7hf']:
                 memory_size = "128M"
             else:
                 memory_size = "32M"
@@ -712,10 +726,15 @@ class Anita:
 
         if vmm_args is None:
             vmm_args = []
+	if dist.arch() == 'evbarm-earmv7hf':
+            vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.workdir, 'netbsd-VEXPRESS_A15.ub'),
+            '-append', "root=ld0a", '-dtb', os.path.join(prefix, 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')]
         self.extra_vmm_args = vmm_args
 
 	self.is_logged_in = False
 	self.tests = tests
+	if dist.arch() == 'evbarm-earmv7hf':
+            self.boot_from = 'sd'
 
     def slog(self, message):
         slog_info(self.structured_log_f, message)
@@ -762,8 +781,8 @@ class Anita:
 	# Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, [
 	    "-m", str(self.memory_megs()),
-            "-drive", "file=%s,format=raw,media=disk,snapshot=%s" %
-	        (self.wd0_path(), ("off", "on")[snapshot_system_disk]),
+            "-drive", ("file=%s,format=raw,media=disk,snapshot=%s" %
+	        (self.wd0_path(), ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbarm-earmv7hf'],
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
@@ -779,14 +798,14 @@ class Anita:
         return ["-drive", "file=%s,format=raw,media=disk,snapshot=%s" % (path, ["off", "on"][snapshot])]
 
     def qemu_cdrom_args(self, path, devno):
-        return ["-drive", "file=%s,format=raw,media=cdrom" % (path)]
+        return ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
 
     def string_arg(self, name, value):
-        if self.vmm == 'xm':    
+        if self.vmm == 'xm':
             return '%s=%s' % (name, value)
         else: # xl
-            return '%s="%s"' % (name, value)	
-    
+            return '%s="%s"' % (name, value)
+
     def start_xen_domu(self, vmm_args):
         frontend = self.vmm
         name = "anita-%i" % os.getpid()
@@ -799,7 +818,7 @@ class Anita:
 	    "memory=" + str(self.memory_megs()),
             self.string_arg('name', name)
         ] + vmm_args + self.extra_vmm_args
-        
+
         # Multiple "disk=" arguments are no longer supported with xl;
         # combine them
         if self.vmm == 'xl':
@@ -811,7 +830,7 @@ class Anita:
                 else:
                     no_disk_args.append(arg)
             args = no_disk_args + [ "disk=[%s]" % (','.join(["'%s'" % arg for arg in disk_args]))]
-        
+
         child = self.pexpect_spawn(args[0], args[1:])
         self.configure_child(child)
         # This is ugly; we reach into the child object and set an
@@ -839,15 +858,22 @@ class Anita:
     def _install(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
-        self.dist.make_iso()
-
-	arch = self.dist.arch()
-
-	if self.vmm != 'noemu':
-	    print "Creating hard disk image...",
-	    sys.stdout.flush()
-	    make_dense_image(self.wd0_path(), parse_size(self.disk_size))
-	    print "done."
+        if self.dist.arch() == 'evbarm-earmv7hf':
+            self.dist.download()
+        else:
+            self.dist.make_iso()
+        arch = self.dist.arch()
+        if self.vmm != 'noemu':
+            print "Creating hard disk image...",
+            sys.stdout.flush()
+            make_dense_image(self.wd0_path(), parse_size(self.disk_size))
+            print "done."
+        if self.dist.arch() == 'evbarm-earmv7hf':
+            subprocess.call('gunzip -kc <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(),
+             'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
+            subprocess.call('gunzip -kcf ' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel',
+             'netbsd-VEXPRESS_A15.ub.gz')) + '>' + os.path.abspath(os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")), shell=True)
+            return
 
 	# The name of the CD-ROM device holding the sets
 	cd_device = None
@@ -860,7 +886,7 @@ class Anita:
                         self.dist.download_local_arch_dir(),
                         ["binary", "kernel", kernel],
                         True)
-            
+
             vmm_args = [
                 self.string_arg('kernel', os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                     "binary", "kernel", self.dist.xen_install_kernel()))),
@@ -890,8 +916,8 @@ class Anita:
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
-                vmm_args += ["-drive", "file=%s,format=raw,if=floppy" % floppy_paths[0], "-boot", "a"]
-		cd_device = 'cd0a';		
+                vmm_args += ["-drive", "file=%s,format=raw,if=floppy,readonly=on" % floppy_paths[0], "-boot", "a"]
+		cd_device = 'cd0a';
             elif self.boot_from == 'cdrom-with-sets':
 	        # Single CD
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
@@ -903,7 +929,7 @@ class Anita:
 	    child = self.start_noemu(['--boot-from', 'net'])
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
-                               
+
 	term = None
 
         # Do the floppy swapping dance and other pre-sysinst interaction
@@ -1026,7 +1052,7 @@ class Anita:
             while True:
                 # Match a letter-label pair, like "h: Compiler Tools",
                 # followed by an installation status of Yes, No, All,
-                # or None.  The label can be separated from the "Yes/No" 
+                # or None.  The label can be separated from the "Yes/No"
                 # field either by spaces (at least two, so that there can
                 # be single spaces within the label), or by a cursor
                 # positioning escape sequence.  In the case of the
@@ -1074,7 +1100,7 @@ class Anita:
 
 	def choose_interface_oldstyle():
 	    self.slog('old-style interface list')
-	    # Choose the first non-fwip interface		
+	    # Choose the first non-fwip interface
 	    while True:
 		child.expect(r"([a-z]+)([0-9]) ")
 		ifname = child.match.group(1)
@@ -1155,10 +1181,10 @@ class Anita:
 	# a subsequent prompt.  Therefore, we check whether the match is the
 	# same as the previous one and ignore it if so.
 	#
-        # OTOH, -current as of 2009.08.23.20.57.40 will issue the message "Hit 
-        # enter to continue" twice in a row, first as a result of MAKEDEV 
-        # printing a warning messages "MAKEDEV: dri0: unknown device", and 
-        # then after "sysinst will give you the opportunity to configure 
+        # OTOH, -current as of 2009.08.23.20.57.40 will issue the message "Hit
+        # enter to continue" twice in a row, first as a result of MAKEDEV
+        # printing a warning messages "MAKEDEV: dri0: unknown device", and
+        # then after "sysinst will give you the opportunity to configure
         # some essential things first".  We match the latter text separately
         # so that the "Hit enter to continue" matches are not consecutive.
         #
@@ -1288,7 +1314,7 @@ class Anita:
 		# prompt here, but sometimes we get a weird spurious one
 		# after running chpass above.
 
-		while True:        
+		while True:
 		    child.expect("(Hit enter to continue)|(x: Exit)")
 		    if child.match.group(1):
 			child.send("\n")
@@ -1296,7 +1322,7 @@ class Anita:
 			child.send("x\n")
 			break
 		    else:
-			raise AssertionError                
+			raise AssertionError
 		break
 	    elif child.match.group(8):
                 # (essential things)
@@ -1376,7 +1402,7 @@ class Anita:
 		# We could use "Minimal", but it doesn't exist in
 		# older versions.
 		child.send(child.match.group(21) + "\n")
-		# Enable/disable sets.  
+		# Enable/disable sets.
 		choose_sets(self.dist.sets)
             # On non-Xen i386/amd64 we first get group 22 or 23,
             # then group 24; on sparc and Xen, we just get group 24.
@@ -1468,20 +1494,19 @@ class Anita:
         # This is needed for Xen and noemu, where we get the kernel
         # from the dist rather than the installed image
         self.dist.set_workdir(self.workdir)
-
         if self.vmm == 'noemu':
-	    self.dist.download()
-	    self._install()	    
-	else:
-	    # Already installed?
-	    if os.path.exists(self.wd0_path()):
-		return
-	    try:
-		self._install()
-	    except:
-		if os.path.exists(self.wd0_path()):
-		    os.unlink(self.wd0_path())
-		raise
+            self.dist.download()
+            self._install()
+        else:
+            # Already installed?
+            if os.path.exists(self.wd0_path()):
+                return
+            try:
+                self._install()
+            except:
+                if os.path.exists(self.wd0_path()):
+                    os.unlink(self.wd0_path())
+                raise
 
     # Boot the virtual machine (installing it first if it's not
     # installed already).  The vmm_args argument applies when
@@ -1494,7 +1519,7 @@ class Anita:
 
 	if not self.no_install:
             self.install()
-	
+
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
@@ -1560,7 +1585,7 @@ class Anita:
 	    if self.shell_cmd("grep -q 'MKKYUA.*=.*yes' /etc/release") != 0:
 		raise RuntimeError("kyua is not installed.")
 	    test_cmd = (
-		"kyua " + 
+		"kyua " +
 		    "--loglevel=error " +
 		    "--logfile=/tmp/tests/kyua-test.log " +
 		    "test " +
@@ -1634,7 +1659,7 @@ class Anita:
 	login(self.child)
 	self.is_logged_in = True
 
-    # Run a shell command 
+    # Run a shell command
     def shell_cmd(self, cmd, timeout = -1):
         self.login()
 	return shell_cmd(self.child, cmd, timeout)
