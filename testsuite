@@ -24,6 +24,13 @@ runtest() {
     rm -f $workdir/wd0.img    
 }
 
+# Test a local ARM build
+arm_build=$(pwd)/test-data/local-builds/2017.06.20.13.51.54/evbarm-earmv7hf/
+if test -d $arm_build
+then
+    runtest "--disk-size=2G boot" $arm_build
+fi
+
 # Test an installation with debug symbols and partial source
 # With 32M of memory, we hit the "stalled" problem (PR 47030)
 debug_build=`pwd`/release/i386-source-2012.01.09.11.52.43/i386/
