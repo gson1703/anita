@@ -1,3 +1,8 @@
+
+Increase the default test timeout to 24 hours, as the tests now
+take much longer to run than before due to a combination of
+the addition of new tests and qemu performance regressions.
+
 Added target support for NetBSD/evbarm-earmv7hf, from Utkarsh Anand.
 This installs from a pre-built image rather than using sysinst.
 
