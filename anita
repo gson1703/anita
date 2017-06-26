@@ -18,45 +18,45 @@ def main(argv = None):
     parser = optparse.OptionParser(
         usage = "usage: %prog [options] install|boot|interact distribution")
     parser.add_option("--workdir",
-		      help="store work files in DIR", metavar="DIR")
+                      help="store work files in DIR", metavar="DIR")
     parser.add_option("--vmm",
-		      help="use VMM (qemu or xen) as the virtual machine monitor",
-		      metavar="VMM", default="qemu")
+                      help="use VMM (qemu or xen) as the virtual machine monitor",
+                      metavar="VMM", default="qemu")
     parser.add_option("--vmm-args",
-		      help="pass ARGS as extra arguments to virtual machine monitor",
-		      metavar="ARGS", default="")
+                      help="pass ARGS as extra arguments to virtual machine monitor",
+                      metavar="ARGS", default="")
     # Deprecated
     parser.add_option("--qemu-args",
-		      help=optparse.SUPPRESS_HELP, default="")
+                      help=optparse.SUPPRESS_HELP, default="")
     parser.add_option("--disk-size",
-		      help="use a virtual disk of SIZE bytes (k/M/G/T suffix accepted)",
-		      metavar="SIZE")
+                      help="use a virtual disk of SIZE bytes (k/M/G/T suffix accepted)",
+                      metavar="SIZE")
     parser.add_option("--memory-size",
-		      help="use a virtual RAM size of SIZE bytes (k/M/G/T suffix accepted)",
-		      metavar="SIZE")
+                      help="use a virtual RAM size of SIZE bytes (k/M/G/T suffix accepted)",
+                      metavar="SIZE")
     parser.add_option("--run",
-		      help="run COMMAND on the virtual machine after boot", metavar="COMMAND")
+                      help="run COMMAND on the virtual machine after boot", metavar="COMMAND")
     parser.add_option("--sets",
-		      help="install the distribution SETS (e.g., base,games)",
-		      metavar="SETS")
+                      help="install the distribution SETS (e.g., base,games)",
+                      metavar="SETS")
     parser.add_option("--test-timeout",
-		      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
+                      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
                       type="int", default=86400)
     parser.add_option("--run-timeout",
-		      help="allow TIMEOUT seconds for command run using the --run option", metavar="TIMEOUT",
+                      help="allow TIMEOUT seconds for command run using the --run option", metavar="TIMEOUT",
                       type="int", default=3600)
     parser.add_option("--persist",
-		      help="make changes to disk contents persistent", action="store_true")
+                      help="make changes to disk contents persistent", action="store_true")
     parser.add_option("--boot-from",
-		      help="boot from MEDIA (floppy/cdrom)", metavar="MEDIA")
+                      help="boot from MEDIA (floppy/cdrom)", metavar="MEDIA")
     parser.add_option("--structured-log", action="store_true",
-		      help="log console traffic in a structured format, to stdout")
+                      help="log console traffic in a structured format, to stdout")
     parser.add_option("--structured-log-file", metavar="FILE",
-		      help="log console traffic in a structured format, to FILE")
+                      help="log console traffic in a structured format, to FILE")
     parser.add_option("--no-install", action="store_true",
-		      help="in boot/test/interact mode, assume system is already installed")
+                      help="in boot/test/interact mode, assume system is already installed")
     parser.add_option("--version", action="store_true",
-		      help="print the anita version number and exit")
+                      help="print the anita version number and exit")
     parser.add_option("--tests", help='select the tests to run in test mode: \"atf\" or \"kyua\"', type="string", default="atf")
     parser.add_option("--dtb", help='use the Device Tree Blob (.dtb) PATH_TO_DTB', type="string", metavar="PATH_TO_DTB", default=dtb_path)
 
@@ -64,10 +64,10 @@ def main(argv = None):
 
     if options.version:
         print anita.__version__
-	sys.exit(0)
+        sys.exit(0)
 
     if len(args) < 2:
-	raise Usage("not enough arguments")
+        raise Usage("not enough arguments")
 
     distarg = args[1]
 
@@ -81,15 +81,15 @@ def main(argv = None):
     if re.search(r'\.iso$', distarg):
         dist = anita.ISO(distarg, sets = sets)
     elif re.match(r'/', distarg):
-	if not re.search(r'/$', distarg):
-	    raise Usage("distribution directory should end in a slash")
-	dist = anita.LocalDirectory(distarg, sets = sets)
+        if not re.search(r'/$', distarg):
+            raise Usage("distribution directory should end in a slash")
+        dist = anita.LocalDirectory(distarg, sets = sets)
     elif re.match(r'[a-z0-9\.0-]+:', distarg):
-	if not re.search(r'/$', distarg):
-	    raise Usage("distribution URL should end in a slash")
-	dist = anita.URL(distarg, sets = sets)
+        if not re.search(r'/$', distarg):
+            raise Usage("distribution URL should end in a slash")
+        dist = anita.URL(distarg, sets = sets)
     else:
-	raise Usage("expected distribution URL or directory, got " + distarg)
+        raise Usage("expected distribution URL or directory, got " + distarg)
     if dist.arch() == 'evbarm-earmv7hf':
         if not os.path.exists(options.dtb):
             raise IOError("The Device Tree Blob %s does not exist." % options.dtb)
@@ -97,23 +97,23 @@ def main(argv = None):
     a = anita.Anita(dist,
         workdir = options.workdir,
         vmm = options.vmm,
-	vmm_args = vmm_args,
+        vmm_args = vmm_args,
         disk_size = options.disk_size,
-	memory_size = options.memory_size,
-	persist = options.persist,
-	boot_from = options.boot_from,
-	structured_log = options.structured_log,
-	structured_log_file = options.structured_log_file,
-	no_install = options.no_install,
+        memory_size = options.memory_size,
+        persist = options.persist,
+        boot_from = options.boot_from,
+        structured_log = options.structured_log,
+        structured_log_file = options.structured_log_file,
+        no_install = options.no_install,
         tests = options.tests,
         dtb = options.dtb
-	)
+        )
 
     def maybe_run_command(a):
         if options.run:
-	    return a.shell_cmd(options.run, options.run_timeout)
-	else:
-	    return 0
+            return a.shell_cmd(options.run, options.run_timeout)
+        else:
+            return 0
 
     status = 0
     mode = args[0]
@@ -122,28 +122,28 @@ def main(argv = None):
         print "This is anita version", anita.__version__
 
     if mode == 'install':
-	a.install()
+        a.install()
     elif mode == 'boot':
-	child = a.boot()
-	status = maybe_run_command(a)
-	a.halt()
+        child = a.boot()
+        status = maybe_run_command(a)
+        a.halt()
     elif mode == 'interact':
         child = a.boot()
-	status = maybe_run_command(a)
-	anita.console_interaction(child)
+        status = maybe_run_command(a)
+        anita.console_interaction(child)
     elif mode == 'test':
-	status = a.run_tests(timeout = options.test_timeout)
-	a.halt()
+        status = a.run_tests(timeout = options.test_timeout)
+        a.halt()
     elif mode == 'print-workdir':
         print a.workdir
     else:
-	raise Usage("unknown mode: " + mode)
+        raise Usage("unknown mode: " + mode)
     return status
 
 if __name__ == "__main__":
     try:
         status = main()
-	sys.exit(status)
+        sys.exit(status)
     except Usage, err:
         print >>sys.stderr, "%s: %s" % (os.path.basename(sys.argv[0]), err.msg)
         print >>sys.stderr, "for help use --help"

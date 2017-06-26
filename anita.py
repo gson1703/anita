@@ -84,8 +84,8 @@ class pexpect_spawn_log(pexpect.spawn):
     def expect(self, pattern, *args, **kwargs):
         print >>self.structured_log_f, "expect(" + repr(pattern) + ")"
         r = pexpect.spawn.expect(self, pattern, *args, **kwargs)
-	print >>self.structured_log_f, "match(" + repr(self.match.group(0)) + ")"
-	return r
+        print >>self.structured_log_f, "match(" + repr(self.match.group(0)) + ")"
+        return r
 
 # Subclass urllib.FancyURLopener so that we can catch
 # HTTP 404 errors
@@ -107,16 +107,16 @@ def my_urlretrieve(url, filename):
 def download_file(file, url, optional = False):
     try:
         print "Downloading", url + "...",
-	sys.stdout.flush()
+        sys.stdout.flush()
         my_urlretrieve(url, file)
-	print "OK"
-	sys.stdout.flush()
+        print "OK"
+        sys.stdout.flush()
     except IOError, e:
         if optional:
-	    print "missing but optional, so that's OK"
-	else:
+            print "missing but optional, so that's OK"
+        else:
             print e
-	sys.stdout.flush()
+        sys.stdout.flush()
         if os.path.exists(file):
             os.unlink(file)
         raise
@@ -207,7 +207,7 @@ def dir2url(dir):
         if not m:
             break
         c, i = m.groups()
-	chars[int(i)] = "/:+-"[ord(c) - 0x60]
+        chars[int(i)] = "/:+-"[ord(c) - 0x60]
         tail = tail[m.end():]
     return "".join(chars)
 
@@ -217,10 +217,10 @@ def check_arch_supported(arch, dist_type):
         "supported NetBSD port") % arch)
     if (arch == 'i386' or arch == 'amd64') and dist_type != 'reltree':
         raise RuntimeError(("NetBSD/%s must be installed from " +
-	    "a release tree, not an ISO") % arch)
+            "a release tree, not an ISO") % arch)
     if (arch == 'sparc') and dist_type != 'iso':
         raise RuntimeError(("NetBSD/%s must be installed from " +
-	"an ISO, not a release tree") % arch)
+        "an ISO, not a release tree") % arch)
 
 # Expect any of a set of alternatives.  The *args are alternating
 # patterns and actions; an action can be a string to be sent
@@ -233,14 +233,14 @@ def expect_any(child, *args):
     patterns = args[0:][::2]
     actions = args[1:][::2]
     while True:
-	r = child.expect(list(patterns))
-	action = actions[r]
-	if isinstance(action, str):
-	    child.send(action)
-	else:
-	    action()
-	if r == len(actions) - 1:
-	    break
+        r = child.expect(list(patterns))
+        action = actions[r]
+        if isinstance(action, str):
+            child.send(action)
+        else:
+            action()
+        if r == len(actions) - 1:
+            break
 
 #############################################################################
 
@@ -249,7 +249,7 @@ def expect_any(child, *args):
 # Subclasses should define:
 #
 #    dist_url(self)
-#	the top-level URL for the machine-dependent download tree where
+#       the top-level URL for the machine-dependent download tree where
 #       the version can be downloaded, for example,
 #       ftp://ftp.netbsd.org/pub/NetBSD/NetBSD-5.0.2/i386/
 #
@@ -366,10 +366,10 @@ class Version:
     # The directory for the install floppy images
     def floppy_dir(self):
         return os.path.join(self.download_local_arch_dir(),
-	    "installation/floppy")
+            "installation/floppy")
     def boot_iso_dir(self):
         return os.path.join(self.download_local_arch_dir(),
-	    "installation/cdrom")
+            "installation/cdrom")
     def boot_from_default(self):
         return None
     def scratch_disk(self):
@@ -446,11 +446,11 @@ class Version:
                 True)
             i = i + 1
 
-	for bootcd in (self.boot_isos()):
+        for bootcd in (self.boot_isos()):
             download_if_missing_3(self.dist_url(),
                 self.download_local_arch_dir(),
                 ["installation", "cdrom", bootcd],
-		True)
+                True)
 
         # These are used with noemu only
         download_if_missing_3(self.dist_url(),
@@ -547,13 +547,13 @@ class URL(Version):
     def __init__(self, url, **kwargs):
         Version.__init__(self, **kwargs)
         self.url = url
-	match = re.match(r'(^.*/)([^/]+)/$', url)
-	if match is None:
+        match = re.match(r'(^.*/)([^/]+)/$', url)
+        if match is None:
             raise RuntimeError(("URL '%s' doesn't look like the URL of a " + \
-	    "NetBSD distribution") % url)
+            "NetBSD distribution") % url)
         self.url_mi_part = match.group(1)
         self.m_arch = match.group(2)
-	check_arch_supported(self.m_arch, 'reltree')
+        check_arch_supported(self.m_arch, 'reltree')
     def dist_url(self):
         return self.url
     def mi_url(self):
@@ -578,31 +578,31 @@ class ISO(Version):
     def __init__(self, iso_url, **kwargs):
         Version.__init__(self, **kwargs)
         if re.match(r'/', iso_url):
-	    self.m_iso_url = "file://" + iso_url
-	    self.m_iso_path = iso_url
-	else:
+            self.m_iso_url = "file://" + iso_url
+            self.m_iso_path = iso_url
+        else:
             self.m_iso_url = iso_url
-	    self.m_iso_path = None
-	# We can't determine the final ISO file name yet because the work
-	# directory is not known at this point, but we can precalculate the
-	# basename of it.
-	self.m_iso_basename = os.path.basename(
-	    urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
-	m = re.match(r"(.*)cd.*iso|NetBSD-[0-9\._A-Z]+-(.*).iso", self.m_iso_basename)
-	if m is None:
+            self.m_iso_path = None
+        # We can't determine the final ISO file name yet because the work
+        # directory is not known at this point, but we can precalculate the
+        # basename of it.
+        self.m_iso_basename = os.path.basename(
+            urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
+        m = re.match(r"(.*)cd.*iso|NetBSD-[0-9\._A-Z]+-(.*).iso", self.m_iso_basename)
+        if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'"
-	        % self.m_iso_basename)
+                % self.m_iso_basename)
         if m.group(1) is not None:
             self.m_arch = m.group(1)
         if m.group(2) is not None:
             self.m_arch = m.group(2)
-	check_arch_supported(self.m_arch, 'iso')
+        check_arch_supported(self.m_arch, 'iso')
     def iso_path(self):
         if self.m_iso_path is not None:
-	    return self.m_iso_path
-	else:
+            return self.m_iso_path
+        else:
             return os.path.join(self.download_local_arch_dir(),
-	        self.m_iso_basename)
+                self.m_iso_basename)
     def default_workdir(self):
          return url2dir(self.m_iso_url)
     def make_iso(self):
@@ -610,8 +610,8 @@ class ISO(Version):
     def download(self):
         if self.m_iso_path is None:
             download_if_missing_2(self.m_iso_url, self.iso_path())
-	else:
-	    mkdir_p(self.workdir)
+        else:
+            mkdir_p(self.workdir)
     def arch(self):
         return self.m_arch
     def boot_from_default(self):
@@ -645,7 +645,7 @@ def slog_info(fd, data):
 class Logger:
     def __init__(self, tag, fd):
         self.tag = tag
-	self.fd = fd
+        self.fd = fd
     def write(self, data):
         slog(self.fd, self.tag, data)
     def __getattr__(self, name):
@@ -667,51 +667,51 @@ class multifile(object):
 class Anita:
     def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-	structured_log = None, structured_log_file = None, no_install = False, tests = 'atf', dtb = ''):
+        structured_log = None, structured_log_file = None, no_install = False, tests = 'atf', dtb = ''):
         self.dist = dist
         if workdir:
             self.workdir = workdir
         else:
             self.workdir = dist.default_workdir()
 
-	self.structured_log = structured_log
-	self.structured_log_file = structured_log_file
+        self.structured_log = structured_log
+        self.structured_log_file = structured_log_file
 
         if self.structured_log_file:
-	    self.structured_log_f = open(self.structured_log_file, "w")
-	    self.unstructured_log_f = sys.stdout
-	else:
+            self.structured_log_f = open(self.structured_log_file, "w")
+            self.unstructured_log_f = sys.stdout
+        else:
             if self.structured_log:
-	        self.structured_log_f = sys.stdout
-	        self.unstructured_log_f = open("/dev/null", "w")
+                self.structured_log_f = sys.stdout
+                self.unstructured_log_f = open("/dev/null", "w")
             else:
-	        self.structured_log_f = open("/dev/null", "w")
-	        self.unstructured_log_f = sys.stdout
+                self.structured_log_f = open("/dev/null", "w")
+                self.unstructured_log_f = sys.stdout
 
-	# Set the default disk size if none was given.
+        # Set the default disk size if none was given.
         if disk_size is None:
             if self.dist.arch() == 'evbarm-earmv7hf':
                 disk_size = '2G'
             else:
                 disk_size = '1536M'
-	self.disk_size = disk_size
+        self.disk_size = disk_size
 
-	# Set the default memory size if none was given.
+        # Set the default memory size if none was given.
         if memory_size is None:
             if dist.arch() in ['amd64', 'evbarm-earmv7hf']:
                 memory_size = "128M"
             else:
                 memory_size = "32M"
-	self.memory_size_bytes = parse_size(memory_size)
+        self.memory_size_bytes = parse_size(memory_size)
 
         self.persist = persist
-	self.boot_from = boot_from
-	self.no_install = no_install
+        self.boot_from = boot_from
+        self.no_install = no_install
 
-	self.qemu = arch_qemu_map.get(dist.arch())
-	if self.qemu is None:
+        self.qemu = arch_qemu_map.get(dist.arch())
+        if self.qemu is None:
             raise RuntimeError("NetBSD port '%s' is not supported" %
-	        dist.arch())
+                dist.arch())
 
         if self.qemu == 'qemu-system-i386' and \
            not try_program(['qemu-system-i386', '--version']) \
@@ -726,14 +726,14 @@ class Anita:
 
         if vmm_args is None:
             vmm_args = []
-	if dist.arch() == 'evbarm-earmv7hf':
+        if dist.arch() == 'evbarm-earmv7hf':
             vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.workdir, 'netbsd-VEXPRESS_A15.ub'),
             '-append', "root=ld0a", '-dtb', dtb]
         self.extra_vmm_args = vmm_args
 
-	self.is_logged_in = False
-	self.tests = tests
-	if dist.arch() == 'evbarm-earmv7hf':
+        self.is_logged_in = False
+        self.tests = tests
+        if dist.arch() == 'evbarm-earmv7hf':
             self.boot_from = 'sd'
 
     def slog(self, message):
@@ -744,8 +744,8 @@ class Anita:
     # the name of the command.
 
     def pexpect_spawn(self, command, args):
-	print command, " \\\n    ".join(args)
-	return pexpect_spawn_log(self.structured_log_f, command, args)
+        print command, " \\\n    ".join(args)
+        return pexpect_spawn_log(self.structured_log_f, command, args)
 
     # The path to the NetBSD hard disk image
     def wd0_path(self):
@@ -761,28 +761,28 @@ class Anita:
         return megs
 
     def configure_child(self, child):
-	# Log reads from child
-	child.logfile_read = multifile([self.unstructured_log_f, Logger('recv', self.structured_log_f)])
-	# Log writes to child
-	child.logfile_send = multifile([self.unstructured_log_f, Logger('send', self.structured_log_f)])
+        # Log reads from child
+        child.logfile_read = multifile([self.unstructured_log_f, Logger('recv', self.structured_log_f)])
+        # Log writes to child
+        child.logfile_send = multifile([self.unstructured_log_f, Logger('send', self.structured_log_f)])
         child.timeout = 600
         child.setecho(False)
         # Xen installs sometimes fail if we don't increase this
-	# from the default of 0.1 seconds.  And powering down noemu
+        # from the default of 0.1 seconds.  And powering down noemu
         # using iLO3 over ssh takes more than 5 seconds.
         child.delayafterclose = 30.0
         # Also increase this just in case
         child.delayafterterminate = 30.0
-	self.child = child
+        self.child = child
 
     def start_qemu(self, vmm_args, snapshot_system_disk):
         # Log the qemu version to stdout
         subprocess.call([self.qemu, '--version'])
-	# Start the actual qemu child process
+        # Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, [
-	    "-m", str(self.memory_megs()),
+            "-m", str(self.memory_megs()),
             "-drive", ("file=%s,format=raw,media=disk,snapshot=%s" %
-	        (self.wd0_path(), ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbarm-earmv7hf'],
+                (self.wd0_path(), ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbarm-earmv7hf'],
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
@@ -810,12 +810,12 @@ class Anita:
         frontend = self.vmm
         name = "anita-%i" % os.getpid()
         args = [
-	    frontend,
-	    "create",
+            frontend,
+            "create",
             "-c",
             "/dev/null",
             self.xen_disk_arg(os.path.abspath(self.wd0_path()), 0, True),
-	    "memory=" + str(self.memory_megs()),
+            "memory=" + str(self.memory_megs()),
             self.string_arg('name', name)
         ] + vmm_args + self.extra_vmm_args
 
@@ -845,11 +845,11 @@ class Anita:
         return child
 
     def start_noemu(self, vmm_args):
-	noemu_always_args = [
-	    '--workdir', self.workdir,
-	    '--releasedir', os.path.join(self.workdir, 'download'),
-	    '--arch', self.dist.arch()
-	]
+        noemu_always_args = [
+            '--workdir', self.workdir,
+            '--releasedir', os.path.join(self.workdir, 'download'),
+            '--arch', self.dist.arch()
+        ]
         child = self.pexpect_spawn('sudo', ['noemu'] +
             noemu_always_args + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
@@ -875,8 +875,8 @@ class Anita:
              'netbsd-VEXPRESS_A15.ub.gz')) + '>' + os.path.abspath(os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")), shell=True)
             return
 
-	# The name of the CD-ROM device holding the sets
-	cd_device = None
+        # The name of the CD-ROM device holding the sets
+        cd_device = None
 
         if vmm_is_xen(self.vmm):
             # Download XEN kernels
@@ -893,153 +893,153 @@ class Anita:
                 self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)
             ]
             child = self.start_xen_domu(vmm_args)
-	    cd_device = 'xbd1d'
+            cd_device = 'xbd1d'
         elif self.vmm == 'qemu':
-	    # Determine what kind of media to boot from.
-	    floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
-		for f in self.dist.floppies() ]
-	    boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
-	    if self.boot_from is None:
-	        self.boot_from = self.dist.boot_from_default()
-	    if self.boot_from is None and len(floppy_paths) == 0:
-	        self.boot_from = 'cdrom'
-	    if self.boot_from is None:
-	        self.boot_from = 'floppy'
+            # Determine what kind of media to boot from.
+            floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
+                for f in self.dist.floppies() ]
+            boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
+            if self.boot_from is None:
+                self.boot_from = self.dist.boot_from_default()
+            if self.boot_from is None and len(floppy_paths) == 0:
+                self.boot_from = 'cdrom'
+            if self.boot_from is None:
+                self.boot_from = 'floppy'
 
             # Set up VM arguments based on the chosen boot media
-	    if self.boot_from == 'cdrom':
-	        vmm_args = self.qemu_cdrom_args(boot_cd_path, 1)
+            if self.boot_from == 'cdrom':
+                vmm_args = self.qemu_cdrom_args(boot_cd_path, 1)
                 vmm_args += self.qemu_cdrom_args(self.dist.iso_path(), 2)
                 vmm_args += ["-boot", "d"]
-		cd_device = 'cd1a'
+                cd_device = 'cd1a'
             elif self.boot_from == 'floppy':
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
                 vmm_args += ["-drive", "file=%s,format=raw,if=floppy,readonly=on" % floppy_paths[0], "-boot", "a"]
-		cd_device = 'cd0a';
+                cd_device = 'cd0a';
             elif self.boot_from == 'cdrom-with-sets':
-	        # Single CD
+                # Single CD
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 vmm_args += ["-boot", "d"]
-		cd_device = 'cd0a'
+                cd_device = 'cd0a'
 
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
-	elif self.vmm == 'noemu':
-	    child = self.start_noemu(['--boot-from', 'net'])
+        elif self.vmm == 'noemu':
+            child = self.start_noemu(['--boot-from', 'net'])
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
 
-	term = None
+        term = None
 
         # Do the floppy swapping dance and other pre-sysinst interaction
 
         floppy0_name = None
-	while True:
-	    # NetBSD/i386 will prompt for a terminal type if booted from a
-	    # CD-ROM, but not when booted from floppies.  Sigh.
-	    child.expect(
-	        # Group 1-2
-	        "(insert disk (\d+), and press return...)|" +
-		# Group 3
-		"(a: Installation messages in English)|" +
-		# Group 4
-		"(Terminal type)|" +
-		# Group 5
+        while True:
+            # NetBSD/i386 will prompt for a terminal type if booted from a
+            # CD-ROM, but not when booted from floppies.  Sigh.
+            child.expect(
+                # Group 1-2
+                "(insert disk (\d+), and press return...)|" +
+                # Group 3
+                "(a: Installation messages in English)|" +
+                # Group 4
+                "(Terminal type)|" +
+                # Group 5
                 "(Installation medium to load the additional utilities from: )|"
-		# Group 6
-		"(1. Install NetBSD)"
-		)
-	    if child.match.group(1):
-		# We got the "insert disk" prompt
-		# There is no floppy 0, hence the "- 1"
-		floppy_index = int(child.match.group(2)) - 1
+                # Group 6
+                "(1. Install NetBSD)"
+                )
+            if child.match.group(1):
+                # We got the "insert disk" prompt
+                # There is no floppy 0, hence the "- 1"
+                floppy_index = int(child.match.group(2)) - 1
 
-		# Escape into qemu command mode to switch floppies
-		child.send("\001c")
-		# We used to wait for a (qemu) prompt here, but qemu 0.9.1
-		# no longer prints it
-		# child.expect('\(qemu\)')
-		if not floppy0_name:
-		    # Between qemu 0.9.0 and 0.9.1, the name of the floppy
-		    # device accepted by the "change" command changed from
-		    # "fda" to "floppy0" without any provision for backwards
-		    # compatibility.  Deal with it.  Also deal with the fact
-		    # that as of qemu 0.15, "info block" no longer prints
-		    # "type=floppy" for floppy drives.  And in qemu 2.5.0,
-		    # the format changed again from "floppy0: " to
-		    # "floppy0 (#block544): ", so we no longer match the
-		    # colon and space.
-		    child.send("info block\n")
-		    child.expect(r'\n(fda|floppy0)')
-		    floppy0_name = child.match.group(1)
-		# Now we can change the floppy
-		child.send("change %s %s\n" %
-		    (floppy0_name, floppy_paths[floppy_index]))
-		# Exit qemu command mode
-		child.send("\001c\n")
-	    elif child.match.group(3):
-	        # "Installation messages in English"
-		break
-	    elif child.match.group(4):
-	        # "Terminal type"
-		child.send("xterm\n")
-		term = "xterm"
-		continue
-	    elif child.match.group(5):
-	        # "Installation medium to load the additional utilities from"
-		# (SPARC)
-		child.send("cdrom\n")
-	        child.expect("CD-ROM device to use")
-		child.send("\n")
-	        child.expect("Path to instfs.tgz")
-		child.send("\n")
-	        child.expect("Terminal type")
-		# The default is "sun", but anita is more likely to run
-		# in an xterm or some other ansi-like terminal than on
-		# a sun console.
-		child.send("xterm\n")
-		term = "xterm"
-	        child.expect("nstall/Upgrade")
-		child.send("I\n")
-	    elif child.match.group(6):
-	        # "1. Install NetBSD"
-	        child.send("1\n")
+                # Escape into qemu command mode to switch floppies
+                child.send("\001c")
+                # We used to wait for a (qemu) prompt here, but qemu 0.9.1
+                # no longer prints it
+                # child.expect('\(qemu\)')
+                if not floppy0_name:
+                    # Between qemu 0.9.0 and 0.9.1, the name of the floppy
+                    # device accepted by the "change" command changed from
+                    # "fda" to "floppy0" without any provision for backwards
+                    # compatibility.  Deal with it.  Also deal with the fact
+                    # that as of qemu 0.15, "info block" no longer prints
+                    # "type=floppy" for floppy drives.  And in qemu 2.5.0,
+                    # the format changed again from "floppy0: " to
+                    # "floppy0 (#block544): ", so we no longer match the
+                    # colon and space.
+                    child.send("info block\n")
+                    child.expect(r'\n(fda|floppy0)')
+                    floppy0_name = child.match.group(1)
+                # Now we can change the floppy
+                child.send("change %s %s\n" %
+                    (floppy0_name, floppy_paths[floppy_index]))
+                # Exit qemu command mode
+                child.send("\001c\n")
+            elif child.match.group(3):
+                # "Installation messages in English"
+                break
+            elif child.match.group(4):
+                # "Terminal type"
+                child.send("xterm\n")
+                term = "xterm"
+                continue
+            elif child.match.group(5):
+                # "Installation medium to load the additional utilities from"
+                # (SPARC)
+                child.send("cdrom\n")
+                child.expect("CD-ROM device to use")
+                child.send("\n")
+                child.expect("Path to instfs.tgz")
+                child.send("\n")
+                child.expect("Terminal type")
+                # The default is "sun", but anita is more likely to run
+                # in an xterm or some other ansi-like terminal than on
+                # a sun console.
+                child.send("xterm\n")
+                term = "xterm"
+                child.expect("nstall/Upgrade")
+                child.send("I\n")
+            elif child.match.group(6):
+                # "1. Install NetBSD"
+                child.send("1\n")
 
         # Confirm "Installation messages in English"
         child.send("\n")
 
-	# i386 and amd64 ask for keyboard type here; sparc doesn't
-	while True:
+        # i386 and amd64 ask for keyboard type here; sparc doesn't
+        while True:
             child.expect("(Keyboard type)|(a: Install NetBSD to hard disk)|" +
-	        "(Shall we continue)")
+                "(Shall we continue)")
             if child.match.group(1) or child.match.group(2):
-	        child.send("\n")
-	    elif child.match.group(3):
+                child.send("\n")
+            elif child.match.group(3):
                 child.expect("b: Yes")
-	        child.send("b\n")
-	        break
+                child.send("b\n")
+                break
             else:
-	        raise AssertionError
+                raise AssertionError
 
         # Depending on the number of disks attached, we get either
         # "found only one disk" followed by "Hit enter to continue",
         # or "On which disk do you want to install".
         child.expect("(Hit enter to continue)|" +
-	    "(On which disk do you want to install)")
-	if child.match.group(1):
+            "(On which disk do you want to install)")
+        if child.match.group(1):
             child.send("\n")
-	elif child.match.group(2):
-	    child.send("a\n")
+        elif child.match.group(2):
+            child.send("a\n")
         else:
             raise AssertionError
 
-	def choose_no():
-	    child.expect("([a-z]): No")
-	    child.send(child.match.group(1) + "\n")
-	def choose_yes():
-	    child.expect("([a-z]): Yes")
-	    child.send(child.match.group(1) + "\n")
+        def choose_no():
+            child.expect("([a-z]): No")
+            child.send(child.match.group(1) + "\n")
+        def choose_yes():
+            child.expect("([a-z]): Yes")
+            child.send(child.match.group(1) + "\n")
 
         # Keep track of sets we have already handled, by label.
         # This is needed so that parsing a pop-up submenu is not
@@ -1094,93 +1094,93 @@ class Anita:
             # Exit the set selection menu
             child.send("x\n")
 
-	# Older NetBSD versions show a prompt like [re0] and ask you
-	# to type in the interface name (or enter for the default);
-	# newer versions show a menu.
+        # Older NetBSD versions show a prompt like [re0] and ask you
+        # to type in the interface name (or enter for the default);
+        # newer versions show a menu.
 
-	def choose_interface_oldstyle():
-	    self.slog('old-style interface list')
-	    # Choose the first non-fwip interface
-	    while True:
-		child.expect(r"([a-z]+)([0-9]) ")
-		ifname = child.match.group(1)
-		ifno = child.match.group(2)
-		self.slog('old-style interface: <%s,%s>' % (ifname, ifno))
-		if ifname != 'fwip':
-		    # Found an acceptable interface
-		    child.send("%s%s\n" % (ifname, ifno))
-		    break
+        def choose_interface_oldstyle():
+            self.slog('old-style interface list')
+            # Choose the first non-fwip interface
+            while True:
+                child.expect(r"([a-z]+)([0-9]) ")
+                ifname = child.match.group(1)
+                ifno = child.match.group(2)
+                self.slog('old-style interface: <%s,%s>' % (ifname, ifno))
+                if ifname != 'fwip':
+                    # Found an acceptable interface
+                    child.send("%s%s\n" % (ifname, ifno))
+                    break
 
-	def choose_interface_newstyle():
-	    self.slog('new-style interface list')
-	    child.expect('Available interfaces')
-	    # Choose the first non-fwip interface
-	    while True:
-		# Make sure to match the digit after the interface
-		# name so that we don't accept a partial interface
-		# name like "fw" from "fwip0".
-		child.expect(r"([a-z]): ([a-z]+)[0-9]")
-		if child.match.group(2) != 'fwip':
-		    # Found an acceptable interface
-		    child.send(child.match.group(1) + "\n")
-		    break
+        def choose_interface_newstyle():
+            self.slog('new-style interface list')
+            child.expect('Available interfaces')
+            # Choose the first non-fwip interface
+            while True:
+                # Make sure to match the digit after the interface
+                # name so that we don't accept a partial interface
+                # name like "fw" from "fwip0".
+                child.expect(r"([a-z]): ([a-z]+)[0-9]")
+                if child.match.group(2) != 'fwip':
+                    # Found an acceptable interface
+                    child.send(child.match.group(1) + "\n")
+                    break
 
         def configure_network():
-	    child.expect("Network media type")
-	    child.send("\n")
-	    child.expect("Perform (DHCP )?autoconfiguration")
-	    child.expect("([a-z]): No")
-	    child.send(child.match.group(1) + "\n")
+            child.expect("Network media type")
+            child.send("\n")
+            child.expect("Perform (DHCP )?autoconfiguration")
+            child.expect("([a-z]): No")
+            child.send(child.match.group(1) + "\n")
 
-	    def choose_a():
-		child.send("a\n")
-	    def choose_dns_server():
-		child.expect("([a-z]): other")
-		child.send(child.match.group(1) + "\n")
-		child.send("10.0.1.1\n")
+            def choose_a():
+                child.send("a\n")
+            def choose_dns_server():
+                child.expect("([a-z]): other")
+                child.send(child.match.group(1) + "\n")
+                child.send("10.0.1.1\n")
 
-	    expect_any(child,
-		r"Your host name", "anita-test\n",
-		r"Your DNS domain", "netbsd.org\n",
-		r"Your IPv4 (number)|(address)", "10.169.0.2\n",
-		r"IPv4 Netmask", "255.255.255.0\n",
-		r"IPv4 gateway", "10.169.0.1\n",
-		r"IPv4 name server", "10.0.1.1\n",
-		r"Perform IPv6 autoconfiguration", choose_no,
-		r"Select (IPv6 )?DNS server", choose_dns_server,
-		r"Are they OK", choose_yes)
-	    self.network_configured = True
+            expect_any(child,
+                r"Your host name", "anita-test\n",
+                r"Your DNS domain", "netbsd.org\n",
+                r"Your IPv4 (number)|(address)", "10.169.0.2\n",
+                r"IPv4 Netmask", "255.255.255.0\n",
+                r"IPv4 gateway", "10.169.0.1\n",
+                r"IPv4 name server", "10.0.1.1\n",
+                r"Perform IPv6 autoconfiguration", choose_no,
+                r"Select (IPv6 )?DNS server", choose_dns_server,
+                r"Are they OK", choose_yes)
+            self.network_configured = True
 
-	self.network_configured = False
+        self.network_configured = False
 
-	# Many different things can happen at this point:
+        # Many different things can happen at this point:
         #
         # Versions older than 2009/08/23 21:16:17 will display a menu
-	# for choosing the extraction verbosity
-	#
-	# Versions older than 2010/03/30 20:09:25 will display a menu for
-	# choosing the CD-ROM device (newer versions will choose automatically)
-	#
-        # Versions older than Fri Apr 6 23:48:53 2012 UTC will ask
-	# you to "Please choose the timezone", wheras newer ones will
-	# instead as you to "Configure the additional items".
-	#
-	# At various points, we may or may not get "Hit enter to continue"
-	# prompts (and some of them seem to appear nondeterministically)
-	#
-	# i386/amd64 can ask whether to use normal or serial console bootblocks
+        # for choosing the extraction verbosity
         #
-	# Try to deal with all of the possible options.
+        # Versions older than 2010/03/30 20:09:25 will display a menu for
+        # choosing the CD-ROM device (newer versions will choose automatically)
+        #
+        # Versions older than Fri Apr 6 23:48:53 2012 UTC will ask
+        # you to "Please choose the timezone", wheras newer ones will
+        # instead as you to "Configure the additional items".
+        #
+        # At various points, we may or may not get "Hit enter to continue"
+        # prompts (and some of them seem to appear nondeterministically)
+        #
+        # i386/amd64 can ask whether to use normal or serial console bootblocks
+        #
+        # Try to deal with all of the possible options.
         #
         # We specify a longer timeout than the default here, because the
         # set extraction can take a long time on slower machines.
-	#
+        #
         # It has happened (at least with NetBSD 3.0.1) that sysinst paints the
-	# screen twice.  This can cause problem because we will then respond
-	# twice, and the second response will be interpreted as a response to
-	# a subsequent prompt.  Therefore, we check whether the match is the
-	# same as the previous one and ignore it if so.
-	#
+        # screen twice.  This can cause problem because we will then respond
+        # twice, and the second response will be interpreted as a response to
+        # a subsequent prompt.  Therefore, we check whether the match is the
+        # same as the previous one and ignore it if so.
+        #
         # OTOH, -current as of 2009.08.23.20.57.40 will issue the message "Hit
         # enter to continue" twice in a row, first as a result of MAKEDEV
         # printing a warning messages "MAKEDEV: dri0: unknown device", and
@@ -1189,201 +1189,201 @@ class Anita:
         # so that the "Hit enter to continue" matches are not consecutive.
         #
         # The changes of Apr 6 2012 broght with them a new redraw problem,
-	# which is worked around using the seen_essential_things variable.
-	#
-	prevmatch = []
-	seen_essential_things = 0
-	loop = 0
+        # which is worked around using the seen_essential_things variable.
+        #
+        prevmatch = []
+        seen_essential_things = 0
+        loop = 0
         while True:
-	    loop = loop + 1
-	    if loop == 20:
-	        raise RuntimeError("loop detected")
-	    child.expect(
-	                 # Group 1
-			 "(a: Progress bar)|" +
-			 # Group 2
+            loop = loop + 1
+            if loop == 20:
+                raise RuntimeError("loop detected")
+            child.expect(
+                         # Group 1
+                         "(a: Progress bar)|" +
+                         # Group 2
                          "(a: CD-ROM)|" +
-			 # Group 3-4
+                         # Group 3-4
                          "(([cx]): Continue)|" +
-			 # Group 5
+                         # Group 5
                          "(Hit enter to continue)|" +
-			 # Group 6
+                         # Group 6
                          "(b: Use serial port com0)|" +
-			 # Group 7
+                         # Group 7
                          "(Please choose the timezone)|" +
-			 # Group 8
+                         # Group 8
                          "(essential things)|" +
-			 # Group 9
-			 "(Configure the additional items)|" +
-			 # Group 10
-			 "(Multiple CDs found)|" +
-			 # Group 11
-			 "(The following are the http site)|" +
-			 # Group 12
-			 "(Is the network information you entered accurate)|" +
-			 # Group 13-14 (old-style / new-style)
-			 "(I have found the following network interfaces)|(Which network device would you like to use)|" +
-			 # Group 15
-			 "(No allows you to continue anyway)|" +
-			 # Group 16
-			 r"(Can't connect to)|" +
-			 # Group 17
-			 "(not-in-use)|" +
-			 # Group 18
-			 "(not-in-use)|" +
-			 # Group 19
-			 "(not-in-use)|" +
-			 # Group 20-21
-			 "(([a-z]): Custom installation)|" +
-			 # Group 22
-			 "(a: This is the correct geometry)|" +
-			 # Group 23
-		         "(a: Use one of these disks)|" +
-			 # Group 24
-                	 "(a: Set sizes of NetBSD partitions)",
-			 10800)
+                         # Group 9
+                         "(Configure the additional items)|" +
+                         # Group 10
+                         "(Multiple CDs found)|" +
+                         # Group 11
+                         "(The following are the http site)|" +
+                         # Group 12
+                         "(Is the network information you entered accurate)|" +
+                         # Group 13-14 (old-style / new-style)
+                         "(I have found the following network interfaces)|(Which network device would you like to use)|" +
+                         # Group 15
+                         "(No allows you to continue anyway)|" +
+                         # Group 16
+                         r"(Can't connect to)|" +
+                         # Group 17
+                         "(not-in-use)|" +
+                         # Group 18
+                         "(not-in-use)|" +
+                         # Group 19
+                         "(not-in-use)|" +
+                         # Group 20-21
+                         "(([a-z]): Custom installation)|" +
+                         # Group 22
+                         "(a: This is the correct geometry)|" +
+                         # Group 23
+                         "(a: Use one of these disks)|" +
+                         # Group 24
+                         "(a: Set sizes of NetBSD partitions)",
+                         10800)
 
-	    if child.match.groups() == prevmatch:
-	        self.slog('ignoring repeat match')
-	        continue
-	    prevmatch = child.match.groups()
-	    if child.match.group(1):
-	        # (a: Progress bar)
-		child.send("\n")
-	    elif child.match.group(2):
-	        # (a: CD-ROM)
-		if self.vmm == 'noemu':
-		    child.send("c\n") # install from HTTP
-		    # We next end up at either "Which device shall I"
-		    # or "The following are the http site" depending on
-		    # the NetBSD version.
-		else:
-		    child.send("a\n") # install from CD-ROM
+            if child.match.groups() == prevmatch:
+                self.slog('ignoring repeat match')
+                continue
+            prevmatch = child.match.groups()
+            if child.match.group(1):
+                # (a: Progress bar)
+                child.send("\n")
+            elif child.match.group(2):
+                # (a: CD-ROM)
+                if self.vmm == 'noemu':
+                    child.send("c\n") # install from HTTP
+                    # We next end up at either "Which device shall I"
+                    # or "The following are the http site" depending on
+                    # the NetBSD version.
+                else:
+                    child.send("a\n") # install from CD-ROM
             elif child.match.group(3):
-	        # CDROM device selection
+                # CDROM device selection
                 if cd_device != 'cd0a':
                     child.send("a\n" + cd_device + "\n")
-	        # (([cx]): Continue)
-		# In 3.0.1, you type "c" to continue, whereas in -current,
-		# you type "x".  Handle both cases.
-		child.send(child.match.group(4) + "\n")
-	    elif child.match.group(5):
-	        # (Hit enter to continue)
-		if seen_essential_things >= 2:
-		    # This must be a redraw
-		    pass
-		else:
-		    child.send("\n")
+                # (([cx]): Continue)
+                # In 3.0.1, you type "c" to continue, whereas in -current,
+                # you type "x".  Handle both cases.
+                child.send(child.match.group(4) + "\n")
+            elif child.match.group(5):
+                # (Hit enter to continue)
+                if seen_essential_things >= 2:
+                    # This must be a redraw
+                    pass
+                else:
+                    child.send("\n")
             elif child.match.group(6):
-	        # (b: Use serial port com0)
+                # (b: Use serial port com0)
                 child.send("bx\n")
-	    elif child.match.group(7):
-	        # (Please choose the timezone)
-	        # "Press 'x' followed by RETURN to quit the timezone selection"
-		child.send("x\n")
-		# The strange non-deterministic "Hit enter to continue" prompt has
-		# also been spotted after executing the sed commands to set the
-		# root password cipher, with 2010.10.27.10.42.12 source.
-		while True:
-		    child.expect("(([a-z]): DES)|(root password)|(Hit enter to continue)")
-		    if child.match.group(1):
-			# DES
-			child.send(child.match.group(2) + "\n")
-		    elif child.match.group(3):
-			# root password
-			break
-		    elif child.match.group(4):
-			# (Hit enter to continue)
-			child.send("\n")
-		    else:
-			raise AssertionError
-		# Don't set a root password
-		child.expect("b: No")
-		child.send("b\n")
-		child.expect("a: /bin/sh")
-		child.send("\n")
+            elif child.match.group(7):
+                # (Please choose the timezone)
+                # "Press 'x' followed by RETURN to quit the timezone selection"
+                child.send("x\n")
+                # The strange non-deterministic "Hit enter to continue" prompt has
+                # also been spotted after executing the sed commands to set the
+                # root password cipher, with 2010.10.27.10.42.12 source.
+                while True:
+                    child.expect("(([a-z]): DES)|(root password)|(Hit enter to continue)")
+                    if child.match.group(1):
+                        # DES
+                        child.send(child.match.group(2) + "\n")
+                    elif child.match.group(3):
+                        # root password
+                        break
+                    elif child.match.group(4):
+                        # (Hit enter to continue)
+                        child.send("\n")
+                    else:
+                        raise AssertionError
+                # Don't set a root password
+                child.expect("b: No")
+                child.send("b\n")
+                child.expect("a: /bin/sh")
+                child.send("\n")
 
-		# "The installation of NetBSD-3.1 is now complete.  The system
-		# should boot from hard disk.  Follow the instructions in the
-		# INSTALL document about final configuration of your system.
-		# The afterboot(8) manpage is another recommended reading; it
-		# contains a list of things to be checked after the first
-		# complete boot."
-		#
-		# We are supposed to get a single "Hit enter to continue"
-		# prompt here, but sometimes we get a weird spurious one
-		# after running chpass above.
+                # "The installation of NetBSD-3.1 is now complete.  The system
+                # should boot from hard disk.  Follow the instructions in the
+                # INSTALL document about final configuration of your system.
+                # The afterboot(8) manpage is another recommended reading; it
+                # contains a list of things to be checked after the first
+                # complete boot."
+                #
+                # We are supposed to get a single "Hit enter to continue"
+                # prompt here, but sometimes we get a weird spurious one
+                # after running chpass above.
 
-		while True:
-		    child.expect("(Hit enter to continue)|(x: Exit)")
-		    if child.match.group(1):
-			child.send("\n")
-		    elif child.match.group(2):
-			child.send("x\n")
-			break
-		    else:
-			raise AssertionError
-		break
-	    elif child.match.group(8):
+                while True:
+                    child.expect("(Hit enter to continue)|(x: Exit)")
+                    if child.match.group(1):
+                        child.send("\n")
+                    elif child.match.group(2):
+                        child.send("x\n")
+                        break
+                    else:
+                        raise AssertionError
+                break
+            elif child.match.group(8):
                 # (essential things)
-		seen_essential_things += 1
-	    elif child.match.group(9):
-	        # (Configure the additional items)
-		child.expect("x: Finished configuring")
-		child.send("x\n")
-		break
-	    elif child.match.group(10):
-	        # (Multiple CDs found)
-		# This happens if we have a boot CD and a CD with sets;
-		# we need to choose the latter.
-	        child.send("b\n")
-	    elif child.match.group(11):
-	        # (The following are the http site)
-		# \027 is control-w, which clears the field
-		child.send("a\n\02710.169.0.1\n") # IP address
-		child.send("b\n\027\n") # Directory = empty string
-		if not self.network_configured:
-		    child.send("j\n") # Configure network
-		    choose_interface_newstyle()
-		    configure_network()
-		# We get 'Hit enter to continue' if this sysinst
-		# version tries ping6 even if we have not configured
-		# IPv6
-		expect_any(child,
-		    r'Hit enter to continue', '\r',
-		    r'x: Get Distribution', 'x\n')
-		r = child.expect(["Install from", "/usr/bin/ftp"])
-		if r == 0:
-		    # ...and I'm back at the "Install from" menu?
-		    # Probably the same bug reported as install/49440.
-		    child.send("c\n") # HTTP
-		    # And again...
-		    child.expect("The following are the http site")
-		    child.expect("x: Get Distribution")
-		    child.send("x\n")
-		elif r == 1:
-		    pass
-		else:
-		    assert(0)
-	    elif child.match.group(12):
-		# "Is the network information you entered accurate"
-		child.expect("([a-z]): Yes")
-		child.send(child.match.group(1) + "\n")
-	    elif child.match.group(13):
-	    	 # "(I have found the following network interfaces)"
-		choose_interface_oldstyle()
-		configure_network()
-	    elif child.match.group(14):
-		# "(Which network device would you like to use)"
-		choose_interface_newstyle()
-		configure_network()
-	    elif child.match.group(15):
-	        choose_no()
-		child.expect("No aborts the install process")
-		choose_yes()
-	    elif child.match.group(16):
-	        self.slog("network problems detected")
-		child.send("\003") # control-c
+                seen_essential_things += 1
+            elif child.match.group(9):
+                # (Configure the additional items)
+                child.expect("x: Finished configuring")
+                child.send("x\n")
+                break
+            elif child.match.group(10):
+                # (Multiple CDs found)
+                # This happens if we have a boot CD and a CD with sets;
+                # we need to choose the latter.
+                child.send("b\n")
+            elif child.match.group(11):
+                # (The following are the http site)
+                # \027 is control-w, which clears the field
+                child.send("a\n\02710.169.0.1\n") # IP address
+                child.send("b\n\027\n") # Directory = empty string
+                if not self.network_configured:
+                    child.send("j\n") # Configure network
+                    choose_interface_newstyle()
+                    configure_network()
+                # We get 'Hit enter to continue' if this sysinst
+                # version tries ping6 even if we have not configured
+                # IPv6
+                expect_any(child,
+                    r'Hit enter to continue', '\r',
+                    r'x: Get Distribution', 'x\n')
+                r = child.expect(["Install from", "/usr/bin/ftp"])
+                if r == 0:
+                    # ...and I'm back at the "Install from" menu?
+                    # Probably the same bug reported as install/49440.
+                    child.send("c\n") # HTTP
+                    # And again...
+                    child.expect("The following are the http site")
+                    child.expect("x: Get Distribution")
+                    child.send("x\n")
+                elif r == 1:
+                    pass
+                else:
+                    assert(0)
+            elif child.match.group(12):
+                # "Is the network information you entered accurate"
+                child.expect("([a-z]): Yes")
+                child.send(child.match.group(1) + "\n")
+            elif child.match.group(13):
+                 # "(I have found the following network interfaces)"
+                choose_interface_oldstyle()
+                configure_network()
+            elif child.match.group(14):
+                # "(Which network device would you like to use)"
+                choose_interface_newstyle()
+                configure_network()
+            elif child.match.group(15):
+                choose_no()
+                child.expect("No aborts the install process")
+                choose_yes()
+            elif child.match.group(16):
+                self.slog("network problems detected")
+                child.send("\003") # control-c
                 def gather_input(seconds):
                     try:
                         child.expect("timeout", seconds)
@@ -1393,20 +1393,20 @@ class Anita:
                 for i in range(60):
                     child.send("ifconfig -a\n")
                     gather_input(1)
-		# would run netstat here but it's not on the install media
+                # would run netstat here but it's not on the install media
                 gather_input(30)
-		sys.exit(1)
-	    elif child.match.group(20):
-		# Custom installation is choice "d" in 6.0,
-		# but choice "c" or "b" in older versions
-		# We could use "Minimal", but it doesn't exist in
-		# older versions.
-		child.send(child.match.group(21) + "\n")
-		# Enable/disable sets.
-		choose_sets(self.dist.sets)
+                sys.exit(1)
+            elif child.match.group(20):
+                # Custom installation is choice "d" in 6.0,
+                # but choice "c" or "b" in older versions
+                # We could use "Minimal", but it doesn't exist in
+                # older versions.
+                child.send(child.match.group(21) + "\n")
+                # Enable/disable sets.
+                choose_sets(self.dist.sets)
             # On non-Xen i386/amd64 we first get group 22 or 23,
             # then group 24; on sparc and Xen, we just get group 24.
-	    elif (child.match.group(22) or child.match.group(23)):
+            elif (child.match.group(22) or child.match.group(23)):
                 if child.match.group(22):
                     child.send("\n")
                 elif child.match.group(23):
@@ -1415,72 +1415,72 @@ class Anita:
                     child.send("0\n")
                 child.expect("b: Use the entire disk")
                 child.send("b\n")
-		while True:
-		    child.expect(r'(Your disk currently has a non-NetBSD partition)|' +
-			r'(Do you want to install the NetBSD bootcode)|' +
-			r'(Do you want to update the bootcode)')
-		    if child.match.group(1):
-		        # Your disk currently has a non-NetBSD partition
-			child.expect("a: Yes")
-			child.send("\n")
-		    elif child.match.group(2) or child.match.group(3):
-		        # Install or replace bootcode
-			child.expect("a: Yes")
-			child.send("\n")
-			break
-	    elif child.match.group(24):
-	        # (a: Set sizes of NetBSD partitions)
+                while True:
+                    child.expect(r'(Your disk currently has a non-NetBSD partition)|' +
+                        r'(Do you want to install the NetBSD bootcode)|' +
+                        r'(Do you want to update the bootcode)')
+                    if child.match.group(1):
+                        # Your disk currently has a non-NetBSD partition
+                        child.expect("a: Yes")
+                        child.send("\n")
+                    elif child.match.group(2) or child.match.group(3):
+                        # Install or replace bootcode
+                        child.expect("a: Yes")
+                        child.send("\n")
+                        break
+            elif child.match.group(24):
+                # (a: Set sizes of NetBSD partitions)
                 child.send("a\n")
-		child.expect("Accept partition sizes")
-		# Press cursor-down enough times to get to the end of the list,
-		# to the "Accept partition sizes" entry, then press
-		# enter to continue.  Previously, we used control-N ("\016"),
-		# but if it gets echoed (which has happened), it is interpreted by
-		# the terminal as "enable line drawing character set", leaving the
-		# terminal in an unusable state.
-		if term == 'xterm':
-		    # For unknown reasons, when using a terminal type of "xterm",
-		    # sysinst puts the terminal in "application mode", causing the
-		    # cursor keys to send a different escape sequence than the default.
-		    cursor_down = "\033OB"
-		else:
-		    # Use the default ANSI cursor-down escape sequence
-		    cursor_down = "\033[B"
-		child.send(cursor_down * 8 + "\n")
+                child.expect("Accept partition sizes")
+                # Press cursor-down enough times to get to the end of the list,
+                # to the "Accept partition sizes" entry, then press
+                # enter to continue.  Previously, we used control-N ("\016"),
+                # but if it gets echoed (which has happened), it is interpreted by
+                # the terminal as "enable line drawing character set", leaving the
+                # terminal in an unusable state.
+                if term == 'xterm':
+                    # For unknown reasons, when using a terminal type of "xterm",
+                    # sysinst puts the terminal in "application mode", causing the
+                    # cursor keys to send a different escape sequence than the default.
+                    cursor_down = "\033OB"
+                else:
+                    # Use the default ANSI cursor-down escape sequence
+                    cursor_down = "\033[B"
+                child.send(cursor_down * 8 + "\n")
 
-		child.expect("x: Partition sizes ok")
-		child.send("\n")
-		child.expect("Please enter a name for your NetBSD disk")
-		child.send("\n")
+                child.expect("x: Partition sizes ok")
+                child.send("\n")
+                child.expect("Please enter a name for your NetBSD disk")
+                child.send("\n")
 
-		# "This is your last chance to quit this process..."
-		child.expect("Shall we continue")
-		child.expect("b: Yes")
-		child.send("b\n")
+                # "This is your last chance to quit this process..."
+                child.expect("Shall we continue")
+                child.expect("b: Yes")
+                child.send("b\n")
 
-		# newfs is run at this point
-	    else:
-	        raise AssertionError
+                # newfs is run at this point
+            else:
+                raise AssertionError
 
         # Installation is finished, halt the system.
-	# Historically, i386 and amd64, you get a root shell,
-	# while sparc just halts.
-	# Since Fri Apr 6 23:48:53 2012 UTC, you are kicked
-	# back into the main menu.
+        # Historically, i386 and amd64, you get a root shell,
+        # while sparc just halts.
+        # Since Fri Apr 6 23:48:53 2012 UTC, you are kicked
+        # back into the main menu.
 
-	while True:
+        while True:
             child.expect("(Hit enter to continue)|(x: Exit Install System)|(#)|(halting machine)|(halted by root)")
-	    if child.match.group(1):
-	        child.send("\n")
-	    elif child.match.group(2):
-		# Back in menu
-		child.send("x\n")
-	    elif child.match.group(3):
-	        # Root shell prompt
-	        child.send("halt\n")
-	    else:
-	        # group 4 or 5: halted
-		break
+            if child.match.group(1):
+                child.send("\n")
+            elif child.match.group(2):
+                # Back in menu
+                child.send("x\n")
+            elif child.match.group(3):
+                # Root shell prompt
+                child.send("halt\n")
+            else:
+                # group 4 or 5: halted
+                break
 
         child.close()
         # Make sure all refs go away
@@ -1517,7 +1517,7 @@ class Anita:
         if vmm_args is None:
             vmm_args = []
 
-	if not self.no_install:
+        if not self.no_install:
             self.install()
 
         if self.vmm == 'qemu':
@@ -1528,19 +1528,19 @@ class Anita:
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                              "binary", "kernel", self.dist.xen_kernel())))])
         elif self.vmm == 'noemu':
-	    child = self.start_noemu(vmm_args + ['--boot-from', 'disk'])
+            child = self.start_noemu(vmm_args + ['--boot-from', 'disk'])
         else:
             raise RuntimeError('unknown vmm %s' % vmm)
-	self.child = child
-	return child
+        self.child = child
+        return child
 
     # Like start_boot(), but wait for a login prompt.
     def boot(self, vmm_args = None):
-	self.start_boot(vmm_args)
-	self.child.expect("login:")
-	# Can't close child here because we still need it if called from
-	# interact()
-	return self.child
+        self.start_boot(vmm_args)
+        self.child.expect("login:")
+        # Can't close child here because we still need it if called from
+        # interact()
+        return self.child
 
     # Deprecated
     def interact(self):
@@ -1550,75 +1550,75 @@ class Anita:
     def run_tests(self, timeout = 10800):
         results_by_net = (self.vmm == 'noemu')
 
-	# Create a scratch disk image for exporting test results from the VM.
+        # Create a scratch disk image for exporting test results from the VM.
         # The results are stored in tar format because that is more portable
         # and easier to manipulate than a file system image, especially if the
         # host is a non-NetBSD system.
-	#
-	# If we are getting the results back by tftp, this file will
-	# be overwritten.
-	scratch_disk_path = os.path.join(self.workdir, "tests-results.img")
+        #
+        # If we are getting the results back by tftp, this file will
+        # be overwritten.
+        scratch_disk_path = os.path.join(self.workdir, "tests-results.img")
         if vmm_is_xen(self.vmm):
             scratch_disk = 'xbd1d'
         else:
             scratch_disk = self.dist.scratch_disk()
         mkdir_p(self.workdir)
 
-	scratch_image_megs = 100
+        scratch_image_megs = 100
         make_dense_image(scratch_disk_path, parse_size('%dM' % scratch_image_megs))
-	# Leave a 10% safety margin
-	max_result_size_k = scratch_image_megs * 900
+        # Leave a 10% safety margin
+        max_result_size_k = scratch_image_megs * 900
 
         if vmm_is_xen(self.vmm):
             scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
         elif self.vmm == 'qemu':
             scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
         elif self.vmm == 'noemu':
-	    scratch_disk_args = []
+            scratch_disk_args = []
         else:
             raise RuntimeError('unknown vmm')
 
         child = self.boot(scratch_disk_args)
-	self.login()
+        self.login()
 
         if self.tests == "kyua":
-	    if self.shell_cmd("grep -q 'MKKYUA.*=.*yes' /etc/release") != 0:
-		raise RuntimeError("kyua is not installed.")
-	    test_cmd = (
-		"kyua " +
-		    "--loglevel=error " +
-		    "--logfile=/tmp/tests/kyua-test.log " +
-		    "test " +
-		    "--store=/tmp/tests/store.db; " +
-		"echo $? >/tmp/tests/test.status; " +
-		"kyua " +
-		    "report " +
-		    "--store=/tmp/tests/store.db " +
-		    "| tail -n 3; " +
-		"kyua " +
-		    "--loglevel=error " +
-		    "--logfile=/tmp/tests/kyua-report-html.log " +
-		    "report-html " +
-		    "--store=/tmp/tests/store.db " +
-		    "--output=/tmp/tests/html; ")
+            if self.shell_cmd("grep -q 'MKKYUA.*=.*yes' /etc/release") != 0:
+                raise RuntimeError("kyua is not installed.")
+            test_cmd = (
+                "kyua " +
+                    "--loglevel=error " +
+                    "--logfile=/tmp/tests/kyua-test.log " +
+                    "test " +
+                    "--store=/tmp/tests/store.db; " +
+                "echo $? >/tmp/tests/test.status; " +
+                "kyua " +
+                    "report " +
+                    "--store=/tmp/tests/store.db " +
+                    "| tail -n 3; " +
+                "kyua " +
+                    "--loglevel=error " +
+                    "--logfile=/tmp/tests/kyua-report-html.log " +
+                    "report-html " +
+                    "--store=/tmp/tests/store.db " +
+                    "--output=/tmp/tests/html; ")
         elif self.tests == "atf":
-	    atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
-			     '/usr/share/xml/atf/tests-results.dtd',
-			     '/usr/share/examples/atf/tests-results.css']
- 	    test_cmd = (
-		"{ atf-run; echo $? >/tmp/tests/test.status; } | " +
-		"tee /tmp/tests/test.tps | " +
-		"atf-report -o ticker:- -o xml:/tmp/tests/test.xml; " +
+            atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
+                             '/usr/share/xml/atf/tests-results.dtd',
+                             '/usr/share/examples/atf/tests-results.css']
+            test_cmd = (
+                "{ atf-run; echo $? >/tmp/tests/test.status; } | " +
+                "tee /tmp/tests/test.tps | " +
+                "atf-report -o ticker:- -o xml:/tmp/tests/test.xml; " +
                 "(cd /tmp && for f in %s; do cp $f tests/; done;); " % ' '.join(atf_aux_files))
-	else:
+        else:
             raise RuntimeError('unknown testing framework %s' % self.test)
 
         exit_status = self.shell_cmd(
-	    "df -k | sed 's/^/df-pre-test /'; " +
-	    "mkdir /tmp/tests && " +
-	    "cd /usr/tests && " +
-	    test_cmd +
-	    ("{ cd /tmp && " +
+            "df -k | sed 's/^/df-pre-test /'; " +
+            "mkdir /tmp/tests && " +
+            "cd /usr/tests && " +
+            test_cmd +
+            ("{ cd /tmp && " +
                 # Make sure the files will fit on the scratch disk
                 "test `du -sk tests | awk '{print $1}'` -lt %d && " % max_result_size_k +
                 # To guard against accidentally overwriting the wrong
@@ -1628,10 +1628,10 @@ class Anita:
                 # "disklabel -W /dev/rwd1d && " +
                 "tar cf /dev/r%s tests; " % scratch_disk +
             "}; " if not results_by_net else \
-	    "{ cd /tmp && tar cf tests-results.img tests && echo put tests-results.img | tftp 10.169.0.1; };") +
-	    "df -k | sed 's/^/df-post-test /'; " +
-	    "ps -glaxw | sed 's/^/ps-post-test /'; " +
-	    "vmstat -s; " +
+            "{ cd /tmp && tar cf tests-results.img tests && echo put tests-results.img | tftp 10.169.0.1; };") +
+            "df -k | sed 's/^/df-post-test /'; " +
+            "ps -glaxw | sed 's/^/ps-post-test /'; " +
+            "vmstat -s; " +
             "sh -c 'exit `cat /tmp/tests/test.status`'",
             timeout)
 
@@ -1642,10 +1642,10 @@ class Anita:
         subprocess.call(["tar", "xf", "-", "tests"],
                         cwd = self.workdir, stdin = tarfile)
 
-	# For backwards compatibility, point workdir/atf to workdir/tests.
-	compat_link = os.path.join(self.workdir, 'atf')
-	if not os.path.lexists(compat_link):
-	    os.symlink('tests', compat_link)
+        # For backwards compatibility, point workdir/atf to workdir/tests.
+        compat_link = os.path.join(self.workdir, 'atf')
+        if not os.path.lexists(compat_link):
+            os.symlink('tests', compat_link)
 
         return exit_status
 
@@ -1654,29 +1654,29 @@ class Anita:
 
     # Log in, if not logged in already
     def login(self):
-	if self.is_logged_in:
-	    return
-	login(self.child)
-	self.is_logged_in = True
+        if self.is_logged_in:
+            return
+        login(self.child)
+        self.is_logged_in = True
 
     # Run a shell command
     def shell_cmd(self, cmd, timeout = -1):
         self.login()
-	return shell_cmd(self.child, cmd, timeout)
+        return shell_cmd(self.child, cmd, timeout)
 
     # Halt the VM
     def halt(self):
         self.login()
         self.child.send("halt\n")
-	try:
-	    # Wait for text confirming the halt, or EOF
+        try:
+            # Wait for text confirming the halt, or EOF
             self.child.expect("(The operating system has halted)|(entering state S5)", timeout = 60)
-	except pexpect.EOF:
-	    # Didn't see the text but got an EOF; that's OK.
-	    print "EOF"
-	except pexpect.TIMEOUT, e:
-	    # This is unexpected but mostly harmless
-	    print "timeout waiting for halt confirmation:", e
+        except pexpect.EOF:
+            # Didn't see the text but got an EOF; that's OK.
+            print "EOF"
+        except pexpect.TIMEOUT, e:
+            # This is unexpected but mostly harmless
+            print "timeout waiting for halt confirmation:", e
 
 def console_interaction(child):
     # We need this in pexpect 2.x or everything will be printed twice
