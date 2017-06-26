@@ -1,4 +1,4 @@
-.Dd Sep 13, 2016
+.Dd Jun 25, 2017
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -22,21 +22,23 @@
 .Ar URL
 .Sh DESCRIPTION
 .Nm
-is a tool for automated testing of the NetBSD installation procedure.  Using 
-.Nm , 
+is a tool for automated testing of the NetBSD installation procedure
+and of NetBSD in general.  Using
+.Nm ,
 you can fully automate the process of downloading a NetBSD
-distribution, installing it in a virtual machine, and booting the 
-installed system.
+distribution, installing it in a virtual machine, booting the
+installed system, and running the NetBSD test suite.
 .Pp
-The NetBSD ports currently supported as targets (i.e., as the 
-system to install and run under emulation) are i386, amd64, sparc and 
-evbarm-earmv7hf (with VEXPRESS_A15 kernel).  The host (the system running
+The NetBSD ports currently supported as targets (i.e., as the
+system to install and run under emulation) are i386, amd64, sparc and
+evbarm-earmv7hf (using the VEXPRESS_A15 kernel).
+The host (the system running
 .Nm )
-can be any NetBSD port or even a different Unix-like system such 
+can be any NetBSD port or even a different Unix-like system such
 as Linux, FreeBSD, or Mac OS X.
 .Pp
-The default virtual machine monitor used by 
-.Nm 
+The default virtual machine monitor used by
+.Nm
 is
 .Ic qemu ,
 but there is also experimental support for Xen.
@@ -50,6 +52,16 @@ it uses an ISO image instead of a directory containing boot floppies
 and sets:
 .Pp
 .Dl anita install http://ftp.netbsd.org/pub/NetBSD/iso/7.1/NetBSD-7.1-sparc.iso
+.Pp
+The evbarm-earmv7hf port does not currently support installation
+using sysinst, so anita will instead install it by decompressing
+the pre-built disk image from the release onto the beginning
+of the virtual disk.  The image will be automatically resized
+at boot time, and after that, the evbarm-earmv7hf port works the
+same as the other ports.  To install it, use a command like
+the following, adjusting the URL to point to a current shapshot:
+.Pp
+.Dl anita install http://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/201706211330Z/evbarm-earmv7hf/
 .Pp
 To boot the newly installed hard disk image and get a login prompt,
 replace
@@ -73,8 +85,8 @@ the URL to point to a current snapshot):
 .Dl anita install http://nyftp.netbsd.org/pub/NetBSD-daily/HEAD/201001280000Z/i386/
 .Dl anita install http://nyftp.netbsd.org/pub/NetBSD-daily/HEAD/201008070000Z/iso/sparccd.iso
 .Pp
-If you have built a NetBSD release locally using 
-.Ic "build.sh -R" , 
+If you have built a NetBSD release locally using
+.Ic "build.sh -R" ,
 you can point
 .Nm
 directly at the RELEASEDIR or ISO using a "file:" URL:
@@ -91,7 +103,7 @@ serial console, recognizing sysinst prompts and sending canned
 responses.
 .Pp
 .Nm
-will create a work directory and cache the distribution sets, boot 
+will create a work directory and cache the distribution sets, boot
 floppies, and a hard disk image in it.  By default, the work directory
 is a subdirectory of the current working directory, with a unique
 name automatically generated from the distribution URL, for example,
@@ -99,30 +111,30 @@ name automatically generated from the distribution URL, for example,
 .Dl work-http---ftp.netbsd.org-pub-NetBSD-NetBSD-7.1-i386-+a4c39
 .Pp
 You can also specify the name of the work directory explicitly using
-the 
+the
 .Fl -workdir
 option.
 .Pp
-When you rerun 
+When you rerun
 .Nm
 with the same URL, files that already exist in
 the work directory will not be re-downloaded or rebuilt, so if you
-run you 
+run you
 .Ic "anita install"
 with the same URL twice in a row, the second
-run will effectively be a no-op, and if you rerun 
+run will effectively be a no-op, and if you rerun
 .Ic "anita interact" ,
 the system will be booted from the existing disk image, skipping the
 installation stage.  To force things to be redone, simply remove the
 work directory.  If you remove just the hard disk image file
 .Pa wd0.img ,
-.Ic "anita install" 
+.Ic "anita install"
 will recreate it from the cached distribution files.
 .Pp
-To ensure that the cached system state is always that of a 
+To ensure that the cached system state is always that of a
 freshly installed system,
 .Nm
-enables the 
+enables the
 .Ic qemu
 snapshotting feature for the system disk by default (but not for other disks).
 Therefore, if you log in and make changes to the system, they will not
@@ -131,27 +143,27 @@ be saved to the disk image file.  To override this behavior, specify the
 option.
 .Pp
 .Sh MODES
-The operation performed by 
-.Nm 
-is determined by the 
+The operation performed by
+.Nm
+is determined by the
 .Ar mode
 argument, which takes the following values:
 .Bl -tag -width indent
 .It Ar install
 Install NetBSD if not already installed.
 .It Ar boot
-Install NetBSD if not already installed, then boot the 
+Install NetBSD if not already installed, then boot the
 installed system.
 .It Ar interact
 Install NetBSD if not already installed, then boot it and connect
-the serial console to the terminal for interactive use.  The 
+the serial console to the terminal for interactive use.  The
 .Cm qemu
 escape character control-a is in effect; for example, you can use
 control-a x to exit, control-a c to enter the
 .Cm qemu
 monitor, or control-a b to send a break (useful for entering DDB).
 .It Ar test
-Install NetBSD if not already installed, then boot it and 
+Install NetBSD if not already installed, then boot it and
 run the test suite from
 .Pa /usr/tests .
 By default, the test suite is run using ATF.  If NetBSD was built with
@@ -174,15 +186,15 @@ file with the results of the tests, and an itemized HTML report in the
 subdirectory.
 .Pp
 When the ATF tools are used to run the test suite, the
-.Cm atf-report 
+.Cm atf-report
 output will be displayed on standard output and the following output
 files are placed in the
 .Pa tests/
 subdirectory: the raw
-.Cm atf-run 
+.Cm atf-run
 output in
 .Pa test.tps ,
-and the output from 
+and the output from
 .Cm "atf-report -o xml"
 in
 .Pa test.xml .
@@ -190,7 +202,7 @@ To facilitate the further processing of the XML output into HTML,
 the files
 .Pa tests-results.xsl ,
 .Pa tests-results.dtd ,
-and 
+and
 .Pa tests-results.css
 are also included.
 .It Ar print-workdir
@@ -220,7 +232,7 @@ or
 .Cm xl ,
 which will make
 .Nm
-install the target system in a Xen domU using the 
+install the target system in a Xen domU using the
 .Cm xm
 or
 .Cm xl
@@ -228,15 +240,15 @@ interface, respectively.  This requires
 running
 .Nm
 as root.  Any changes made to the system disk image will
-be persistent whether or not the 
+be persistent whether or not the
 .Fl -persist
 option was given.  The Xen support should be considered experimental
 and may not be fully tested.  For backwards compatibility,
 .Ar xen
-is accepted as a synonym for 
+is accepted as a synonym for
 .Ar xm .
 .It Fl -vmm-args Ar string
-Additional arguments to pass to the virtual machine monitor (qemu, xm, or xl).  
+Additional arguments to pass to the virtual machine monitor (qemu, xm, or xl).
 The arguments are given
 as a single string, which may contain multiple arguments separated
 by whitespace.  There is no way to pass an argument containing
@@ -246,9 +258,9 @@ the old name is still accepted for backwards compatibility.
 .It Fl -disk-size Ar size
 The size of the virtual disk NetBSD gets installed on.  The default
 is large enough to hold the OS installation itself when also using
-default values for the 
+default values for the
 .Fl -sets
-and 
+and
 .Fl -memory-size
 options, but if you need
 additional space, you can specify a larger size.  The size is given in
@@ -256,8 +268,8 @@ bytes, or a suffix of k, M, G, or T can be used for kilo-, mega-,
 giga-, or terabytes.
 .It Fl -memory-size Ar size
 The size of the virtual RAM.  The size is given in
-bytes, or a suffix of k, M, or G can be used as with 
-the 
+bytes, or a suffix of k, M, or G can be used as with
+the
 .Fl -disk-size
 option.  The default is 32M.  Note that since sysinst sizes the
 swap partition based on the amount of RAM, if you run
@@ -301,12 +313,12 @@ option, in seconds.  The default is 3600 seconds (one hour).
 .It Fl -test-timeout Ar timeout
 Set a timeout for the tests run in the
 .Cm test
-mode, in seconds.  The default is 10800 seconds (three hours).
+mode, in seconds.  The default is 86400 seconds (24 hours).
 .It Fl -persist
 Store any changes to the contents of the system disk persistently,
 such that they may affect future
 .Nm
-runs, instead of the default behavior where only the 
+runs, instead of the default behavior where only the
 .Ar install
 mode can modify the disk contents and all other modes work with
 an ephemeral snapshot copy of the freshly installed system.
@@ -318,13 +330,13 @@ if they are present, otherwise from CD-ROM.
 Generate log output in a structured format similar to Python code.
 Commands sent to the serial console by
 .Nm
-are logged as 
+are logged as
 .Cm send(t, 'command...') ,
-where 
+where
 .Va t
 is a timestamp in seconds since the Unix epoch.
 Data received are logged
-as 
+as
 .Cm recv(t, 'data...') .
 Calls to pexpect's
 .Fn expect
@@ -332,12 +344,12 @@ function are logged as
 .Cm expect(t, 'regexp...') ,
 and the actual strings matched by them as
 .Cm match(t, '...') .
-Unprintable characters in the data strings are escaped using Python 
+Unprintable characters in the data strings are escaped using Python
 string syntax.
 .Pp
 The default is to do unstructured logging where the raw output from
-the virtual machine console is sent to standard output as-is, 
-and the commands sent to the console are only logged if echoed 
+the virtual machine console is sent to standard output as-is,
+and the commands sent to the console are only logged if echoed
 by the virtual machine.
 .It Fl -structured-log-file
 Like
@@ -367,17 +379,10 @@ For more details, please see
 .Sh BUGS IN ANITA
 .Nm
 is still a work in progress.  Currently,
-.Nm 
-only knows how to install the i386, amd64, and sparc ports. 
-The evbarm-earmv7hf port supplies a compressed raw disk image that
-is already populated. The install step for the evbarm-earmv7hf
-port corresponds to decompressing the kernel and the supplied
-compressed raw disk image and writing the image to the start of 
-user generated custom-sized image. After the install step, it 
-works in much the same way as other ports.
+.Nm
+only supports the i386, amd64, and sparc, and evbarm-earmv7hf
+ports.
 It should be possible to add support for installing other ports
-and installing the evbarm-earmv7hf port using sysinst (i.e.
-by using an INSTALL kernel for VEXPRESS_A15) -
 patches are welcome.
 .Pp
 .Nm
@@ -386,12 +391,16 @@ the sysinst user interface.
 .Pp
 Installing NetBSD releases older than 2.1 has not been tested.
 .Pp
+Exporting ATF test reports to the host system does not yet work
+with the evbarm-earmv7hf port for lack of support for
+a second sd card or other suitable block device.
+.Pp
 .Sh BUGS IN NETBSD
 .Pp
 NetBSD/i386 releases older than 4.0 will install, but when booting
 the installed image, they hang after the "root on ffs" message.
 .Pp
-NetBSD/i386 versions older than 2009-06-13 13:35:11 fail to find 
+NetBSD/i386 versions older than 2009-06-13 13:35:11 fail to find
 any PCI buses when run under qemu; see PRs 38729 and 42681.
 .Pp
 .Sh BUGS IN QEMU
@@ -408,17 +417,17 @@ Some floating point tests also fail.
 .Pp
 Running multithreaded programs (such as the NetBSD test suite) on
 an emulated i386 or amd64 system requires qemu patches that are in
-pkgsrc beginning with qemu 0.12.3nb3. They were finally integrated 
-into qemu on 2011-12-11.  See PR 42158 and 
+pkgsrc beginning with qemu 0.12.3nb3. They were finally integrated
+into qemu on 2011-12-11.  See PR 42158 and
 .Pp
-.Dl https://bugs.launchpad.net/bugs/569760 
+.Dl https://bugs.launchpad.net/bugs/569760
 .Pp
 for details.
 .Pp
 When attempting to install NetBSD-current in qemu 1.0, it panics
 during the install kernel boot due to a regression in qemu's
-emulation of the PCI configuration registers.  The work-around 
-is to use qemu 0.xx.  See PR 45671 and 
+emulation of the PCI configuration registers.  The work-around
+is to use qemu 0.xx.  See PR 45671 and
 https://bugs.launchpad.net/qemu/+bug/897771 for details.
 This bug has since been fixed on the qemu mainline.
 .Pp
@@ -441,9 +450,9 @@ which can easily be mistaken for a hang.  Please be patient. This
 issue has been worked around in NetBSD-current; see PR 43156 for
 details.
 .Pp
-Installing using qemu version 1.5.1, 1.6.0, 1.7.0, or 2.0.0 
+Installing using qemu version 1.5.1, 1.6.0, 1.7.0, or 2.0.0
 prior to 2.0.0nb4 on
-NetBSD fails due to the serial console dropping characters; see 
+NetBSD fails due to the serial console dropping characters; see
 PR 48071 and the qemu bug reports
 .Pp
 .Dl https://bugs.launchpad.net/qemu/+bug/1399943
@@ -456,18 +465,18 @@ remains unfixed for sparc targets.
 .Pp
 .Sh BUGS IN KVM
 .Pp
-When 
+When
 .Nm
 is run on a Linux host using a version of qemu that enables the
 "kvm" kernel-mode virtualization by default, and is used to
-boot a version of NetBSD-current newer than 2009-11-04 
+boot a version of NetBSD-current newer than 2009-11-04
 14:39:17, the emulated NetBSD system hangs during boot; see
-PR 44069 for details.  This issue can be worked 
+PR 44069 for details.  This issue can be worked
 around by passing Anita the command line option
-.Fl -vmm-args 
+.Fl -vmm-args
 .Ar -no-kvm
-to disable kvm.  The alternative 
-.Fl -vmm-args 
+to disable kvm.  The alternative
+.Fl -vmm-args
 .Ar -no-kvm-irqchip
 performs better but doesn't quite work: the system installs and
 boots, but the test suite occasionally fails to complete; see PR 44176.
@@ -486,5 +495,5 @@ Python 2.7.12:
 .Dl http://bugs.python.org/issue27973
 .Pp
 This problem is worked around in
-.Nm 
+.Nm
 1.40.
