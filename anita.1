@@ -18,6 +18,7 @@
 .Op Fl -structured-log
 .Op Fl -structured-log-file Ar file
 .Op Fl -tests Ar kyua | atf
+.Op Fl -dtb dtb
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -358,8 +359,17 @@ but logs to a given file rather than to standard output,
 and in addition to rather than instead of the default
 unstructured logging.
 .It Fl -tests Ar kyua | atf
-Specify the test framework to use for running tests. The default is
+The test framework to use for running tests. The default is
 .Cm atf .
+.It Fl -dtb
+The location of the Device Tree Blob file, needed when
+emulating ARM systems.  The default is the location of the file
+.Pa vexpress-v2p-ca15-tc1.dtb
+in the
+.Pa dtb-arm-vexpress
+package assuming both it and
+.Nm
+itself have been installed via pkgsrc.
 .El
 .Sh DEBUGGING NETBSD USING ANITA
 .Nm
