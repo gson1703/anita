@@ -869,10 +869,23 @@ class Anita:
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
             print "done."
         if self.dist.arch() == 'evbarm-earmv7hf':
-            subprocess.call('gunzip -kc <' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(),
-             'binary', 'gzimg', 'armv7.img.gz')) + ' | dd of=' + self.wd0_path() + ' conv=notrunc', shell=True)
-            subprocess.call('gunzip -kcf ' + os.path.abspath(os.path.join(self.workdir, 'download', self.dist.arch(), 'binary', 'kernel',
-             'netbsd-VEXPRESS_A15.ub.gz')) + '>' + os.path.abspath(os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")), shell=True)
+            # Unzip the image
+            gzimage_fn = os.path.join(self.workdir,
+                'download', self.dist.arch(),
+                'binary', 'gzimg', 'armv7.img.gz')
+            gzimage = open(gzimage_fn, 'r')
+            subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc', shell = True, stdin = gzimage)
+            gzimage.close()
+            # Unzip the kernel
+            gzkernel_fn = os.path.join(self.workdir,
+                'download', self.dist.arch(), 'binary', 'kernel',
+                'netbsd-VEXPRESS_A15.ub.gz')
+            gzkernel = open(gzkernel_fn, 'r')
+            kernel_fn = os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")
+            kernel = open(kernel_fn, 'w')
+            subprocess.call('gunzip', stdin = gzkernel, stdout = kernel)
+            kernel.close()
+            gzkernel.close()
             return
 
         # The name of the CD-ROM device holding the sets
