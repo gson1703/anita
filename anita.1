@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar work_directory
-.Op Fl -vmm Ar qemu | xm | xl
+.Op Fl -vmm Ar qemu | xm | xl | gxemul
 .Op Fl -vmm-args Ar vmm_arguments
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
@@ -31,8 +31,8 @@ distribution, installing it in a virtual machine, booting the
 installed system, and running the NetBSD test suite.
 .Pp
 The NetBSD ports currently supported as targets (i.e., as the
-system to install and run under emulation) are i386, amd64, sparc and
-evbarm-earmv7hf (using the VEXPRESS_A15 kernel).
+system to install and run under emulation) are i386, amd64, sparc,
+evbarm-earmv7hf (using the VEXPRESS_A15 kernel) and pmax.
 The host (the system running
 .Nm )
 can be any NetBSD port or even a different Unix-like system such
@@ -220,9 +220,10 @@ The following command line options are supported:
 .It Fl -workdir Ar directory
 The work directory.  The default is an automatically generated
 name under ".".
-.It Fl -vmm Ar qemu | xm | xl
-Specify the virtual machine monitor.  The default is
-.Cm qemu .
+.It Fl -vmm Ar qemu | xm | xl | gxemul
+Specify the virtual machine monitor.
+If the target system architecture is pmax,
+.Nm will run .Cm gxemul.
 If
 .Nm
 is running in a Xen dom0 and the target system architecture
@@ -390,8 +391,8 @@ For more details, please see
 .Nm
 is still a work in progress.  Currently,
 .Nm
-only supports the i386, amd64, and sparc, and evbarm-earmv7hf
-ports.
+only supports the i386, amd64, sparc, evbarm-earmv7hf
+and pmax ports.
 It should be possible to add support for installing other ports
 patches are welcome.
 .Pp
