@@ -439,8 +439,6 @@ class Version:
                 download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
             return
-        elif self.arch() == 'pmax':
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         i = 0
         for floppy in self.potential_floppies():
             download_if_missing_3(self.dist_url(),
@@ -785,9 +783,8 @@ class Anita:
         self.child = child
 
     def start_gxemul(self, vmm_args):
-        child = self.pexpect_spawn('gxemul', ["-M", str(self.memory_megs()) + 'M', "-d", os.path.abspath(self.wd0_path())]
-         + vmm_args + self.extra_vmm_args + [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-         "binary", "kernel", ("netbsd-INSTALL.gz", "netbsd-GENERIC.gz")[self.no_install]))])
+        child = self.pexpect_spawn('gxemul', ["-M", str(self.memory_megs()) + 'M',
+         "-d", os.path.abspath(self.wd0_path())] + self.extra_vmm_args + vmm_args)
         self.configure_child(child)
         return child
     def start_qemu(self, vmm_args, snapshot_system_disk):
@@ -961,9 +958,9 @@ class Anita:
             child = self.start_noemu(['--boot-from', 'net'])
         elif self.vmm == 'gxemul':
             cd_device = 'cd0a'
-            vmm_args = []
-            if not self.no_install:
-                vmm_args += ["-d", self.gxemul_cdrom_args()]
+            vmm_args = ["-d", self.gxemul_cdrom_args()]
+            vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+             "binary", "kernel", "netbsd-INSTALL.gz"))]
             child = self.start_gxemul(vmm_args)
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
@@ -1557,8 +1554,6 @@ class Anita:
 
         if not self.no_install:
             self.install()
-        if self.vmm == 'gxemul':
-            self.no_install = True
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
