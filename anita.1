@@ -222,8 +222,11 @@ The work directory.  The default is an automatically generated
 name under ".".
 .It Fl -vmm Ar qemu | xm | xl | gxemul
 Specify the virtual machine monitor.
-If the target system architecture is pmax,
-.Nm will run .Cm gxemul.
+The default virtual machine monitor is qemu.
+If the target system architecture is not supported by qemu,
+.Nm
+will set the default virtual machine monitor to
+.Cm gxemul for the supported architectures.
 If
 .Nm
 is running in a Xen dom0 and the target system architecture

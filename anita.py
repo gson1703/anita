@@ -439,6 +439,8 @@ class Version:
                 download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
             return
+        elif self.arch() == 'pmax':
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         i = 0
         for floppy in self.potential_floppies():
             download_if_missing_3(self.dist_url(),
@@ -666,7 +668,7 @@ class multifile(object):
         return g
 
 class Anita:
-    def __init__(self, dist, workdir = None, vmm = 'qemu', vmm_args = None,
+    def __init__(self, dist, workdir = None, vmm = None, vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
         structured_log = None, structured_log_file = None, no_install = False, tests = 'atf', dtb = ''):
         self.dist = dist
@@ -722,7 +724,9 @@ class Anita:
         # Backwards compatibility
         if vmm == 'xen':
             vmm = 'xm'
-        if self.dist.arch() in arch_gxemul_list:
+        elif not vmm and self.qemu:
+            vmm = 'qemu'
+        else:
             vmm = 'gxemul'
 
         self.vmm = vmm
