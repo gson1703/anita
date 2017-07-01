@@ -21,7 +21,7 @@ def main(argv = None):
                       help="store work files in DIR", metavar="DIR")
     parser.add_option("--vmm",
                       help="use VMM (qemu or xen) as the virtual machine monitor",
-                      metavar="VMM", default="qemu")
+                      metavar="VMM")
     parser.add_option("--vmm-args",
                       help="pass ARGS as extra arguments to virtual machine monitor",
                       metavar="ARGS", default="")
@@ -54,7 +54,7 @@ def main(argv = None):
     parser.add_option("--structured-log-file", metavar="FILE",
                       help="log console traffic in a structured format, to FILE")
     parser.add_option("--no-install", action="store_true",
-                      help="in boot/test/interact mode, assume system is already installed")
+                      help="in boot/test/interact mode, assume system is already installed", default=False)
     parser.add_option("--version", action="store_true",
                       help="print the anita version number and exit")
     parser.add_option("--tests", help='select the tests to run in test mode: \"atf\" or \"kyua\"', type="string", default="atf")
