@@ -1114,9 +1114,9 @@ class Anita:
                         if len(sets_this_screen) != 0:
                             break
                     else:
-                        if len(sets_this_screen) >= 0:
-                            break
-                else:
+                        if len(sets_this_screen) >= 0: #while installing hpcmips, the option 'm' is repeated (only when run via anita)
+                            break                      #It is appended to sets_this_screen only once. So, we need to select exit once
+                else:                                  #more, otherwise, we'll get stuck.
                     for set in set_list:
                         if re.match(set['label'], label) and label not in labels_seen:
                             sets_this_screen.append({
@@ -1290,8 +1290,8 @@ class Anita:
                          "(a: Use one of these disks)|" +
                          # Group 24
                          "(a: Set sizes of NetBSD partitions)|" +
-                         "(sectors)|" +
-                         "(heads)",
+                         "(sectors)|" +  #We need to enter these values
+                         "(heads)",      #while installing hpcmips port.
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1500,7 +1500,7 @@ class Anita:
                 if not self.dist.arch() == 'hpcmips':
                     child.send(cursor_down * 8 + "\n")
                 else:
-                    child.send("x\n")
+                    child.send("x\n") #Escape seqence for cursor down not working in vt100
                 child.expect("x: Partition sizes ok")
                 child.send("\n")
                 child.expect("Please enter a name for your NetBSD disk")
