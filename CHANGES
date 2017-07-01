@@ -1,3 +1,5 @@
+Add support for gxemul as a new VMM and NetBSD/pmax as a new guest.
+From Utkarsh Anand.
 
 Increase the default test timeout to 24 hours, as the tests now
 take much longer to run than before due to a combination of
