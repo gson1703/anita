@@ -1719,7 +1719,8 @@ class Anita:
 
 def console_interaction(child):
     # We need this in pexpect 2.x or everything will be printed twice
-    child.logfile = None
+    child.logfile_read = None
+    child.logfile_send = None
     child.interact()
 
 # Calling this directly is deprecated, use Anita.login()
