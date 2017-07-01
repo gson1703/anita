@@ -1290,8 +1290,8 @@ class Anita:
                          "(a: Use one of these disks)|" +
                          # Group 24
                          "(a: Set sizes of NetBSD partitions)|" +
-                         "(sectors)|" +  #We need to enter these values
-                         "(heads)",      #while installing hpcmips port.
+                         # Group 25
+                         "(Sysinst could not automatically determine the BIOS geometry of the disk)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1513,9 +1513,10 @@ class Anita:
 
                 # newfs is run at this point
             elif child.match.group(25):
-                child.send("\n")
-            elif child.match.group(26):
-                child.send("\n")
+                child.expect("sectors")                 #We need to enter these values
+                child.send("\n")                        #in cases where sysinst could not
+                child.expect("heads")                   #determine disk geometry. Currently,
+                child.send("\n")                        #this happens for NetBSD/hpcmips
                 child.expect("b: Use the entire disk")
                 child.send("b\n")
             else:
