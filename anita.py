@@ -32,7 +32,7 @@ arch_qemu_map = {
     'sparc64': 'qemu-system-sparc64',
     'macppc': 'qemu-system-ppc',
 }
-arch_gxemul_list = ['pmax']
+arch_gxemul_list = ['pmax', 'hpcmips']
 
 # External commands we rely on
 
@@ -439,6 +439,9 @@ class Version:
                 download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
             return
+        if self.arch() == 'hpcmips':
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         i = 0
         for floppy in self.potential_floppies():
             download_if_missing_3(self.dist_url(),
@@ -733,6 +736,8 @@ class Anita:
             vmm_args = []
         if self.dist.arch() == 'pmax':
             vmm_args += ["-e3max"]
+        elif self.dist.arch() == 'hpcmips':
+            vmm_args += ["-emobilepro880"]
         if dist.arch() == 'evbarm-earmv7hf':
             vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.workdir, 'netbsd-VEXPRESS_A15.ub'),
             '-append', "root=ld0a", '-dtb', dtb]
@@ -958,17 +963,24 @@ class Anita:
             child = self.start_noemu(['--boot-from', 'net'])
         elif self.vmm == 'gxemul':
             cd_device = 'cd0a'
+            if self.dist.arch() == 'hpcmips':
+                cd_device = 'cd0d'
             vmm_args = ["-d", self.gxemul_cdrom_args()]
-            vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-             "binary", "kernel", "netbsd-INSTALL.gz"))]
+            if self.dist.arch() == 'pmax':
+                vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                 "binary", "kernel", "netbsd-INSTALL.gz"))]
+            elif self.dist.arch() == 'hpcmips':
+                vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                 "installation", "netbsd.gz"))]
             child = self.start_gxemul(vmm_args)
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
 
         term = None
+        if self.dist.arch() == 'hpcmips':
+            term = 'vt100'
 
         # Do the floppy swapping dance and other pre-sysinst interaction
-
         floppy0_name = None
         while True:
             # NetBSD/i386 will prompt for a terminal type if booted from a
@@ -1097,7 +1109,7 @@ class Anita:
                 # Alternatively, match the special letter "x: " which
                 # is not followed by an installation status.
                 child.expect(
-                    "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s?\x1b\[\d+;\d+H))(Yes|No|All|None))|(x: )")
+                    "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s?\x1b\[\d+;\d+H\x00*))(Yes|No|All|None))|(x: )")
                 (letter, label, yesno, exit) = child.match.groups()
                 if exit:
                     if len(sets_this_screen) != 0:
@@ -1275,7 +1287,9 @@ class Anita:
                          # Group 23
                          "(a: Use one of these disks)|" +
                          # Group 24
-                         "(a: Set sizes of NetBSD partitions)",
+                         "(a: Set sizes of NetBSD partitions)|" +
+                         # Group 25
+                         "(Sysinst could not automatically determine the BIOS geometry of the disk)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1473,7 +1487,7 @@ class Anita:
                 # but if it gets echoed (which has happened), it is interpreted by
                 # the terminal as "enable line drawing character set", leaving the
                 # terminal in an unusable state.
-                if term == 'xterm':
+                if term in ['xterm', 'vt100']:
                     # For unknown reasons, when using a terminal type of "xterm",
                     # sysinst puts the terminal in "application mode", causing the
                     # cursor keys to send a different escape sequence than the default.
@@ -1482,7 +1496,6 @@ class Anita:
                     # Use the default ANSI cursor-down escape sequence
                     cursor_down = "\033[B"
                 child.send(cursor_down * 8 + "\n")
-
                 child.expect("x: Partition sizes ok")
                 child.send("\n")
                 child.expect("Please enter a name for your NetBSD disk")
@@ -1494,6 +1507,15 @@ class Anita:
                 child.send("b\n")
 
                 # newfs is run at this point
+            elif child.match.group(25):
+                # We need to enter these values in cases where sysinst could not
+                # determine disk geometry. Currently, this happens for NetBSD/hpcmips
+                child.expect("sectors")
+                child.send("\n")
+                child.expect("heads")
+                child.send("\n")
+                child.expect("b: Use the entire disk")
+                child.send("b\n")
             else:
                 raise AssertionError
 
@@ -1554,6 +1576,9 @@ class Anita:
 
         if not self.no_install:
             self.install()
+            if self.dist.arch() == 'hpcmips':
+                vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                 "binary", "kernel", "netbsd-GENERIC.gz"))]
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
