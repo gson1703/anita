@@ -28,8 +28,8 @@ arch_qemu_map = {
     'amd64': 'qemu-system-x86_64',
     'sparc': 'qemu-system-sparc',
     'evbarm-earmv7hf': 'qemu-system-arm',
-     # The following ones don't actually work
     'sparc64': 'qemu-system-sparc64',
+     # The following ones don't actually work
     'macppc': 'qemu-system-ppc',
 }
 arch_gxemul_list = ['pmax', 'hpcmips']
@@ -216,10 +216,10 @@ def check_arch_supported(arch, dist_type):
     if arch_qemu_map.get(arch) is None and not arch in arch_gxemul_list:
         raise RuntimeError(("'%s' is not the name of a " + \
         "supported NetBSD port") % arch)
-    if (arch == 'i386' or arch == 'amd64') and dist_type != 'reltree':
+    if arch in ['i386', 'amd64'] and dist_type != 'reltree':
         raise RuntimeError(("NetBSD/%s must be installed from " +
             "a release tree, not an ISO") % arch)
-    if (arch == 'sparc') and dist_type != 'iso':
+    if (arch in ['sparc', 'sparc64']) and dist_type != 'iso':
         raise RuntimeError(("NetBSD/%s must be installed from " +
         "an ISO, not a release tree") % arch)
 
@@ -375,7 +375,7 @@ class Version:
         return None
     def scratch_disk(self):
         arch = self.arch()
-        if arch == 'i386' or arch == 'amd64':
+        if arch in ['i386', 'amd64', 'sparc64']:
             return "wd1d"
         else:
             return "sd1c"
@@ -702,7 +702,7 @@ class Anita:
 
         # Set the default memory size if none was given.
         if memory_size is None:
-            if dist.arch() in ['amd64', 'evbarm-earmv7hf', 'pmax']:
+            if dist.arch() in ['amd64', 'evbarm-earmv7hf', 'pmax', 'sparc64']:
                 memory_size = "128M"
             else:
                 memory_size = "32M"
@@ -954,7 +954,10 @@ class Anita:
                 cd_device = 'cd0a';
             elif self.boot_from == 'cdrom-with-sets':
                 # Single CD
-                vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
+                if not self.dist.arch() == 'sparc64':
+                    vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
+                else:
+                    vmm_args = ['-cdrom', self.dist.iso_path()]
                 vmm_args += ["-boot", "d"]
                 cd_device = 'cd0a'
 
