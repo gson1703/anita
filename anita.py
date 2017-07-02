@@ -1109,18 +1109,11 @@ class Anita:
                 # Alternatively, match the special letter "x: " which
                 # is not followed by an installation status.
                 child.expect(
-                    "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s?\x1b\[\d+;\d+H))(Yes|No|All|None))|(x: )")
+                    "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s?\x1b\[\d+;\d+H\x00*))(Yes|No|All|None))|(x: )")
                 (letter, label, yesno, exit) = child.match.groups()
                 if exit:
-                    if not self.dist.arch() == 'hpcmips':
-                        if len(sets_this_screen) != 0:
-                            break
-                    else:
-                        #while installing hpcmips, the option 'm' is repeated (only when run via anita)
-                        #It is appended to sets_this_screen only once. So, we need to select exit once
-                        #more, otherwise, we'll get stuck.
-                        if len(sets_this_screen) >= 0:
-                            break
+                    if len(sets_this_screen) != 0:
+                        break
                 else:
                     for set in set_list:
                         if re.match(set['label'], label) and label not in labels_seen:
@@ -1515,8 +1508,8 @@ class Anita:
 
                 # newfs is run at this point
             elif child.match.group(25):
-                #We need to enter these values in cases where sysinst could not
-                #determine disk geometry. Currently, this happens for NetBSD/hpcmips
+                # We need to enter these values in cases where sysinst could not
+                # determine disk geometry. Currently, this happens for NetBSD/hpcmips
                 child.expect("sectors")
                 child.send("\n")
                 child.expect("heads")
