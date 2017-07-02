@@ -977,6 +977,8 @@ class Anita:
             raise RuntimeError('unknown vmm %s' % self.vmm)
 
         term = None
+        if self.dist.arch() == 'hpcmips':
+            term = 'vt100'
 
         # Do the floppy swapping dance and other pre-sysinst interaction
         floppy0_name = None
@@ -1114,9 +1116,12 @@ class Anita:
                         if len(sets_this_screen) != 0:
                             break
                     else:
-                        if len(sets_this_screen) >= 0: #while installing hpcmips, the option 'm' is repeated (only when run via anita)
-                            break                      #It is appended to sets_this_screen only once. So, we need to select exit once
-                else:                                  #more, otherwise, we'll get stuck.
+                        #while installing hpcmips, the option 'm' is repeated (only when run via anita)
+                        #It is appended to sets_this_screen only once. So, we need to select exit once
+                        #more, otherwise, we'll get stuck.
+                        if len(sets_this_screen) >= 0:
+                            break
+                else:
                     for set in set_list:
                         if re.match(set['label'], label) and label not in labels_seen:
                             sets_this_screen.append({
@@ -1489,7 +1494,7 @@ class Anita:
                 # but if it gets echoed (which has happened), it is interpreted by
                 # the terminal as "enable line drawing character set", leaving the
                 # terminal in an unusable state.
-                if term == 'xterm':
+                if term in ['xterm', 'vt100']:
                     # For unknown reasons, when using a terminal type of "xterm",
                     # sysinst puts the terminal in "application mode", causing the
                     # cursor keys to send a different escape sequence than the default.
@@ -1497,10 +1502,7 @@ class Anita:
                 else:
                     # Use the default ANSI cursor-down escape sequence
                     cursor_down = "\033[B"
-                if not self.dist.arch() == 'hpcmips':
-                    child.send(cursor_down * 8 + "\n")
-                else:
-                    child.send("x\n") #Escape seqence for cursor down not working in vt100
+                child.send(cursor_down * 8 + "\n")
                 child.expect("x: Partition sizes ok")
                 child.send("\n")
                 child.expect("Please enter a name for your NetBSD disk")
@@ -1513,10 +1515,12 @@ class Anita:
 
                 # newfs is run at this point
             elif child.match.group(25):
-                child.expect("sectors")                 #We need to enter these values
-                child.send("\n")                        #in cases where sysinst could not
-                child.expect("heads")                   #determine disk geometry. Currently,
-                child.send("\n")                        #this happens for NetBSD/hpcmips
+                #We need to enter these values in cases where sysinst could not
+                #determine disk geometry. Currently, this happens for NetBSD/hpcmips
+                child.expect("sectors")
+                child.send("\n")
+                child.expect("heads")
+                child.send("\n")
                 child.expect("b: Use the entire disk")
                 child.send("b\n")
             else:
