@@ -243,6 +243,16 @@ def expect_any(child, *args):
         if r == len(actions) - 1:
             break
 
+# Receive and discard (but log) input from the child or a time
+# period of "seconds".  This is effectively a delay like
+# time.sleep(seconds), but generates more useful log output.
+
+def gather_input(child, seconds):
+    try:
+        child.expect("this-should-not-match", seconds)
+    except pexpect.TIMEOUT:
+        pass
+
 #############################################################################
 
 # A NetBSD version.
@@ -1441,11 +1451,6 @@ class Anita:
             elif child.match.group(16):
                 self.slog("network problems detected")
                 child.send("\003") # control-c
-                def gather_input(seconds):
-                    try:
-                        child.expect("timeout", seconds)
-                    except pexpect.TIMEOUT:
-                        pass
                 gather_input(666)
                 for i in range(60):
                     child.send("ifconfig -a\n")
