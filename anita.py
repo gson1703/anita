@@ -32,7 +32,7 @@ arch_qemu_map = {
      # The following ones don't actually work
     'macppc': 'qemu-system-ppc',
 }
-arch_gxemul_list = ['pmax', 'hpcmips']
+arch_gxemul_list = ['pmax', 'hpcmips', 'landisk']
 
 # External commands we rely on
 
@@ -441,6 +441,7 @@ class Version:
             return
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
+        if self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         i = 0
         for floppy in self.potential_floppies():
@@ -736,6 +737,8 @@ class Anita:
             vmm_args = []
         if self.dist.arch() == 'pmax':
             vmm_args += ["-e3max"]
+        elif self.dist.arch() == 'landisk':
+            vmm_args += ["-Elandisk"]
         elif self.dist.arch() == 'hpcmips':
             vmm_args += ["-emobilepro880"]
         if dist.arch() == 'evbarm-earmv7hf':
@@ -817,7 +820,7 @@ class Anita:
     def qemu_cdrom_args(self, path, devno):
         return ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
     def gxemul_cdrom_args(self):
-        return self.dist.iso_path()
+        return ('', 'd:')[self.dist.arch() == 'landisk'] + self.dist.iso_path()
     def gxemul_disk_args(self, path):
         return ["-d", path]
 
@@ -968,8 +971,10 @@ class Anita:
             cd_device = 'cd0a'
             if self.dist.arch() == 'hpcmips':
                 cd_device = 'cd0d'
+            elif self.dist.arch() == 'landisk':
+                cd_device = 'wd1a'
             vmm_args = ["-d", self.gxemul_cdrom_args()]
-            if self.dist.arch() == 'pmax':
+            if self.dist.arch() in ['pmax', 'landisk']:
                 vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                  "binary", "kernel", "netbsd-INSTALL.gz"))]
             elif self.dist.arch() == 'hpcmips':
@@ -980,7 +985,7 @@ class Anita:
             raise RuntimeError('unknown vmm %s' % self.vmm)
 
         term = None
-        if self.dist.arch() == 'hpcmips':
+        if self.dist.arch() in ['hpcmips', 'landisk']:
             term = 'vt100'
 
         # Do the floppy swapping dance and other pre-sysinst interaction
@@ -1579,7 +1584,7 @@ class Anita:
 
         if not self.no_install:
             self.install()
-            if self.dist.arch() == 'hpcmips':
+            if self.dist.arch() in ['hpcmips', 'landisk']:
                 vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                  "binary", "kernel", "netbsd-GENERIC.gz"))]
 
