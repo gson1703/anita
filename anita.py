@@ -1764,7 +1764,7 @@ def console_interaction(child):
 # Calling this directly is deprecated, use Anita.login()
 
 def login(child):
-    #Send a newline character to get another login prompt, since boot() consumed one.
+    # Send a newline character to get another login prompt, since boot() consumed one.
     child.send("\n")
     child.expect("login:")
     child.send("root\n")
