@@ -789,7 +789,7 @@ class Anita:
         # Log reads from child
         child.logfile_read = multifile([self.unstructured_log_f, Logger('recv', self.structured_log_f)])
         # Log writes to child
-        child.logfile_send = multifile([self.unstructured_log_f, Logger('send', self.structured_log_f)])
+        child.logfile_send = Logger('send', self.structured_log_f)
         child.timeout = 600
         child.setecho(False)
         # Xen installs sometimes fail if we don't increase this
@@ -1764,6 +1764,7 @@ def console_interaction(child):
 # Calling this directly is deprecated, use Anita.login()
 
 def login(child):
+    #Send a newline character to get another login prompt, since boot() consumed one.
     child.send("\n")
     child.expect("login:")
     child.send("root\n")
