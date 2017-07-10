@@ -1,5 +1,8 @@
 
-Fix output appearing twice in interact mode (again).
+VM console input is no longer logged to stdout, to keep it from
+appearing twice when echoed by the VM.
+
+Fix VM console output appearing twice in interact mode (again).
 
 Add support for gxemul as a new VMM and NetBSD/pmax as a new guest.
 From Utkarsh Anand.
