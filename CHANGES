@@ -1,4 +1,6 @@
 
+- 1.42 released -
+
 VM console input is no longer logged to stdout, to keep it from
 appearing twice when echoed by the VM.
 
