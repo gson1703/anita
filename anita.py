@@ -1111,7 +1111,7 @@ class Anita:
         # confused by earlier output echoing past choices.
         labels_seen = set()
 
-        def choose_sets(set_list):
+        def choose_sets(set_list, level = 0):
             sets_this_screen = []
             # First parse the set selection screen or popup; it's messy.
             while True:
@@ -1154,7 +1154,7 @@ class Anita:
                     child.send(item['letter'] + "\n")
                 if group:
                     # Recurse to handle sub-menu
-                    choose_sets(group)
+                    choose_sets(group, level + 1)
 
             # Exit the set selection menu
             child.send("x\n")
