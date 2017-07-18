@@ -1451,12 +1451,12 @@ class Anita:
             elif child.match.group(16):
                 self.slog("network problems detected")
                 child.send("\003") # control-c
-                gather_input(666)
+                gather_input(child, 666)
                 for i in range(60):
                     child.send("ifconfig -a\n")
-                    gather_input(1)
+                    gather_input(child, 1)
                 # would run netstat here but it's not on the install media
-                gather_input(30)
+                gather_input(child, 30)
                 sys.exit(1)
             elif child.match.group(20):
                 # Custom installation is choice "d" in 6.0,
