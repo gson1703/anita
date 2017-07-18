@@ -1619,8 +1619,15 @@ class Anita:
 
     # Deprecated
     def interact(self):
-        child = self.boot()
-        console_interaction(child)
+        self.boot()
+        self.console_interaction()
+
+    def console_interaction(self):
+        # With pexpect 2.x and newer, we need to disable logging to stdout
+        # of data read from the slave, or otherwise everything will be
+        # printed twice.  We can still log to the structured log, though.
+        self.child.logfile_read = Logger('recv', self.structured_log_f)
+        self.child.interact()
 
     def run_tests(self, timeout = 10800):
         results_by_net = (self.vmm == 'noemu')
@@ -1754,12 +1761,6 @@ class Anita:
         except pexpect.TIMEOUT, e:
             # This is unexpected but mostly harmless
             print "timeout waiting for halt confirmation:", e
-
-def console_interaction(child):
-    # We need this in pexpect 2.x or everything will be printed twice
-    child.logfile_read = None
-    child.logfile_send = None
-    child.interact()
 
 # Calling this directly is deprecated, use Anita.login()
 

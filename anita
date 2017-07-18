@@ -124,13 +124,13 @@ def main(argv = None):
     if mode == 'install':
         a.install()
     elif mode == 'boot':
-        child = a.boot()
+        a.boot()
         status = maybe_run_command(a)
         a.halt()
     elif mode == 'interact':
-        child = a.boot()
+        a.boot()
         status = maybe_run_command(a)
-        anita.console_interaction(child)
+        a.interact()
     elif mode == 'test':
         status = a.run_tests(timeout = options.test_timeout)
         a.halt()
