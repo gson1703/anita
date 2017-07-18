@@ -771,7 +771,9 @@ class Anita:
 
     def pexpect_spawn(self, command, args):
         print command, " \\\n    ".join(args)
-        return pexpect_spawn_log(self.structured_log_f, command, args)
+        child = pexpect_spawn_log(self.structured_log_f, command, args)
+        print "child pid is %d" % child.pid
+        return child
 
     # The path to the NetBSD hard disk image
     def wd0_path(self):
