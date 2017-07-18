@@ -249,7 +249,8 @@ def expect_any(child, *args):
 
 def gather_input(child, seconds):
     try:
-        child.expect("this-should-not-match", seconds)
+        # This regexp will never match
+        child.expect("(?!)", seconds)
     except pexpect.TIMEOUT:
         pass
 
