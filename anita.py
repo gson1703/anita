@@ -33,6 +33,7 @@ arch_qemu_map = {
     'macppc': 'qemu-system-ppc',
 }
 arch_gxemul_list = ['pmax', 'hpcmips', 'landisk']
+arch_simh_list = ['vax']
 
 # External commands we rely on
 
@@ -213,13 +214,13 @@ def dir2url(dir):
     return "".join(chars)
 
 def check_arch_supported(arch, dist_type):
-    if arch_qemu_map.get(arch) is None and not arch in arch_gxemul_list:
+    if arch_qemu_map.get(arch) is None and not arch in (arch_gxemul_list + arch_simh_list):
         raise RuntimeError(("'%s' is not the name of a " + \
         "supported NetBSD port") % arch)
     if arch in ['i386', 'amd64'] and dist_type != 'reltree':
         raise RuntimeError(("NetBSD/%s must be installed from " +
             "a release tree, not an ISO") % arch)
-    if (arch in ['sparc', 'sparc64']) and dist_type != 'iso':
+    if (arch in ['sparc', 'sparc64', 'vax']) and dist_type != 'iso':
         raise RuntimeError(("NetBSD/%s must be installed from " +
         "an ISO, not a release tree") % arch)
 
@@ -387,6 +388,8 @@ class Version:
         arch = self.arch()
         if arch in ['i386', 'amd64', 'sparc64']:
             return "wd1d"
+        elif arch == 'vax':
+            return "ra1a"
         else:
             return "sd1c"
 
@@ -724,7 +727,7 @@ class Anita:
         self.no_install = no_install
 
         self.qemu = arch_qemu_map.get(dist.arch())
-        if self.qemu is None and not self.dist.arch() in arch_gxemul_list:
+        if self.qemu is None and not self.dist.arch() in (arch_gxemul_list + arch_simh_list):
             raise RuntimeError("NetBSD port '%s' is not supported" %
                 dist.arch())
 
@@ -738,6 +741,8 @@ class Anita:
             vmm = 'xm'
         elif not vmm and self.qemu:
             vmm = 'qemu'
+        elif self.dist.arch() in arch_simh_list:
+            vmm = 'simh'
         else:
             vmm = 'gxemul'
 
@@ -800,6 +805,18 @@ class Anita:
         child.delayafterterminate = 30.0
         self.child = child
 
+    def start_simh(self, vmm_args = []):
+        f = open(os.path.join(self.workdir, 'netbsd.ini'), 'w')
+        f.write('set cpu ' + str(self.memory_megs()) + 'm\n' +
+                'set rq0 ra92\n' +
+                'set rq3 cdrom\n' + '\n'.join(vmm_args) + '\n' +
+                'attach rq0 ' + self.wd0_path() + '\n' +
+                'attach -r rq3 ' + self.dist.iso_path() + '\n' +
+                'boot cpu')
+        f.close()
+        child = self.pexpect_spawn('simh-vax', [os.path.join(self.workdir, 'netbsd.ini')])
+        self.configure_child(child)
+        return child
     def start_gxemul(self, vmm_args):
         child = self.pexpect_spawn('gxemul', ["-M", str(self.memory_megs()) + 'M',
          "-d", os.path.abspath(self.wd0_path())] + self.extra_vmm_args + vmm_args)
@@ -991,6 +1008,11 @@ class Anita:
                 vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                  "installation", "netbsd.gz"))]
             child = self.start_gxemul(vmm_args)
+        elif self.vmm == 'simh':
+            cd_device = 'cd0a'
+            child = self.start_simh()
+            child.expect(">>>")
+            child.send("boot dua3\r\n")
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
 
@@ -1604,6 +1626,10 @@ class Anita:
             child = self.start_noemu(vmm_args + ['--boot-from', 'disk'])
         elif self.vmm == 'gxemul':
             child = self.start_gxemul(vmm_args)
+        elif self.vmm == 'simh':
+            child = self.start_simh(vmm_args)
+            child.expect(">>>")
+            child.send("boot dua0\r\n")
         else:
             raise RuntimeError('unknown vmm %s' % vmm)
         self.child = child
@@ -1652,6 +1678,8 @@ class Anita:
             scratch_disk_args = []
         elif self.vmm == 'gxemul':
             scratch_disk_args = self.gxemul_disk_args(os.path.abspath(scratch_disk_path))
+        elif self.vmm == 'simh':
+            scratch_disk_args = ['set rq1 ra92', 'attach rq1 ' + scratch_disk_path]
         else:
             raise RuntimeError('unknown vmm')
 
