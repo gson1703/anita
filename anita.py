@@ -812,7 +812,8 @@ class Anita:
         f = open(os.path.join(self.workdir, 'netbsd.ini'), 'w')
         f.write('set cpu ' + str(self.memory_megs()) + 'm\n' +
                 'set rq0 ra92\n' +
-                'set rq3 cdrom\n' + '\n'.join(vmm_args) + '\n' +
+                'set rq3 cdrom\n' +
+                '\n'.join(vmm_args) + '\n' +
                 'attach rq0 ' + self.wd0_path() + '\n' +
                 'attach -r rq3 ' + self.dist.iso_path() + '\n' +
                 'boot cpu')
