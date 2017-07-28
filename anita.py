@@ -1319,7 +1319,7 @@ class Anita:
                          # Group 16
                          r"(Can't connect to)|" +
                          # Group 17
-                         "(not-in-use)|" +
+                         "(/sbin/newfs)|" +
                          # Group 18
                          "(not-in-use)|" +
                          # Group 19
@@ -1484,6 +1484,8 @@ class Anita:
                 # would run netstat here but it's not on the install media
                 gather_input(child, 30)
                 sys.exit(1)
+            elif child.match.group(17):
+                self.slog("matched newfs to defeat repeat match detection")
             elif child.match.group(20):
                 # Custom installation is choice "d" in 6.0,
                 # but choice "c" or "b" in older versions
