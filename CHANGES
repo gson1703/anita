@@ -1,7 +1,7 @@
-Deal with sysinst sometimes issuing a "Hit enter to continue"
-prompt twice in a row on hpcmips.
 
 Log interactive mode input and output to the structured log file.
+
+Add support for NetBSD/hpcmips targets, from Utkarsh Anand.
 
 - 1.42 released -
 

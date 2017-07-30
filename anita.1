@@ -1,4 +1,4 @@
-.Dd Jun 25, 2017
+.Dd July 30, 2017
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -32,7 +32,7 @@ installed system, and running the NetBSD test suite.
 .Pp
 The NetBSD ports currently supported as targets (i.e., as the
 system to install and run under emulation) are i386, amd64, sparc,
-evbarm-earmv7hf (using the VEXPRESS_A15 kernel) and pmax.
+evbarm-earmv7hf (using the VEXPRESS_A15 kernel), pmax, and hpcmips.
 The host (the system running
 .Nm )
 can be any NetBSD port or even a different Unix-like system such
@@ -394,10 +394,10 @@ For more details, please see
 .Nm
 is still a work in progress.  Currently,
 .Nm
-only supports the i386, amd64, sparc, evbarm-earmv7hf
-and pmax ports.
-It should be possible to add support for installing other ports
-patches are welcome.
+only supports the i386, amd64, sparc, evbarm-earmv7hf,
+pmax, and hpcmips ports.
+It should be possible to add support for installing other ports.
+Patches are welcome.
 .Pp
 .Nm
 is likely to break whenever any significant change is made to
