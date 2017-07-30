@@ -1,4 +1,6 @@
 
+- 1.43 released -
+
 Log interactive mode input and output to the structured log file.
 
 Add support for NetBSD/hpcmips targets, from Utkarsh Anand.
