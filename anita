@@ -120,6 +120,7 @@ def main(argv = None):
 
     if mode != 'print-workdir':
         print "This is anita version", anita.__version__
+        sys.stdout.flush()
 
     if mode == 'install':
         a.install()
