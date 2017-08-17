@@ -34,6 +34,7 @@ arch_qemu_map = {
 }
 arch_gxemul_list = ['pmax', 'hpcmips', 'landisk']
 arch_simh_list = ['vax']
+arch_uae_list = ['amiga']
 
 # External commands we rely on
 
@@ -214,10 +215,10 @@ def dir2url(dir):
     return "".join(chars)
 
 def check_arch_supported(arch, dist_type):
-    if arch_qemu_map.get(arch) is None and not arch in (arch_gxemul_list + arch_simh_list):
+    if arch_qemu_map.get(arch) is None and not arch in (arch_gxemul_list + arch_simh_list + arch_uae_list):
         raise RuntimeError(("'%s' is not the name of a " + \
         "supported NetBSD port") % arch)
-    if arch in ['i386', 'amd64'] and dist_type != 'reltree':
+    if arch in ['i386', 'amd64', 'amiga'] and dist_type != 'reltree':
         raise RuntimeError(("NetBSD/%s must be installed from " +
             "a release tree, not an ISO") % arch)
     if (arch in ['sparc', 'sparc64', 'vax']) and dist_type != 'iso':
@@ -453,10 +454,12 @@ class Version:
                 download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
             return
-        if self.arch() == 'hpcmips':
+        elif self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
-        if self.arch() in ['hpcmips', 'landisk']:
+        elif self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
+        elif self.arch() == 'amiga':
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "miniroot", "miniroot.fs.gz"])
         i = 0
         for floppy in self.potential_floppies():
             download_if_missing_3(self.dist_url(),
@@ -808,6 +811,33 @@ class Anita:
         child.delayafterterminate = 30.0
         self.child = child
 
+    def start_uae(self, vmm_args = []):
+        f = open(os.path.join(self.workdir, 'netbsd.uae'), 'w')
+        f.write('kickstart_rom_file=/path/to/kickstart\n' +
+                'kbd_lang=us\n' +
+                'gfx_linemode=double\n' +
+                'sound_output=interrupts\n' +
+                'sound_channels=stereo\n' +
+                'sound_max_buff=44100\n' +
+                'cpu_type=68040\n' +
+                'cpu_speed=30' +
+                'cpu_compatible=false' +
+                'nr_floppies=1' +
+                'rtc=a3000\n' +
+                'wdc=both\n' +
+                'z3mem_size=1024\n' +
+                'wdcfile=rw,32,16,0,512,' + self.wd0_path() + '\n' +
+                '\n'.join(vmm_args) + '\n' +
+                'ethercard=false\n' +
+                'gmtime=true\n' +
+                'use_gui=no\n' +
+                'vnc_screen=0\n' +
+                'vnc_password=\n' +
+                'vnc_viewonly=ok')
+        f.close()
+        child = self.pexpect_spawn('uae', [os.path.join(self.workdir, 'netbsd.uae')])
+        self.configure_child(child)
+        return child
     def start_simh(self, vmm_args = []):
         f = open(os.path.join(self.workdir, 'netbsd.ini'), 'w')
         f.write('set cpu ' + str(self.memory_megs()) + 'm\n' +
@@ -910,7 +940,123 @@ class Anita:
         self.configure_child(child)
         return child
 
-    def _install(self):
+    def install_amiga(self):
+        print "Creating hard disk image...",
+        sys.stdout.flush()
+        spawn('dd',['dd', 'if=/dev/zero', 'of=' + self.wd0_path, 'bs=512', 'count=2000000'])
+        print "Creating install image...",
+        sys.stdout.flush()
+        wd1_path = os.path.join(self.workdir, 'wd1.img')
+        spawn('dd',['dd', 'if=/dev/zero', 'of=' + wd1_path, 'bs=512', 'count=2000000'])
+        rdb_conf = os.path.join(self.workdir,'rdbedit.conf')
+        f = open(rdb_conf, 'w+')
+        f.write('c3 7000\n' + 'p3\n' + 'nmini\n' + 'fbootable\n' + 'o16\n' + 'tNBR\\7\n' + 'q\n' +
+                'c4 8624\n' + 'p4\n' + 'nsets\n' + 'o16\n' + 'tNBU\\12\n' + 'q\n' + 'q\n' + 'Y\n')
+        f.seek(0)
+        subprocess.Popen(['rdbedit', '-Fies 2', wd1_path], stdin=f)
+        f.close()
+        f = open(rdb_conf, 'w+')
+        f.write('c3 7000\n' + 'p3\n' + 'nroot\n' + 'fbootable\n' + 'o16\n' +
+                'tNBR\\7\n' + 'q\n' + 'q\n' + 'Y\n')
+        f.seek(0)
+        subprocess.Popen(['rdbedit', '-Fies 2', self.wd0_path()], stdin=f)
+        f.close()
+        self.dist.make_iso()
+        miniroot_fn = os.path.join(self.workdir, 'installation', 'miniroot', 'miniroot.fs.gz')
+        if os.path.exists(miniroot_fn):
+            subprocess.call('zcat' + miniroot_fn + ' | dd of=' + self.wd0_path() + 'oseek=128' + ' conv=osync,notrunc', shell = True)
+        spawn('dd', ['dd', 'if=' + self.dist.iso_path, 'of=' + wd1_path, 'oseek=896128' + ' conv=osync,notrunc', shell = True])
+        vmm_args = ['wdcfile=rw,32,16,0,512,' + wd1_path]
+        child = self.start_uae(vmm_args)
+        loop = 0
+        while True:
+            loop = loop + 1
+            if loop == 24:
+                raise RuntimeError("loop detected")
+            child.expect(
+                        # Group 1
+                        "(map you want to activate)|" +
+                        # Group 2
+                        "(pgrade)|" +
+                        # Group 3
+                        "(Proceed with installation)|" +
+                        # Group 4
+                        "(Look at which)|" +
+                        # Group 5
+                        "(Which disk is the root disk)|" +
+                        # Group 6
+                        "(Device name)|" +
+                        # Group 7
+                        "(Ok to configure wd0b as a swap device)|" +
+                        # Group 8
+                        "(Edit)|" +
+                        # Group 9
+                        "(Configure the network)|" +
+                        # Group 10
+                        "(Edit the fstab)|" +
+                        # Group 11
+                        "(Use verbose listing for extractions)|" +
+                        # Group 12
+                        "(or local)|" +
+                        # Group 13
+                        "(Is the file-system with the install sets already mounted)|"
+                        # Group 14
+                        "(Which is the disk with the installation sets)|" +
+                        # Group 15
+                        "(Partition)|" +
+                        # Group 16
+                        "(Which filesystem type)|" +
+                        # Group 17
+                        "(Continue extraction)|" +
+                        # Group 18
+                        "(or all)|" +
+                        # Group 19
+                        "(Extract more sets)|" +
+                        # Group 20
+                        "(What timezone are you in)|" +
+                        # Group 21
+                        "(Should a boot block be installed)|"
+                        # Group 22
+                        "(the installer will restart itself)|",
+                        10800)
+            if child.match.group(1):
+                child.send("6\n")
+            elif child.match.group(2):
+                child.send("I\n")
+            elif child.match.group(3) or child.match.group (7) or child.match.group(11):
+                child.send("y\n")
+            elif child.match.group(4) or child.match.group(6) or child.match.group(17)
+            or child.match.group(20) or child.match.group(21):
+                child.send("\n")
+            elif child.match.group(5) or child.match.group(14):
+                child.send("wd0\n")
+            elif child.match.group(8) or child.match.group(9) or child.match.group(10)
+            or child.match.group(13) or child.match.group(19):
+                child.send("n\n")
+            elif child.match.group(12) or child.match.group(15):
+                child.send("d\n")
+            elif child.match.group(16):
+                child.send("cd9660\n")
+            elif child.match.group(18):
+                child.send("all\n")
+            elif child.match.group(22):
+                child.expect("(#)|(halting machine)|(halted by root)")
+                if child.match.group(1):
+                    # Root shell prompt
+                    child.send("halt\n")
+                else:
+                    break
+            else:
+                raise AssertionError()
+        child.close()
+        # Make sure all refs go away
+        child = None
+        self.child = None
+        os.unlink(wd1_path)
+        os.unlink(rdb_conf)
+        self.dist.cleanup()
+
+    def install_sysinst(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
         if self.dist.arch() == 'evbarm-earmv7hf':
@@ -1600,7 +1746,10 @@ class Anita:
             if os.path.exists(self.wd0_path()):
                 return
             try:
-                self._install()
+                if self.dist.arch() == 'amiga':
+                    self.install_amiga()
+                else:
+                    self.install_sysinst()
             except:
                 if os.path.exists(self.wd0_path()):
                     os.unlink(self.wd0_path())
