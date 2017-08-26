@@ -943,7 +943,7 @@ class Anita:
     def install_amiga(self):
         print "Creating hard disk image...",
         sys.stdout.flush()
-        spawn('dd',['dd', 'if=/dev/zero', 'of=' + self.wd0_path, 'bs=512', 'count=2000000'])
+        spawn('dd',['dd', 'if=/dev/zero', 'of=' + self.wd0_path(), 'bs=512', 'count=2000000'])
         print "Creating install image...",
         sys.stdout.flush()
         wd1_path = os.path.join(self.workdir, 'wd1.img')
@@ -963,15 +963,21 @@ class Anita:
         f.close()
         self.dist.make_iso()
         miniroot_fn = os.path.join(self.workdir, 'installation', 'miniroot', 'miniroot.fs.gz')
+        bootxx = os.path.join(self.workdir, 'bootxx')
+        bootblock = os.path.join(self.workdir, 'bootblock')
         if os.path.exists(miniroot_fn):
-            subprocess.call('zcat' + miniroot_fn + ' | dd of=' + self.wd0_path() + 'oseek=128' + ' conv=osync,notrunc', shell = True)
-        spawn('dd', ['dd', 'if=' + self.dist.iso_path, 'of=' + wd1_path, 'oseek=896128' + ' conv=osync,notrunc', shell = True])
+            spawn('dd',['dd', 'if=' + miniroot_fn, 'of=' + bootxx, 'conv=osync', 'count=16'])
+            open(bootblock, 'w').close()
+            spawn('installboot',['installboot', '-m amiga', '-o command="netbsd -Cc 4000"', bootblock, bootxx])
+            spawn('dd',['dd', 'if=' + bootblock, 'of=' + wd1_path, 'oseek=128', 'conv=osync,notrunc'])
+            subprocess.call('zcat ' + miniroot_fn + ' | dd of=' + self.wd0_path() + ' oseek=144' + ' skip=16' + ' conv=osync,notrunc', shell = True)
+        spawn('dd', ['dd', 'if=' + self.dist.iso_path, 'of=' + wd1_path, ' oseek=896128' + ' conv=osync,notrunc', shell = True])
         vmm_args = ['wdcfile=rw,32,16,0,512,' + wd1_path]
         child = self.start_uae(vmm_args)
         loop = 0
         while True:
             loop = loop + 1
-            if loop == 24:
+            if loop == 27:
                 raise RuntimeError("loop detected")
             child.expect(
                         # Group 1
@@ -1007,40 +1013,74 @@ class Anita:
                         # Group 16
                         "(Which filesystem type)|" +
                         # Group 17
-                        "(Continue extraction)|" +
+                        "(contains the savesets)|" +
                         # Group 18
-                        "(or all)|" +
+                        "(Continue extraction)|" +
                         # Group 19
-                        "(Extract more sets)|" +
+                        "(or all)|" +
                         # Group 20
-                        "(What timezone are you in)|" +
+                        "(Extract more sets)|" +
                         # Group 21
-                        "(Should a boot block be installed)|"
+                        "(What timezone are you in)|" +
                         # Group 22
+                        "(on the installation filesystem)|" +
+                        # Group 23
+                        "(Should a boot block be installed)|" +
+                        # Group 24
+                        "(Boot command)|" +
+                        # Group 25
                         "(the installer will restart itself)|",
                         10800)
             if child.match.group(1):
                 child.send("6\n")
             elif child.match.group(2):
                 child.send("I\n")
-            elif child.match.group(3) or child.match.group (7) or child.match.group(11):
+            elif child.match.group(3):
                 child.send("y\n")
-            elif child.match.group(4) or child.match.group(6) or child.match.group(17)
-            or child.match.group(20) or child.match.group(21):
+            elif child.match.group(4):
                 child.send("\n")
-            elif child.match.group(5) or child.match.group(14):
+            elif child.match.group(5):
                 child.send("wd0\n")
-            elif child.match.group(8) or child.match.group(9) or child.match.group(10)
-            or child.match.group(13) or child.match.group(19):
+            elif child.match.group(6):
+                child.send("\n")
+            elif child.match.group(7):
+                child.send("y\n")
+            elif child.match.group(8):
                 child.send("n\n")
-            elif child.match.group(12) or child.match.group(15):
+            elif child.match.group(9):
+                child.send("n\n")
+            elif child.match.group(10):
+                child.send("n\n")
+            elif child.match.group(11):
+                child.send("y\n")
+            elif child.match.group(12):
+                child.send("d\n")
+            elif child.match.group(13):
+                child.send("n\n")
+            elif child.match.group(14):
+                child.send("wd1\n")
+            elif child.match.group(15):
                 child.send("d\n")
             elif child.match.group(16):
                 child.send("cd9660\n")
+            elif child.match.group(17):
+                child.send("amiga/binary/sets\n")
             elif child.match.group(18):
+                child.send("\n")
+            elif child.match.group(19):
                 child.send("all\n")
+            elif child.match.group(20):
+                child.send("n\n")
+            elif child.match.group(21):
+                child.send("\n")
             elif child.match.group(22):
-                child.expect("(#)|(halting machine)|(halted by root)")
+                child.send("n\n")
+            elif child.match.group(23):
+                child.send("y\n")
+            elif child.match.group(24):
+                child.send("netbsd -Cc 4000\n")
+            elif child.match.group(25):
+                child.expect("(#)|(halted by root)")
                 if child.match.group(1):
                     # Root shell prompt
                     child.send("halt\n")
