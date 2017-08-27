@@ -454,11 +454,11 @@ class Version:
                 download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
             return
-        elif self.arch() == 'hpcmips':
+        if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
-        elif self.arch() in ['hpcmips', 'landisk']:
+        if self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
-        elif self.arch() == 'amiga':
+        if self.arch() == 'amiga':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "miniroot", "miniroot.fs.gz"])
         i = 0
         for floppy in self.potential_floppies():
@@ -731,7 +731,7 @@ class Anita:
         self.no_install = no_install
 
         self.qemu = arch_qemu_map.get(dist.arch())
-        if self.qemu is None and not self.dist.arch() in (arch_gxemul_list + arch_simh_list):
+        if self.qemu is None and not self.dist.arch() in (arch_gxemul_list + arch_simh_list + arch_uae_list):
             raise RuntimeError("NetBSD port '%s' is not supported" %
                 dist.arch())
 
@@ -747,6 +747,8 @@ class Anita:
             vmm = 'qemu'
         elif self.dist.arch() in arch_simh_list:
             vmm = 'simh'
+        elif self.dist.arch() in arch_uae_list:
+            vmm = 'uae'
         else:
             vmm = 'gxemul'
 
@@ -941,13 +943,14 @@ class Anita:
         return child
 
     def install_amiga(self):
+        self.dist.make_iso()
         print "Creating hard disk image...",
         sys.stdout.flush()
-        spawn('dd',['dd', 'if=/dev/zero', 'of=' + self.wd0_path(), 'bs=512', 'count=2000000'])
+        make_dense_image(self.wd0_path(), 1024000000)
         print "Creating install image...",
         sys.stdout.flush()
         wd1_path = os.path.join(self.workdir, 'wd1.img')
-        spawn('dd',['dd', 'if=/dev/zero', 'of=' + wd1_path, 'bs=512', 'count=2000000'])
+        make_dense_image(wd1_path, 1024000000)
         rdb_conf = os.path.join(self.workdir,'rdbedit.conf')
         f = open(rdb_conf, 'w+')
         f.write('c3 7000\n' + 'p3\n' + 'nmini\n' + 'fbootable\n' + 'o16\n' + 'tNBR\\7\n' + 'q\n' +
@@ -961,17 +964,16 @@ class Anita:
         f.seek(0)
         subprocess.Popen(['rdbedit', '-Fies 2', self.wd0_path()], stdin=f)
         f.close()
-        self.dist.make_iso()
         miniroot_fn = os.path.join(self.workdir, 'installation', 'miniroot', 'miniroot.fs.gz')
         bootxx = os.path.join(self.workdir, 'bootxx')
         bootblock = os.path.join(self.workdir, 'bootblock')
         if os.path.exists(miniroot_fn):
-            spawn('dd',['dd', 'if=' + miniroot_fn, 'of=' + bootxx, 'conv=osync', 'count=16'])
+            os.spawn('dd',['dd', 'if=' + miniroot_fn, 'of=' + bootxx, 'conv=osync', 'count=16'])
             open(bootblock, 'w').close()
             spawn('installboot',['installboot', '-m amiga', '-o command="netbsd -Cc 4000"', bootblock, bootxx])
-            spawn('dd',['dd', 'if=' + bootblock, 'of=' + wd1_path, 'oseek=128', 'conv=osync,notrunc'])
-            subprocess.call('zcat ' + miniroot_fn + ' | dd of=' + self.wd0_path() + ' oseek=144' + ' skip=16' + ' conv=osync,notrunc', shell = True)
-        spawn('dd', ['dd', 'if=' + self.dist.iso_path, 'of=' + wd1_path, ' oseek=896128' + ' conv=osync,notrunc', shell = True])
+            spawn('dd',['dd', 'if=' + bootblock, 'of=' + wd1_path, 'seek=128', 'conv=osync,notrunc'])
+            subprocess.call('zcat ' + miniroot_fn + ' | dd of=' + self.wd0_path() + ' seek=144' + ' skip=16' + ' conv=osync,notrunc', shell = True)
+        spawn('dd', ['dd', 'if=' + self.dist.iso_path(), 'of=' + wd1_path, 'seek=896128', 'conv=osync,notrunc'])
         vmm_args = ['wdcfile=rw,32,16,0,512,' + wd1_path]
         child = self.start_uae(vmm_args)
         loop = 0
@@ -1825,6 +1827,8 @@ class Anita:
             child = self.start_simh(vmm_args)
             child.expect(">>>")
             child.send("boot dua0\r\n")
+        elif self.vmm == 'uae':
+            child = self.start_uae(vmm_args)
         else:
             raise RuntimeError('unknown vmm %s' % vmm)
         self.child = child
@@ -1882,6 +1886,8 @@ class Anita:
             scratch_disk_args = self.gxemul_disk_args(os.path.abspath(scratch_disk_path))
         elif self.vmm == 'simh':
             scratch_disk_args = ['set rq1 ra92', 'attach rq1 ' + scratch_disk_path]
+        elif self.vmm == 'uae':
+            scratch_disk_args = ['wdcfile=rw,32,16,0,512,' + scratch_disk_path]
         else:
             raise RuntimeError('unknown vmm')
 
