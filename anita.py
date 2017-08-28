@@ -815,20 +815,20 @@ class Anita:
 
     def start_uae(self, vmm_args = []):
         f = open(os.path.join(self.workdir, 'netbsd.uae'), 'w')
-        f.write('kickstart_rom_file=/path/to/kickstart\n' +
+        f.write('kickstart_rom_file=/home/utkarsh009/uae/kick3.1.rom\n' +
                 'kbd_lang=us\n' +
                 'gfx_linemode=double\n' +
                 'sound_output=interrupts\n' +
                 'sound_channels=stereo\n' +
                 'sound_max_buff=44100\n' +
                 'cpu_type=68040\n' +
-                'cpu_speed=30' +
-                'cpu_compatible=false' +
-                'nr_floppies=1' +
+                'cpu_speed=30\n' +
+                'cpu_compatible=false\n' +
+                'nr_floppies=1\n' +
                 'rtc=a3000\n' +
                 'wdc=both\n' +
                 'z3mem_size=1024\n' +
-                'wdcfile=rw,32,16,0,512,' + self.wd0_path() + '\n' +
+                'wdcfile=rw,32,16,0,512,' + os.path.abspath(self.wd0_path()) + '\n' +
                 '\n'.join(vmm_args) + '\n' +
                 'ethercard=false\n' +
                 'gmtime=true\n' +
@@ -837,7 +837,7 @@ class Anita:
                 'vnc_password=\n' +
                 'vnc_viewonly=ok')
         f.close()
-        child = self.pexpect_spawn('uae', [os.path.join(self.workdir, 'netbsd.uae')])
+        child = self.pexpect_spawn('uae', ['-f ' + os.path.join(self.workdir, 'netbsd.uae') + ' -I ' + '""'])
         self.configure_child(child)
         return child
     def start_simh(self, vmm_args = []):
@@ -959,22 +959,22 @@ class Anita:
         subprocess.Popen(['rdbedit', '-Fies 2', wd1_path], stdin=f)
         f.close()
         f = open(rdb_conf, 'w+')
-        f.write('c3 7000\n' + 'p3\n' + 'nroot\n' + 'fbootable\n' + 'o16\n' +
+        f.write('c3 15624\n' + 'p3\n' + 'nroot\n' + 'fbootable\n' + 'o16\n' +
                 'tNBR\\7\n' + 'q\n' + 'q\n' + 'Y\n')
         f.seek(0)
         subprocess.Popen(['rdbedit', '-Fies 2', self.wd0_path()], stdin=f)
         f.close()
-        miniroot_fn = os.path.join(self.workdir, 'installation', 'miniroot', 'miniroot.fs.gz')
+        miniroot_fn = os.path.join(self.workdir, 'download', 'amiga', 'installation', 'miniroot', 'miniroot.fs.gz')
         bootxx = os.path.join(self.workdir, 'bootxx')
         bootblock = os.path.join(self.workdir, 'bootblock')
         if os.path.exists(miniroot_fn):
-            os.spawn('dd',['dd', 'if=' + miniroot_fn, 'of=' + bootxx, 'conv=osync', 'count=16'])
+            spawn('dd',['dd', 'if=' + miniroot_fn, 'of=' + bootxx, 'conv=osync', 'count=16'])
             open(bootblock, 'w').close()
-            spawn('installboot',['installboot', '-m amiga', '-o command="netbsd -Cc 4000"', bootblock, bootxx])
-            spawn('dd',['dd', 'if=' + bootblock, 'of=' + wd1_path, 'seek=128', 'conv=osync,notrunc'])
-            subprocess.call('zcat ' + miniroot_fn + ' | dd of=' + self.wd0_path() + ' seek=144' + ' skip=16' + ' conv=osync,notrunc', shell = True)
-        spawn('dd', ['dd', 'if=' + self.dist.iso_path(), 'of=' + wd1_path, 'seek=896128', 'conv=osync,notrunc'])
-        vmm_args = ['wdcfile=rw,32,16,0,512,' + wd1_path]
+            spawn('installboot',['installboot', '-m', 'amiga', '-o', 'command="netbsd -Cc 4000"', bootblock, bootxx])
+            spawn('dd',['dd', 'if=' + bootblock, 'of=' + wd1_path, 'seek=128', 'conv=sync,notrunc', 'bs=512'])
+            subprocess.call('zcat ' + miniroot_fn + ' | dd of=' + self.wd0_path() + ' seek=144' + ' skip=16' + ' conv=sync,notrunc' + ' bs=512', shell = True)
+        spawn('dd', ['dd', 'if=' + self.dist.iso_path(), 'of=' + wd1_path, 'seek=896128', 'conv=sync,notrunc', 'bs=512'])
+        vmm_args = ['wdcfile=rw,32,16,0,512,' + os.path.abspath(wd1_path)]
         child = self.start_uae(vmm_args)
         loop = 0
         while True:
