@@ -837,7 +837,7 @@ class Anita:
                 'vnc_password=\n' +
                 'vnc_viewonly=ok')
         f.close()
-        child = self.pexpect_spawn('uae', ['-f ' + os.path.join(self.workdir, 'netbsd.uae') + ' -I ' + '""'])
+        child = self.pexpect_spawn('uae', ['-f', os.path.join(self.workdir, 'netbsd.uae'), '-I', ''])
         self.configure_child(child)
         return child
     def start_simh(self, vmm_args = []):
@@ -951,41 +951,45 @@ class Anita:
         sys.stdout.flush()
         wd1_path = os.path.join(self.workdir, 'wd1.img')
         make_dense_image(wd1_path, 1024000000)
-        rdb_conf = os.path.join(self.workdir,'rdbedit.conf')
-        f = open(rdb_conf, 'w+')
+        rdb_conf_a = os.path.join(self.workdir,'rdbedit_a.conf')
+        rdb_conf_b = os.path.join(self.workdir,'rdbedit_b.conf')
+        f = open(rdb_conf_a, 'w+')
         f.write('c3 7000\n' + 'p3\n' + 'nmini\n' + 'fbootable\n' + 'o16\n' + 'tNBR\\7\n' + 'q\n' +
                 'c4 8624\n' + 'p4\n' + 'nsets\n' + 'o16\n' + 'tNBU\\12\n' + 'q\n' + 'q\n' + 'Y\n')
         f.seek(0)
         subprocess.Popen(['rdbedit', '-Fies 2', wd1_path], stdin=f)
         f.close()
-        f = open(rdb_conf, 'w+')
-        f.write('c3 15624\n' + 'p3\n' + 'nroot\n' + 'fbootable\n' + 'o16\n' +
+        g = open(rdb_conf_b, 'w+')
+        g.write('c3 15624\n' + 'p3\n' + 'nroot\n' + 'fbootable\n' + 'o16\n' +
                 'tNBR\\7\n' + 'q\n' + 'q\n' + 'Y\n')
-        f.seek(0)
-        subprocess.Popen(['rdbedit', '-Fies 2', self.wd0_path()], stdin=f)
-        f.close()
+        g.seek(0)
+        subprocess.Popen(['rdbedit', '-Fies 2', self.wd0_path()], stdin=g)
+        g.close()
         miniroot_fn = os.path.join(self.workdir, 'download', 'amiga', 'installation', 'miniroot', 'miniroot.fs.gz')
         bootxx = os.path.join(self.workdir, 'bootxx')
         bootblock = os.path.join(self.workdir, 'bootblock')
-        if os.path.exists(miniroot_fn):
-            spawn('dd',['dd', 'if=' + miniroot_fn, 'of=' + bootxx, 'conv=osync', 'count=16'])
-            open(bootblock, 'w').close()
-            spawn('installboot',['installboot', '-m', 'amiga', '-o', 'command="netbsd -Cc 4000"', bootblock, bootxx])
-            spawn('dd',['dd', 'if=' + bootblock, 'of=' + wd1_path, 'seek=128', 'conv=sync,notrunc', 'bs=512'])
-            subprocess.call('zcat ' + miniroot_fn + ' | dd of=' + self.wd0_path() + ' seek=144' + ' skip=16' + ' conv=sync,notrunc' + ' bs=512', shell = True)
+        boot_command = "netbsd -Cc 4000"
+        h = open(miniroot_fn, 'r')
+        subprocess.call('zcat | dd of=' + bootxx + ' conv=sync' + ' bs=512' + ' count=16', shell = True, stdin = h)
+        h.seek(0)
+        open(bootblock, 'w').close()
+        spawn('installboot',['installboot', '-m', 'amiga', '-o', 'command=' + boot_command, bootblock, bootxx])
+        spawn('dd',['dd', 'if=' + bootblock, 'of=' + wd1_path, 'seek=128', 'conv=sync,notrunc', 'bs=512'])
+        subprocess.call('zcat | dd of=' + wd1_path + ' seek=144' + ' skip=16' + ' conv=sync,notrunc' + ' bs=512', shell = True, stdin = h)
+        h.close()
         spawn('dd', ['dd', 'if=' + self.dist.iso_path(), 'of=' + wd1_path, 'seek=896128', 'conv=sync,notrunc', 'bs=512'])
         vmm_args = ['wdcfile=rw,32,16,0,512,' + os.path.abspath(wd1_path)]
         child = self.start_uae(vmm_args)
         loop = 0
         while True:
             loop = loop + 1
-            if loop == 27:
+            if loop == 28:
                 raise RuntimeError("loop detected")
             child.expect(
                         # Group 1
                         "(map you want to activate)|" +
                         # Group 2
-                        "(pgrade)|" +
+                        "(nstall or)|" +
                         # Group 3
                         "(Proceed with installation)|" +
                         # Group 4
@@ -1031,7 +1035,7 @@ class Anita:
                         # Group 24
                         "(Boot command)|" +
                         # Group 25
-                        "(the installer will restart itself)|",
+                        "(the installer will restart itself)",
                         10800)
             if child.match.group(1):
                 child.send("6\n")
@@ -1082,20 +1086,21 @@ class Anita:
             elif child.match.group(24):
                 child.send("netbsd -Cc 4000\n")
             elif child.match.group(25):
-                child.expect("(#)|(halted by root)")
-                if child.match.group(1):
-                    # Root shell prompt
-                    child.send("halt\n")
-                else:
-                    break
+                break
             else:
                 raise AssertionError()
+        while True:
+            child.expect("(#)|(halted by root)")
+            if child.match.group(1):
+                # Root shell prompt
+                child.send("halt\n")
+            else:
+                break
         child.close()
         # Make sure all refs go away
         child = None
         self.child = None
         os.unlink(wd1_path)
-        os.unlink(rdb_conf)
         self.dist.cleanup()
 
     def install_sysinst(self):
