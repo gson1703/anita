@@ -233,8 +233,8 @@ def check_arch_supported(arch, dist_type):
 
 def expect_any(child, *args):
     # http://stackoverflow.com/questions/11702414/split-a-list-into-half-by-even-and-odd-elements
-    patterns = args[0:][::2]
-    actions = args[1:][::2]
+    patterns = args[::2]
+    actions = args[1::2]
     while True:
         r = child.expect(list(patterns))
         action = actions[r]
