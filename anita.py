@@ -957,13 +957,13 @@ class Anita:
         f.write('c3 7000\n' + 'p3\n' + 'nmini\n' + 'fbootable\n' + 'o16\n' + 'tNBR\\7\n' + 'q\n' +
                 'c4 8624\n' + 'p4\n' + 'nsets\n' + 'o16\n' + 'tNBU\\12\n' + 'q\n' + 'q\n' + 'Y\n')
         f.seek(0)
-        subprocess.Popen(['rdbedit', '-Fies 2', wd1_path], stdin=f)
+        subprocess.Popen(['rdbedit', '-Fies', '2', wd1_path], stdin=f)
         f.close()
         g = open(rdb_conf_b, 'w+')
         g.write('c3 15624\n' + 'p3\n' + 'nroot\n' + 'fbootable\n' + 'o16\n' +
                 'tNBR\\7\n' + 'q\n' + 'q\n' + 'Y\n')
         g.seek(0)
-        subprocess.Popen(['rdbedit', '-Fies 2', self.wd0_path()], stdin=g)
+        subprocess.Popen(['rdbedit', '-Fies', '2', self.wd0_path()], stdin=g)
         g.close()
         miniroot_fn = os.path.join(self.workdir, 'download', 'amiga', 'installation', 'miniroot', 'miniroot.fs.gz')
         bootxx = os.path.join(self.workdir, 'bootxx')
