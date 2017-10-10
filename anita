@@ -14,7 +14,8 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    dtb_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')
+    dtb_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+                            'share', 'dtb', 'arm', 'vexpress-v2p-ca15-tc1.dtb')
     parser = optparse.OptionParser(
         usage = "usage: %prog [options] install|boot|interact distribution")
     parser.add_option("--workdir",
