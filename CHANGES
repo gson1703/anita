@@ -1,4 +1,6 @@
 
+Log the command line arguments on startup.
+
 - 1.43 released -
 
 Log interactive mode input and output to the structured log file.
