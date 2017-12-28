@@ -739,15 +739,20 @@ class Anita:
            and try_program(['qemu', '--version']): \
                self.qemu = 'qemu'
 
+        # Choose a default vmm if none was explicitly requested
+        if not vmm:
+            if self.qemu:
+                vmm = 'qemu'
+            elif self.dist.arch() in arch_simh_list:
+                vmm = 'simh'
+            elif self.dist.arch() in arch_gxemul_list:
+                vmm = 'gxemul'
+            else:
+                raise RuntimeError("%s has no default VMM" % self.dist.arch())
+
         # Backwards compatibility
         if vmm == 'xen':
             vmm = 'xm'
-        elif not vmm and self.qemu:
-            vmm = 'qemu'
-        elif self.dist.arch() in arch_simh_list:
-            vmm = 'simh'
-        else:
-            vmm = 'gxemul'
 
         self.vmm = vmm
 
