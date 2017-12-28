@@ -13,7 +13,7 @@ import time
 import urllib
 import urlparse
 
-__version__='1.43'
+__version__='1.43c'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -1777,7 +1777,7 @@ class Anita:
         login(self.child)
         self.is_logged_in = True
 
-    # Run a shell command
+    # Run a shell command and return its exit status
     def shell_cmd(self, cmd, timeout = -1):
         self.login()
         return shell_cmd(self.child, cmd, timeout)
