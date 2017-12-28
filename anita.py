@@ -1328,7 +1328,7 @@ class Anita:
                          # Group 17
                          "(/sbin/newfs)|" +
                          # Group 18
-                         "(not-in-use)|" +
+                         "(Do you want to install the NetBSD bootcode)|" +
                          # Group 19
                          "(not-in-use)|" +
                          # Group 20-21
@@ -1493,6 +1493,9 @@ class Anita:
                 sys.exit(1)
             elif child.match.group(17):
                 self.slog("matched newfs to defeat repeat match detection")
+            elif child.match.group(18):
+                # "Do you want to install the NetBSD bootcode"
+                choose_yes()
             elif child.match.group(20):
                 # Custom installation is choice "d" in 6.0,
                 # but choice "c" or "b" in older versions
