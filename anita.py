@@ -732,6 +732,8 @@ class Anita:
             raise RuntimeError("NetBSD port '%s' is not supported" %
                 dist.arch())
 
+        # Support old versions of qemu where qemu-system-i386 was
+        # simply called qemu
         if self.qemu == 'qemu-system-i386' and \
            not try_program(['qemu-system-i386', '--version']) \
            and try_program(['qemu', '--version']): \
