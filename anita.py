@@ -813,6 +813,11 @@ class Anita:
         child.delayafterclose = 30.0
         # Also increase this just in case
         child.delayafterterminate = 30.0
+        # pexpect 4.3.1 needs this, too
+        ptyproc = getattr(child, 'ptyproc')
+        if ptyproc:
+            ptyproc.delayafterclose = child.delayafterclose
+            ptyproc.delayafterterminate = child.delayafterterminate
         self.child = child
 
     def start_simh(self, vmm_args = []):
