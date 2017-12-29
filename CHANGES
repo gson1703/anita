@@ -1,3 +1,7 @@
+Deal with pexpect 4.3.1 requiring delayafterclose and
+delayafterterminate to be set in two different places.
+
+Support installing on disks with a corrupt or out-of-date MBR.
 
 Log the command line arguments on startup.
 
