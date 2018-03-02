@@ -440,14 +440,13 @@ class Version:
     # Download this release
     # The ISO class overrides this to download the ISO only
     def download(self):
-        # Depending on the NetBSD version, there may be two or more
-        # boot floppies.  Treat any floppies past the first two as
-        # optional files.
-        if hasattr(self, 'url') and self.url[:7] == 'file://':
-            mkdir_p(os.path.join(self.workdir, 'download'))
-            if not os.path.lexists(os.path.join(self.workdir, 'download', self.arch())):
-                os.symlink(self.url[7:], os.path.join(self.workdir, 'download', self.arch()))
-            return
+        # Optimization of file:// URLs is disabled for now; it doesn't
+        # work for the source sets.
+        #if hasattr(self, 'url') and self.url[:7] == 'file://':
+        #    mkdir_p(os.path.join(self.workdir, 'download'))
+        #    if not os.path.lexists(os.path.join(self.workdir, 'download', self.arch())):
+        #        os.symlink(self.url[7:], os.path.join(self.workdir, 'download', self.arch()))
+        #    return
         if self.arch() == 'evbarm-earmv7hf':
             for file in ['netbsd-VEXPRESS_A15.ub.gz']:
                 download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
@@ -458,6 +457,9 @@ class Version:
         if self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         i = 0
+        # Depending on the NetBSD version, there may be two or more
+        # boot floppies.  Treat any floppies past the first two as
+        # optional files.
         for floppy in self.potential_floppies():
             download_if_missing_3(self.dist_url(),
                 self.download_local_arch_dir(),
