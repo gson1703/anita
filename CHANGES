@@ -1,5 +1,6 @@
 Deal with pexpect 4.3.1 requiring delayafterclose and
-delayafterterminate to be set in two different places.
+delayafterterminate to be set in two different places
+(https://github.com/pexpect/pexpect/issues/462).
 
 Support installing on disks with a corrupt or out-of-date MBR.
 
