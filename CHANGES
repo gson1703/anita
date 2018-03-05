@@ -1,5 +1,8 @@
-Disable code to avoid copies when installing from a file: URL or
-local path, as it broke installation of source sets.
+
+- 1.44 released -
+
+Disable optimization avoiding copies when installing from a file: URL
+or local path, as it broke installation of source sets.
 
 Deal with pexpect 4.3.1 requiring delayafterclose and
 delayafterterminate to be set in two different places
