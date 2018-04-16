@@ -1766,7 +1766,7 @@ class Anita:
                 # "disklabel -W /dev/rwd1d && " +
                 "tar cf /dev/r%s tests; " % scratch_disk +
             "}; " if not results_by_net else \
-            "{ cd /tmp && tar cf tests-results.img tests && echo put tests-results.img | tftp 10.169.0.1; };") +
+            "{ cd /tmp && tar cf tests-results.img tests && (echo blksize 8192; echo put tests-results.img) | tftp 10.169.0.1; };") +
             "df -k | sed 's/^/df-post-test /'; " +
             "ps -glaxw | sed 's/^/ps-post-test /'; " +
             "vmstat -s; " +
