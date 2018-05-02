@@ -5,6 +5,7 @@ import re
 import anita
 import os
 import optparse
+import pexpect
 
 class Usage(Exception):
     def __init__(self, msg):
@@ -123,6 +124,7 @@ def main(argv = None):
 
     if mode != 'print-workdir':
         print "This is anita version", anita.__version__
+        print "Using pexpect version", pexpect.__version__
         print " \\\n    ".join(sys.argv)
         sys.stdout.flush()
 

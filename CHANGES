@@ -1,4 +1,6 @@
 
+Log the pexpect version.
+
 - 1.44 released -
 
 Disable optimization avoiding copies when installing from a file: URL
