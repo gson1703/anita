@@ -1586,13 +1586,17 @@ class Anita:
         # Since Fri Apr 6 23:48:53 2012 UTC, you are kicked
         # back into the main menu.
 
+        x_sent = False
         while True:
             child.expect("(Hit enter to continue)|(x: Exit Install System)|(#)|(halting machine)|(halted by root)")
             if child.match.group(1):
                 child.send("\n")
             elif child.match.group(2):
                 # Back in menu
-                child.send("x\n")
+                # Menu may get redrawn, so only send this once
+                if not x_sent:
+                    child.send("x\n")
+                    x_sent = True
             elif child.match.group(3):
                 # Root shell prompt
                 child.send("halt\n")

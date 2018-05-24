@@ -1,3 +1,4 @@
+Don't send a spurious "x" at the end of installation.
 
 Log the pexpect version.
 
