@@ -1678,6 +1678,7 @@ class Anita:
         self.boot()
         self.console_interaction()
 
+    # Interact with the console of a system that has already been booted
     def console_interaction(self):
         # With pexpect 2.x and newer, we need to disable logging to stdout
         # of data read from the slave, or otherwise everything will be

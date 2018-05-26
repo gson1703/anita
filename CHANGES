@@ -1,3 +1,6 @@
+Fix a bug that caused the system to be unnecessarily
+booted twice in "interact" mode since version 1.43.
+
 Don't send a spurious "x" at the end of installation.
 
 Log the pexpect version.
