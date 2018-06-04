@@ -1307,6 +1307,7 @@ class Anita:
                          # Group 1
                          "(a: Progress bar)|" +
                          # Group 2
+                         # (See also group 26)
                          "(a: CD-ROM)|" +
                          # Group 3-4
                          "(([cx]): Continue)|" +
@@ -1347,7 +1348,9 @@ class Anita:
                          # Group 24
                          "(a: Set sizes of NetBSD partitions)|" +
                          # Group 25
-                         "(Sysinst could not automatically determine the BIOS geometry of the disk)",
+                         "(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
+                         # Group 26-27
+                         "(([a-h]): HTTP)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1359,13 +1362,12 @@ class Anita:
                 child.send("\n")
             elif child.match.group(2):
                 # (a: CD-ROM)
-                if self.vmm == 'noemu':
-                    child.send("c\n") # install from HTTP
+                if self.vmm != 'noemu':
+                    child.send("a\n") # install from CD-ROM
                     # We next end up at either "Which device shall I"
                     # or "The following are the http site" depending on
                     # the NetBSD version.
-                else:
-                    child.send("a\n") # install from CD-ROM
+                # The noemu case is handled in group 26-27
             elif child.match.group(3):
                 # CDROM device selection
                 if cd_device != 'cd0a':
@@ -1577,6 +1579,10 @@ class Anita:
                 child.send("\n")
                 child.expect("b: Use the entire disk")
                 child.send("b\n")
+            elif child.match.group(26):
+                # "(([a-h]): HTTP)"
+                if self.vmm == 'noemu':
+                    child.send(child.match.group(27) + "\n") # install from HTTP
             else:
                 raise AssertionError
 
