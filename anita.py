@@ -1256,6 +1256,12 @@ class Anita:
                 r"Are they OK", choose_yes)
             self.network_configured = True
 
+        def choose_install_media():
+            # Noemu installs from HTTP, otherwise we use the CD-ROM
+            media = ['CD-ROM', 'HTTP'][self.vmm == 'noemu']
+            child.expect('([a-h]): ' + media)
+            child.send(child.match.group(1) + "\n")
+
         self.network_configured = False
 
         # Many different things can happen at this point:
@@ -1307,8 +1313,7 @@ class Anita:
                          # Group 1
                          "(a: Progress bar)|" +
                          # Group 2
-                         # (See also group 26)
-                         "(a: CD-ROM)|" +
+                         "(Install from)|" +
                          # Group 3-4
                          "(([cx]): Continue)|" +
                          # Group 5
@@ -1348,9 +1353,7 @@ class Anita:
                          # Group 24
                          "(a: Set sizes of NetBSD partitions)|" +
                          # Group 25
-                         "(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
-                         # Group 26-27
-                         "(([a-h]): HTTP)",
+                         "(Sysinst could not automatically determine the BIOS geometry of the disk)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1361,13 +1364,8 @@ class Anita:
                 # (a: Progress bar)
                 child.send("\n")
             elif child.match.group(2):
-                # (a: CD-ROM)
-                if self.vmm != 'noemu':
-                    child.send("a\n") # install from CD-ROM
-                    # We next end up at either "Which device shall I"
-                    # or "The following are the http site" depending on
-                    # the NetBSD version.
-                # The noemu case is handled in group 26-27
+                # (Install from)
+                choose_install_media()
             elif child.match.group(3):
                 # CDROM device selection
                 if cd_device != 'cd0a':
@@ -1447,9 +1445,11 @@ class Anita:
                 # we need to choose the latter.
                 child.send("b\n")
             elif child.match.group(11):
+                gather_input(child, 1)
                 # (The following are the http site)
                 # \027 is control-w, which clears the field
-                child.send("a\n\02710.169.0.1\n") # IP address
+                child.send("a\n") # IP address
+                child.send("\02710.169.0.1\n")
                 child.send("b\n\027\n") # Directory = empty string
                 if not self.network_configured:
                     child.send("j\n") # Configure network
@@ -1465,7 +1465,7 @@ class Anita:
                 if r == 0:
                     # ...and I'm back at the "Install from" menu?
                     # Probably the same bug reported as install/49440.
-                    child.send("c\n") # HTTP
+                    choose_install_media()
                     # And again...
                     child.expect("The following are the http site")
                     child.expect("x: Get Distribution")
@@ -1579,10 +1579,6 @@ class Anita:
                 child.send("\n")
                 child.expect("b: Use the entire disk")
                 child.send("b\n")
-            elif child.match.group(26):
-                # "(([a-h]): HTTP)"
-                if self.vmm == 'noemu':
-                    child.send(child.match.group(27) + "\n") # install from HTTP
             else:
                 raise AssertionError
 
@@ -1690,6 +1686,7 @@ class Anita:
         # of data read from the slave, or otherwise everything will be
         # printed twice.  We can still log to the structured log, though.
         self.child.logfile_read = Logger('recv', self.structured_log_f)
+        self.slog('entering console interaction')
         self.child.interact()
 
     def run_tests(self, timeout = 10800):
