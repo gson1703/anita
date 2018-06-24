@@ -69,10 +69,25 @@ def mkdir_p(dir):
     if not os.path.isdir(dir):
         os.makedirs(dir)
 
+# Quote a shell command.  This is not fully correct, and intended only
+# to make it possible to cut and paste logged command into a shell
+# when arguments contain spaces; it must never be used to run
+# untrusted commands automatically, because that would be a security
+# hole.  If or when we ever switch to Python 3, this should be replaced
+# by shlex.quote().
+
+def quote_shell_command(v):
+    def quote_word(w):
+        if ' ' in w:
+            return '"' + w + '"'
+        else:
+            return w
+    return " \\\n    ".join([quote_word(w) for w in v])
+
 # Run a shell command safely and with error checking
 
 def spawn(command, args):
-    print command, ' '.join(args[1:])
+    print quote_shell_command(args)
     ret = os.spawnvp(os.P_WAIT, command, args)
     if ret != 0:
         raise RuntimeError("could not run " + command)
@@ -784,7 +799,7 @@ class Anita:
     # the name of the command.
 
     def pexpect_spawn(self, command, args):
-        print command, " \\\n    ".join(args)
+        print quote_shell_command([command] + args)
         child = pexpect_spawn_log(self.structured_log_f, command, args)
         print "child pid is %d" % child.pid
         return child
