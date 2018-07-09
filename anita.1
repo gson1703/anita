@@ -490,6 +490,16 @@ is also currently broken:
 .Pp
 .Dl https://bugs.launchpad.net/qemu/+bug/1743191
 .Pp
+The qemu
+.Fl icount
+option looks useful for making the tests less dependent on host timing,
+and its
+.Ar sleep=on|off
+argument might be used to speed up the tests by emulating the passage
+of time instead of waiting for actual time to pass, but they are broken:
+.Pp
+.Dl https://bugs.launchpad.net/qemu/+bug/1774677
+.Pp
 .Sh BUGS IN KVM
 .Pp
 When
