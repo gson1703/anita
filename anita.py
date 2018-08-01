@@ -526,6 +526,7 @@ class Version:
         Anita(dist = self).interact()
 
 # Subclass for versions where we pass in the version number explicitly
+# Deprecated, use anita.URL instead
 
 class NumberedVersion(Version):
     def __init__(self, ver, **kwargs):
@@ -542,6 +543,7 @@ class NumberedVersion(Version):
         return "netbsd-" + self.ver
 
 # An official NetBSD release
+# Deprecated, use anita.URL instead
 
 class Release(NumberedVersion):
     def __init__(self, ver, **kwargs):
@@ -553,6 +555,7 @@ class Release(NumberedVersion):
         return self.mi_url() + self.arch() + "/"
 
 # A daily build
+# Deprecated, use anita.URL instead
 
 class DailyBuild(NumberedVersion):
     def __init__(self, branch, timestamp, **kwargs):
@@ -569,6 +572,7 @@ class DailyBuild(NumberedVersion):
             branch + "/" + self.timestamp + "/i386/"
 
 # A local build
+# Deprecated, use anita.URL instead
 
 class LocalBuild(NumberedVersion):
     def __init__(self, ver, release_path, **kwargs):
