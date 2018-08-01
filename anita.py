@@ -1332,7 +1332,7 @@ class Anita:
                          # Group 1
                          "(a: Progress bar)|" +
                          # Group 2
-                         "(Install from)|" +
+                         "(Select medium|Install from)|" +
                          # Group 3-4
                          "(([cx]): Continue)|" +
                          # Group 5
