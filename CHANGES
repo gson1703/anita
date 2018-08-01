@@ -1,5 +1,7 @@
-Mark the NumberedVersion, Release, DailyBuild, and LocalBuild
-classes as deprecated.
+
+Mark the NumberedVersion and Release classes as deprecated.
+
+Remove the obsolete clases DailyBuild and LocalBuild.
 
 Fix a bug that caused the guest OS to unnecessarily boot twice
 when entering "interact" mode since version 1.43.

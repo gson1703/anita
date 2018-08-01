@@ -554,33 +554,6 @@ class Release(NumberedVersion):
     def dist_url(self):
         return self.mi_url() + self.arch() + "/"
 
-# A daily build
-# Deprecated, use anita.URL instead
-
-class DailyBuild(NumberedVersion):
-    def __init__(self, branch, timestamp, **kwargs):
-        ver = re.sub("^netbsd-", "", branch)
-        NumberedVersion.__init__(self, ver, **kwargs)
-        self.timestamp = timestamp
-    def default_workdir(self):
-        return NumberedVersion.default_workdir(self) + "-" + self.timestamp
-    def dist_url(self):
-        branch = re.sub("[\\._]", "-", self.ver)
-        if re.match("^[0-9]", branch):
-            branch = "netbsd-" + branch
-        return "http://ftp.netbsd.org/pub/NetBSD-daily/" + \
-            branch + "/" + self.timestamp + "/i386/"
-
-# A local build
-# Deprecated, use anita.URL instead
-
-class LocalBuild(NumberedVersion):
-    def __init__(self, ver, release_path, **kwargs):
-        NumberedVersion.__init__(self, ver, **kwargs)
-        self.release_path = release_path
-    def dist_url(self):
-        return "file://" + self.release_path + "/i386/"
-
 # The top-level URL of a release tree
 
 class URL(Version):
