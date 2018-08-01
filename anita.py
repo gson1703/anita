@@ -568,7 +568,7 @@ class DailyBuild(NumberedVersion):
         branch = re.sub("[\\._]", "-", self.ver)
         if re.match("^[0-9]", branch):
             branch = "netbsd-" + branch
-        return "http://ftp.netbsd.org/pub/NetBSD-daily/" + \
+        return "https://nyftp.netbsd.org/pub/NetBSD-daily/" + \
             branch + "/" + self.timestamp + "/i386/"
 
 # A local build
