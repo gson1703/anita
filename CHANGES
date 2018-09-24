@@ -1,4 +1,7 @@
 
+Support NetBSD/vax via simh.  Installing and booting works;
+running the ATF tests does not.  From Utkarsh Anand.
+
 Mark the NumberedVersion and Release classes as deprecated.
 
 Remove the obsolete clases DailyBuild and LocalBuild.

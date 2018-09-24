@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar work_directory
-.Op Fl -vmm Ar qemu | xm | xl | gxemul
+.Op Fl -vmm Ar qemu | xm | xl | gxemul | simh
 .Op Fl -vmm-args Ar vmm_arguments
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
@@ -32,7 +32,8 @@ installed system, and running the NetBSD test suite.
 .Pp
 The NetBSD ports currently supported as targets (i.e., as the
 system to install and run under emulation) are i386, amd64, sparc,
-evbarm-earmv7hf (using the VEXPRESS_A15 kernel), pmax, and hpcmips.
+evbarm-earmv7hf (using the VEXPRESS_A15 kernel), pmax, hpcmips,
+and vax.
 The host (the system running
 .Nm )
 can be any NetBSD port or even a different Unix-like system such
@@ -220,14 +221,16 @@ The following command line options are supported:
 .It Fl -workdir Ar directory
 The work directory.  The default is an automatically generated
 name under ".".
-.It Fl -vmm Ar qemu | xm | xl | gxemul
+.It Fl -vmm Ar qemu | xm | xl | gxemul | simh
 Specify the virtual machine monitor.
 The default virtual machine monitor is qemu.
 If the target system architecture is not supported by qemu,
 .Nm
-will set the default virtual machine monitor to
+will automatically switch to
 .Cm gxemul
-for the supported architectures.
+or
+.Cm simh
+as needed.
 If
 .Nm
 is running in a Xen dom0 and the target system architecture
@@ -254,7 +257,7 @@ and may not be fully tested.  For backwards compatibility,
 is accepted as a synonym for
 .Ar xm .
 .It Fl -vmm-args Ar string
-Additional arguments to pass to the virtual machine monitor (qemu, xm, or xl).
+Additional arguments to pass to the virtual machine monitor (e.g., qemu).
 The arguments are given
 as a single string, which may contain multiple arguments separated
 by whitespace.  There is no way to pass an argument containing
@@ -393,12 +396,9 @@ For more details, please see
 .Xr tests 7
 .Sh BUGS IN ANITA
 .Nm
-is still a work in progress.  Currently,
-.Nm
-only supports the i386, amd64, sparc, evbarm-earmv7hf,
-pmax, and hpcmips ports.
-It should be possible to add support for installing other ports.
-Patches are welcome.
+supports only a limit number of NetBSD ports; there may
+be other ports with working emulators, and support should
+be added for those. Patches are welcome.
 .Pp
 .Nm
 is likely to break whenever any significant change is made to
@@ -417,6 +417,9 @@ the installed image, they hang after the "root on ffs" message.
 .Pp
 NetBSD/i386 versions older than 2009-06-13 13:35:11 fail to find
 any PCI buses when run under qemu; see PRs 38729 and 42681.
+.Pp
+NetBSD/vax is unable to run the ATF tests as of source date
+2018.03.22.12.16.11.
 .Pp
 .Sh BUGS IN QEMU
 .Pp
