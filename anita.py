@@ -1039,7 +1039,14 @@ class Anita:
                 # Group 1-2
                 "(insert disk (\d+), and press return...)|" +
                 # Group 3
-                "(a: Installation messages in English)|" +
+                # Match either the English or the German text.
+                # This is a kludge to deal with kernel messages
+                # like "ciss0: normal state on 'ciss0:1'" that
+                # sometimes appear in the middle of one or the
+                # other, but are unlikely to appear in the middle of
+                # both.  The installation is done in English no
+                # matter which one we happen to match.
+                "(Installation messages in English|Installation auf Deutsch)|" +
                 # Group 4
                 "(Terminal type)|" +
                 # Group 5
@@ -1102,6 +1109,10 @@ class Anita:
             elif child.match.group(6):
                 # "1. Install NetBSD"
                 child.send("1\n")
+
+        if self.vmm == 'noemu':
+            self.slog("wait for envsys to settle down")
+            time.sleep(30)
 
         # Confirm "Installation messages in English"
         child.send("\n")
