@@ -62,8 +62,11 @@ runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-5.1.5/i386/
 
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
 
-# Test CD boot, newest version
+# Test CD boot
 runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-7.1/amd64/
+
+# Test newest version
+runtest http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.0/amd64/
 
 # Test anita 1.2 compatibility.
 $python <<END
