@@ -1692,6 +1692,7 @@ class Anita:
         self.slog('entering console interaction')
         self.child.interact()
 
+    # Run the NetBSD ATF test suite on the guest
     def run_tests(self, timeout = 10800):
         results_by_net = (self.vmm == 'noemu')
 
