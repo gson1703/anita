@@ -29,11 +29,23 @@ arch_qemu_map = {
     'sparc': 'qemu-system-sparc',
     'evbarm-earmv7hf': 'qemu-system-arm',
     'sparc64': 'qemu-system-sparc64',
+    'evbarm-aarch64': 'qemu-system-aarch64',
      # The following ones don't actually work
     'macppc': 'qemu-system-ppc',
 }
 arch_gxemul_list = ['pmax', 'hpcmips', 'landisk']
 arch_simh_list = ['vax']
+
+arch_props = {
+    'evbarm-earmv7hf': {
+        'image_name': 'armv7.img.gz',
+        'kernel_name': 'netbsd-VEXPRESS_A15.ub.gz',
+    },
+    'evbarm-aarch64': {
+        'image_name': 'arm64.img.gz',
+        'kernel_name': 'netbsd-GENERIC64.img.gz', # XXX is this correct?
+    }
+}
 
 # External commands we rely on
 
@@ -462,10 +474,10 @@ class Version:
         #    if not os.path.lexists(os.path.join(self.workdir, 'download', self.arch())):
         #        os.symlink(self.url[7:], os.path.join(self.workdir, 'download', self.arch()))
         #    return
-        if self.arch() == 'evbarm-earmv7hf':
-            for file in ['netbsd-VEXPRESS_A15.ub.gz']:
+        if self.arch() in ['evbarm-earmv7hf', 'evbarm-aarch64']:
+            for file in [arch_props[self.arch()]['kernel_name']]:
                 download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", "armv7.img.gz"])
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", arch_props[self.arch()]['image_name']])
             return
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
@@ -703,7 +715,7 @@ class Anita:
 
         # Set the default disk size if none was given.
         if disk_size is None:
-            if self.dist.arch() == 'evbarm-earmv7hf':
+            if self.dist.arch() in ['evbarm-earmv7hf', 'evbarm-aarch64'] :
                 disk_size = '2G'
             else:
                 disk_size = '1536M'
@@ -711,7 +723,7 @@ class Anita:
 
         # Set the default memory size if none was given.
         if memory_size is None:
-            if dist.arch() in ['amd64', 'evbarm-earmv7hf', 'pmax', 'sparc64']:
+            if dist.arch() in ['amd64', 'evbarm-earmv7hf', 'evbarm-aarch64', 'pmax', 'sparc64']:
                 memory_size = "128M"
             else:
                 memory_size = "32M"
@@ -758,9 +770,12 @@ class Anita:
             vmm_args += ["-Elandisk"]
         elif self.dist.arch() == 'hpcmips':
             vmm_args += ["-emobilepro880"]
-        if dist.arch() == 'evbarm-earmv7hf':
+        elif dist.arch() == 'evbarm-earmv7hf':
             vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.workdir, 'netbsd-VEXPRESS_A15.ub'),
             '-append', "root=ld0a", '-dtb', dtb]
+        elif dist.arch() == 'evbarm-aarch64':
+            vmm_args += ['-M', 'virt', '-cpu', 'cortex-a57', '-kernel', os.path.join(self.workdir, 'netbsd-GENERIC64.img'),
+            '-append', 'root=ld4a']
         self.extra_vmm_args = vmm_args
 
         self.is_logged_in = False
@@ -835,11 +850,18 @@ class Anita:
     def start_qemu(self, vmm_args, snapshot_system_disk):
         # Log the qemu version to stdout
         subprocess.call([self.qemu, '--version'])
+        # Choose a disk interface for wd0
+        if self.dist.arch() == 'evbarm-earmv7hf':
+            if_part = ',if=sd'
+        elif self.dist.arch() == 'evbarm-aarch64':
+            if_part = ',if=virtio'
+        else:
+            if_part = ''
         # Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, [
             "-m", str(self.memory_megs()),
-            "-drive", ("file=%s,format=raw,media=disk,snapshot=%s" %
-                (self.wd0_path(), ("off", "on")[snapshot_system_disk])) + ("",",if=sd")[self.dist.arch() == 'evbarm-earmv7hf'],
+            "-drive", ("file=%s,format=raw,media=disk,snapshot=%s%s" %
+                (self.wd0_path(), ("off", "on")[snapshot_system_disk], if_part)),
             "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
@@ -919,7 +941,7 @@ class Anita:
     def _install(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
-        if self.dist.arch() == 'evbarm-earmv7hf':
+        if self.dist.arch() == 'evbarm-earmv7hf' or self.dist.arch() == 'evbarm-aarch64':
             self.dist.download()
         else:
             self.dist.make_iso()
@@ -929,20 +951,23 @@ class Anita:
             sys.stdout.flush()
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
             print "done."
-        if self.dist.arch() == 'evbarm-earmv7hf':
+
+        image_name = self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('image_name')
+        if image_name:
             # Unzip the image
             gzimage_fn = os.path.join(self.workdir,
                 'download', self.dist.arch(),
-                'binary', 'gzimg', 'armv7.img.gz')
+                'binary', 'gzimg', image_name)
             gzimage = open(gzimage_fn, 'r')
             subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc', shell = True, stdin = gzimage)
             gzimage.close()
             # Unzip the kernel
+            kernel_name = arch_props[self.dist.arch()]['kernel_name']
             gzkernel_fn = os.path.join(self.workdir,
-                'download', self.dist.arch(), 'binary', 'kernel',
-                'netbsd-VEXPRESS_A15.ub.gz')
+                'download', self.dist.arch(), 'binary', 'kernel', kernel_name)
+            kernel_name_nogz = kernel_name[:-3]
             gzkernel = open(gzkernel_fn, 'r')
-            kernel_fn = os.path.join(self.workdir, "netbsd-VEXPRESS_A15.ub")
+            kernel_fn = os.path.join(self.workdir, kernel_name_nogz)
             kernel = open(kernel_fn, 'w')
             subprocess.call('gunzip', stdin = gzkernel, stdout = kernel)
             kernel.close()
