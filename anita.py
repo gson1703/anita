@@ -854,7 +854,8 @@ class Anita:
         if self.dist.arch() == 'evbarm-earmv7hf':
             if_part = ',if=sd'
         elif self.dist.arch() == 'evbarm-aarch64':
-            if_part = ',if=virtio'
+            if_part = ',if=none,id=hd0'
+            vmm_args += ['-device', 'virtio-blk-device,drive=hd0']
         else:
             if_part = ''
         # Start the actual qemu child process
