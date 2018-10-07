@@ -771,11 +771,19 @@ class Anita:
         elif self.dist.arch() == 'hpcmips':
             vmm_args += ["-emobilepro880"]
         elif dist.arch() == 'evbarm-earmv7hf':
-            vmm_args += ['-M', 'vexpress-a15', '-kernel', os.path.join(self.workdir, 'netbsd-VEXPRESS_A15.ub'),
-            '-append', "root=ld0a", '-dtb', dtb]
+            vmm_args += [
+                '-M', 'vexpress-a15',
+                '-kernel', os.path.join(self.workdir, 'netbsd-VEXPRESS_A15.ub'),
+                '-append', 'root=ld0a',
+                '-dtb', dtb
+            ]
         elif dist.arch() == 'evbarm-aarch64':
-            vmm_args += ['-M', 'virt', '-cpu', 'cortex-a57', '-kernel', os.path.join(self.workdir, 'netbsd-GENERIC64.img'),
-            '-append', 'root=ld4a']
+            vmm_args += [
+                '-M', 'virt',
+                '-cpu', 'cortex-a57',
+                '-kernel', os.path.join(self.workdir, 'netbsd-GENERIC64.img'),
+                '-append', 'root=ld4a'
+            ]
         self.extra_vmm_args = vmm_args
 
         self.is_logged_in = False
