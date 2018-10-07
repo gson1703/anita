@@ -891,7 +891,7 @@ class Anita:
     def gxemul_disk_args(self, path):
         return ["-d", path]
 
-    def string_arg(self, name, value):
+    def xen_string_arg(self, name, value):
         if self.vmm == 'xm':
             return '%s=%s' % (name, value)
         else: # xl
@@ -907,7 +907,7 @@ class Anita:
             "/dev/null",
             self.xen_disk_arg(os.path.abspath(self.wd0_path()), 0, True),
             "memory=" + str(self.memory_megs()),
-            self.string_arg('name', name)
+            self.xen_string_arg('name', name)
         ] + vmm_args + self.extra_vmm_args
 
         # Multiple "disk=" arguments are no longer supported with xl;
@@ -995,7 +995,7 @@ class Anita:
                         True)
 
             vmm_args = [
-                self.string_arg('kernel', os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                self.xen_string_arg('kernel', os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                     "binary", "kernel", self.dist.xen_install_kernel()))),
                 self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)
             ]
@@ -1687,7 +1687,7 @@ class Anita:
             child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
         elif vmm_is_xen(self.vmm):
-            child = self.start_xen_domu(vmm_args + [self.string_arg('kernel',
+            child = self.start_xen_domu(vmm_args + [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                              "binary", "kernel", self.dist.xen_kernel())))])
         elif self.vmm == 'noemu':
