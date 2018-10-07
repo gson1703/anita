@@ -850,20 +850,11 @@ class Anita:
     def start_qemu(self, vmm_args, snapshot_system_disk):
         # Log the qemu version to stdout
         subprocess.call([self.qemu, '--version'])
-        # Choose a disk interface for wd0
-        if self.dist.arch() == 'evbarm-earmv7hf':
-            if_part = ',if=sd'
-        elif self.dist.arch() == 'evbarm-aarch64':
-            if_part = ',if=none,id=hd0'
-            vmm_args += ['-device', 'virtio-blk-device,drive=hd0']
-        else:
-            if_part = ''
         # Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, [
-            "-m", str(self.memory_megs()),
-            "-drive", ("file=%s,format=raw,media=disk,snapshot=%s%s" %
-                (self.wd0_path(), ("off", "on")[snapshot_system_disk], if_part)),
-            "-nographic"
+                "-m", str(self.memory_megs())
+            ] + self.qemu_disk_args(self.wd0_path(), 0, True, snapshot_system_disk) + [
+                "-nographic"
             ] + vmm_args + self.extra_vmm_args)
         self.configure_child(child)
         return child
@@ -875,7 +866,16 @@ class Anita:
             return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
 
     def qemu_disk_args(self, path, devno = 0, writable = True, snapshot = False):
-        return ["-drive", "file=%s,format=raw,media=disk,snapshot=%s" % (path, ["off", "on"][snapshot])]
+        # Choose a disk interface
+        dev_args = []
+        if self.dist.arch() == 'evbarm-earmv7hf':
+            if_part = ',if=sd'
+        elif self.dist.arch() == 'evbarm-aarch64':
+            if_part = ',if=none,id=hd%d' % devno
+            dev_args = ['-device', 'virtio-blk-device,drive=hd%d' % devno]
+        else:
+            if_part = ''
+        return ["-drive", "file=%s,format=raw,media=disk,snapshot=%s%s" % (path, ["off", "on"][snapshot], if_part)] + dev_args
 
     def qemu_cdrom_args(self, path, devno):
         return ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
