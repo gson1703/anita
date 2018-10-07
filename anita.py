@@ -866,16 +866,23 @@ class Anita:
             return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
 
     def qemu_disk_args(self, path, devno = 0, writable = True, snapshot = False):
-        # Choose a disk interface
+        drive_attrs = [
+            ('file', path),
+            ('format', 'raw'),
+            ('media', 'disk'),
+            ('snapshot', ["off", "on"][snapshot])
+        ]
         dev_args = []
         if self.dist.arch() == 'evbarm-earmv7hf':
-            if_part = ',if=sd'
+            drive_attrs += [('if', 'sd')]
         elif self.dist.arch() == 'evbarm-aarch64':
-            if_part = ',if=none,id=hd%d' % devno
-            dev_args = ['-device', 'virtio-blk-device,drive=hd%d' % devno]
+            drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
+            dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
         else:
-            if_part = ''
-        return ["-drive", "file=%s,format=raw,media=disk,snapshot=%s%s" % (path, ["off", "on"][snapshot], if_part)] + dev_args
+            pass
+        def format_attrs(attrs):
+            return ','.join(["%s=%s" % pair for pair in attrs])
+        return ["-drive", format_attrs(drive_attrs)] + dev_args
 
     def qemu_cdrom_args(self, path, devno):
         return ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
