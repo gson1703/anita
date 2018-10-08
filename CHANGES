@@ -1,4 +1,6 @@
 
+- 1.45 released -
+
 Support xz compressed distribution sets.
 
 Support NetBSD/vax via simh.  Installing and booting works;
