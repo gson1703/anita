@@ -854,11 +854,13 @@ class Anita:
         child = self.pexpect_spawn('simh-vax', [os.path.join(self.workdir, 'netbsd.ini')])
         self.configure_child(child)
         return child
+
     def start_gxemul(self, vmm_args):
         child = self.pexpect_spawn('gxemul', ["-M", str(self.memory_megs()) + 'M',
          "-d", os.path.abspath(self.wd0_path())] + self.extra_vmm_args + vmm_args)
         self.configure_child(child)
         return child
+
     def start_qemu(self, vmm_args, snapshot_system_disk):
         # Log the qemu version to stdout
         subprocess.call([self.qemu, '--version'])
