@@ -1763,7 +1763,11 @@ class Anita:
         if vmm_is_xen(self.vmm):
             scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
         elif self.vmm == 'qemu':
-            scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
+            if self.dist.arch() == 'evbarm-earmv7hf':
+                # Only supports a single SD card
+                scratch_disk_args = []
+            else:
+                scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
         elif self.vmm == 'noemu':
             scratch_disk_args = []
         elif self.vmm == 'gxemul':
