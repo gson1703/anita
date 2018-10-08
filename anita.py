@@ -47,6 +47,8 @@ arch_props = {
     }
 }
 
+set_exts = ['.tgz', '.tar.xz']
+
 # External commands we rely on
 
 if os.uname()[0] == 'NetBSD':
@@ -458,11 +460,11 @@ class Version:
         for fn in self.tempfiles:
             os.unlink(fn)
 
-    def set_path(self, setname):
+    def set_path(self, setname, ext):
         if re.match(r'.*src$', setname):
-            return ['source', 'sets', setname + '.tgz']
+            return ['source', 'sets', setname + ext]
         else:
-            return [self.arch(), 'binary', 'sets', setname + '.tgz']
+            return [self.arch(), 'binary', 'sets', setname + ext]
 
     # Download this release
     # The ISO class overrides this to download the ISO only
@@ -510,12 +512,14 @@ class Version:
             ["binary", "kernel", "netbsd-INSTALL.gz"],
             True)
 
-        for set in self.flat_sets:
-            if set['install']:
-                download_if_missing_3(self.mi_url(),
-                                      self.download_local_mi_dir(),
-                                      self.set_path(set['filename']),
-                                      set['optional'])
+        for ext in set_exts:
+            for set in self.flat_sets:
+                if set['install']:
+                    download_if_missing_3(self.mi_url(),
+                                          self.download_local_mi_dir(),
+                                          self.set_path(set['filename'],
+                                                        ext),
+                                          True)
 
     # Create an install ISO image to install from
     def make_iso(self):
