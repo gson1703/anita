@@ -44,6 +44,7 @@ arch_props = {
     'evbarm-aarch64': {
         'image_name': 'arm64.img.gz',
         'kernel_name': 'netbsd-GENERIC64.img.gz', # XXX is this correct?
+        'reverse_virtio_devices': True,
     }
 }
 
@@ -283,6 +284,24 @@ def gather_input(child, seconds):
         child.expect("(?!)", seconds)
     except pexpect.TIMEOUT:
         pass
+
+# Reverse the order of any "-device virtio-blk-device,..." options in v
+
+def reverse_virtio_devices(v):
+    # Build a list of indices in v in where a "-device virtio-blk-device"
+    # list element pair begins
+    indices = []
+    for i in range(len(v) - 1):
+        if v[i] == '-device' and v[i + 1].startswith('virtio-blk-device'):
+            indices.append(i)
+    # Swap list element pairs, working outside in
+    for i in range(len(indices) >> 1):
+        a = indices[i]
+        b = indices[-i - 1]
+        def swap(a, b):
+            v[a], v[b] = v[b], v[a]
+        swap(a, b)
+        swap(a + 1, b + 1)
 
 #############################################################################
 
@@ -864,6 +883,9 @@ class Anita:
     def start_qemu(self, vmm_args, snapshot_system_disk):
         # Log the qemu version to stdout
         subprocess.call([self.qemu, '--version'])
+        # Deal with virtio device ordering issues
+        if self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('reverse_virtio_devices'):
+            reverse_virtio_devices(vmm_args)
         # Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, [
                 "-m", str(self.memory_megs())
