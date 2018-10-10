@@ -37,14 +37,28 @@ arch_gxemul_list = ['pmax', 'hpcmips', 'landisk']
 arch_simh_list = ['vax']
 
 arch_props = {
+    'i386': {
+        'scratch_disk': 'wd1d',
+    },
+    'amd64': {
+        'scratch_disk': 'wd1d',
+    },
+    'sparc64': {
+        'scratch_disk': 'wd1d',
+    },
+    'vax': {
+        'scratch_disk': 'ra1a',
+    },
     'evbarm-earmv7hf': {
         'image_name': 'armv7.img.gz',
         'kernel_name': 'netbsd-VEXPRESS_A15.ub.gz',
+        #'scratch_disk': None,
     },
     'evbarm-aarch64': {
         'image_name': 'arm64.img.gz',
         'kernel_name': 'netbsd-GENERIC64.img.gz', # XXX is this correct?
         'reverse_virtio_devices': True,
+        'scratch_disk': 'ld5a',
     }
 }
 
@@ -435,12 +449,9 @@ class Version:
         return None
     def scratch_disk(self):
         arch = self.arch()
-        if arch in ['i386', 'amd64', 'sparc64']:
-            return "wd1d"
-        elif arch == 'vax':
-            return "ra1a"
-        else:
-            return "sd1c"
+        if arch in arch_props and 'scratch_disk' in arch_props[arch]:
+            return arch_props[arch]['scratch_disk']
+        return 'sd1c'
 
     def xen_kernel(self):
         arch = self.arch()
