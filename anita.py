@@ -883,15 +883,19 @@ class Anita:
     def start_qemu(self, vmm_args, snapshot_system_disk):
         # Log the qemu version to stdout
         subprocess.call([self.qemu, '--version'])
-        # Deal with virtio device ordering issues
-        if self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('reverse_virtio_devices'):
-            reverse_virtio_devices(vmm_args)
-        # Start the actual qemu child process
-        child = self.pexpect_spawn(self.qemu, [
+        qemu_args = [
                 "-m", str(self.memory_megs())
             ] + self.qemu_disk_args(self.wd0_path(), 0, True, snapshot_system_disk) + [
                 "-nographic"
-            ] + vmm_args + self.extra_vmm_args)
+            ] + vmm_args + self.extra_vmm_args
+        # Deal with virtio device ordering issues
+        if self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('reverse_virtio_devices'):
+            print "reversing virtio devices"
+            reverse_virtio_devices(qemu_args)
+        else:
+            print "not reversing virtio devices"
+        # Start the actual qemu child process
+        child = self.pexpect_spawn(self.qemu, qemu_args)
         self.configure_child(child)
         return child
 
