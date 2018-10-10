@@ -92,6 +92,7 @@ arch_props = {
         'qemu': {
             'executable': 'qemu-system-ppc',
         },
+        'scratch_disk': None,
     },
 }
 
@@ -494,7 +495,7 @@ class Version:
         arch = self.arch()
         if arch in arch_props and 'scratch_disk' in arch_props[arch]:
             return arch_props[arch]['scratch_disk']
-        return 'sd1c'
+        return None
 
     def xen_kernel(self):
         arch = self.arch()
