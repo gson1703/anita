@@ -67,7 +67,7 @@ arch_props = {
         },
         'image_name': 'arm64.img.gz',
         'kernel_name': 'netbsd-GENERIC64.img.gz', # XXX is this correct?
-        'reverse_virtio_devices': True,
+        'reverse_virtio_drives': True,
         'scratch_disk': 'ld5a',
     },
     'pmax': {
@@ -339,7 +339,7 @@ def reverse_sublists(v, sublist_len, pred):
     # pred begins
     indices = []
     for i in range(len(v) - (sublist_len - 1)):
-        if pred(v[i:i+sublist_len])
+        if pred(v[i:i+sublist_len]):
             indices.append(i)
     # Swap list element pairs, working outside in
     for i in range(len(indices) >> 1):
@@ -350,12 +350,14 @@ def reverse_sublists(v, sublist_len, pred):
         for j in range(sublist_len):
             swap(a + j, b + j)
 
-# Reverse the order of any "-device virtio-blk-device,..." options in v
+# Reverse the order of any "-drive ... -device virtio-blk-device,..."
+# option pairs in v
 
-def reverse_virtio_devices(v):
+def reverse_virtio_drives(v):
     def is_virtio_blk(sublist):
-        return sublist[0] == '-device' and sublist[1].startswith('virtio-blk-device')
-    reverse_sublists(v, 2, is_virtio_blk)
+        return sublist[0] == '-drive' and sublist[2] == '-device' \
+            and sublist[3].startswith('virtio-blk-device')
+    reverse_sublists(v, 4, is_virtio_blk)
 
 #############################################################################
 
@@ -945,9 +947,9 @@ class Anita:
                 "-nographic"
             ] + vmm_args + self.extra_vmm_args
         # Deal with virtio device ordering issues
-        if self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('reverse_virtio_devices'):
+        if self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('reverse_virtio_drives'):
             print "reversing virtio devices"
-            reverse_virtio_devices(qemu_args)
+            reverse_virtio_drives(qemu_args)
         else:
             print "not reversing virtio devices"
         # Start the actual qemu child process
