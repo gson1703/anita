@@ -331,14 +331,15 @@ def gather_input(child, seconds):
     except pexpect.TIMEOUT:
         pass
 
-# Reverse the order of any "-device virtio-blk-device,..." options in v
+# Reverse the order of sublists of v of length sublist_len
+# for which the predicate pred is true.
 
-def reverse_virtio_devices(v):
-    # Build a list of indices in v in where a "-device virtio-blk-device"
-    # list element pair begins
+def reverse_sublists(v, sublist_len, pred):
+    # Build a list of indices in v in where a sublist satisfying
+    # pred begins
     indices = []
-    for i in range(len(v) - 1):
-        if v[i] == '-device' and v[i + 1].startswith('virtio-blk-device'):
+    for i in range(len(v) - (sublist_len - 1)):
+        if pred(v[i:i+sublist_len])
             indices.append(i)
     # Swap list element pairs, working outside in
     for i in range(len(indices) >> 1):
@@ -346,8 +347,15 @@ def reverse_virtio_devices(v):
         b = indices[-i - 1]
         def swap(a, b):
             v[a], v[b] = v[b], v[a]
-        swap(a, b)
-        swap(a + 1, b + 1)
+        for j in range(sublist_len):
+            swap(a + j, b + j)
+
+# Reverse the order of any "-device virtio-blk-device,..." options in v
+
+def reverse_virtio_devices(v):
+    def is_virtio_blk(sublist):
+        return sublist[0] == '-device' and sublist[1].startswith('virtio-blk-device')
+    reverse_sublists(v, 2, is_virtio_blk)
 
 #############################################################################
 
