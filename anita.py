@@ -23,43 +23,75 @@ __version__='1.45'
 netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 #netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
 
-arch_qemu_map = {
-    'i386': 'qemu-system-i386',
-    'amd64': 'qemu-system-x86_64',
-    'sparc': 'qemu-system-sparc',
-    'evbarm-earmv7hf': 'qemu-system-arm',
-    'sparc64': 'qemu-system-sparc64',
-    'evbarm-aarch64': 'qemu-system-aarch64',
-     # The following ones don't actually work
-    'macppc': 'qemu-system-ppc',
-}
-arch_gxemul_list = ['pmax', 'hpcmips', 'landisk']
-arch_simh_list = ['vax']
+# The supported architectures, and their properties.
 
 arch_props = {
     'i386': {
         'scratch_disk': 'wd1d',
+        'qemu': {
+            'executable': 'qemu-system-i386',
+        },
     },
     'amd64': {
         'scratch_disk': 'wd1d',
+        'qemu': {
+            'executable': 'qemu-system-x86_64',
+        },
+    },
+    'sparc': {
+        'scratch_disk': 'sd1c',
+        'qemu': {
+            'executable': 'qemu-system-sparc',
+        },
     },
     'sparc64': {
         'scratch_disk': 'wd1d',
+        'qemu': {
+            'executable': 'qemu-system-sparc64',
+        },
     },
     'vax': {
         'scratch_disk': 'ra1a',
     },
     'evbarm-earmv7hf': {
+        'qemu': {
+            'executable': 'qemu-system-arm',
+        },
         'image_name': 'armv7.img.gz',
         'kernel_name': 'netbsd-VEXPRESS_A15.ub.gz',
         #'scratch_disk': None,
     },
     'evbarm-aarch64': {
+        'qemu': {
+            'executable': 'qemu-system-aarch64',
+        },
         'image_name': 'arm64.img.gz',
         'kernel_name': 'netbsd-GENERIC64.img.gz', # XXX is this correct?
         'reverse_virtio_devices': True,
         'scratch_disk': 'ld5a',
-    }
+    },
+    'pmax': {
+        'gxemul': {
+        },
+    },
+    'hpcmips': {
+        'gxemul': {
+        },
+    },
+    'landisk': {
+        'gxemul': {
+        },
+    },
+    'vax': {
+        'simh': {
+        },
+    },
+     # The following ones don't actually work
+    'macppc': {
+        'qemu': {
+            'executable': 'qemu-system-ppc',
+        },
+    },
 }
 
 set_exts = ['.tgz', '.tar.xz']
@@ -258,7 +290,7 @@ def dir2url(dir):
     return "".join(chars)
 
 def check_arch_supported(arch, dist_type):
-    if arch_qemu_map.get(arch) is None and not arch in (arch_gxemul_list + arch_simh_list):
+    if not arch in arch_props:
         raise RuntimeError(("'%s' is not the name of a " + \
         "supported NetBSD port") % arch)
     if arch in ['i386', 'amd64'] and dist_type != 'reltree':
@@ -767,25 +799,30 @@ class Anita:
         self.boot_from = boot_from
         self.no_install = no_install
 
-        self.qemu = arch_qemu_map.get(dist.arch())
-        if self.qemu is None and not self.dist.arch() in (arch_gxemul_list + arch_simh_list):
+        props = arch_props.get(dist.arch())
+        if not props:
             raise RuntimeError("NetBSD port '%s' is not supported" %
                 dist.arch())
 
-        # Support old versions of qemu where qemu-system-i386 was
-        # simply called qemu
-        if self.qemu == 'qemu-system-i386' and \
-           not try_program(['qemu-system-i386', '--version']) \
-           and try_program(['qemu', '--version']): \
-               self.qemu = 'qemu'
+        # Get name of qemu executable (if applicable)
+        if 'qemu' in props:
+            self.qemu = props['qemu']['executable']
+            # Support old versions of qemu where qemu-system-i386 was
+            # simply called qemu
+            if self.qemu == 'qemu-system-i386' and \
+               not try_program(['qemu-system-i386', '--version']) \
+               and try_program(['qemu', '--version']): \
+                   self.qemu = 'qemu'
+        else:
+            self.qemu = None
 
         # Choose a default vmm if none was explicitly requested
         if not vmm:
             if self.qemu:
                 vmm = 'qemu'
-            elif self.dist.arch() in arch_simh_list:
+            elif 'simh' in props:
                 vmm = 'simh'
-            elif self.dist.arch() in arch_gxemul_list:
+            elif 'gxemul' in props:
                 vmm = 'gxemul'
             else:
                 raise RuntimeError("%s has no default VMM" % self.dist.arch())
