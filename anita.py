@@ -66,7 +66,7 @@ arch_props = {
             'executable': 'qemu-system-aarch64',
         },
         'image_name': 'arm64.img.gz',
-        'kernel_name': 'netbsd-GENERIC64.img.gz', # XXX is this correct?
+        'kernel_name': 'netbsd-GENERIC64.img.gz',
         'reverse_virtio_drives': True,
         'scratch_disk': 'ld5a',
     },
