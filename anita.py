@@ -1934,6 +1934,11 @@ class Anita:
             "sh -c 'exit `cat /tmp/tests/test.status`'",
             timeout)
 
+        # Halt the VM before reading the scratch disk, to
+        # ensure that it has been flushed.  This matters
+        # when using gxemul.
+        self.halt()
+
         # We give tar an explicit path to extract to guard against
         # the possibility of an arbitrary file overwrite attack if
         # anita is used to test an untrusted virtual machine.

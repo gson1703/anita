@@ -140,7 +140,6 @@ def main(argv = None):
         a.console_interaction()
     elif mode == 'test':
         status = a.run_tests(timeout = options.test_timeout)
-        a.halt()
     elif mode == 'print-workdir':
         print a.workdir
     else:
