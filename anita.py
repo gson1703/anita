@@ -59,7 +59,7 @@ arch_props = {
         },
         'image_name': 'armv7.img.gz',
         'kernel_name': 'netbsd-VEXPRESS_A15.ub.gz',
-        #'scratch_disk': None,
+        'scratch_disk': None,
     },
     'evbarm-aarch64': {
         'qemu': {
@@ -1825,6 +1825,7 @@ class Anita:
 
     # Run the NetBSD ATF test suite on the guest
     def run_tests(self, timeout = 10800):
+        mkdir_p(self.workdir)
         results_by_net = (self.vmm == 'noemu')
 
         # Create a scratch disk image for exporting test results from the VM.
@@ -1839,33 +1840,31 @@ class Anita:
             scratch_disk = 'xbd1d'
         else:
             scratch_disk = self.dist.scratch_disk()
-        mkdir_p(self.workdir)
 
-        scratch_image_megs = 100
-        make_dense_image(scratch_disk_path, parse_size('%dM' % scratch_image_megs))
-        # Leave a 10% safety margin
-        max_result_size_k = scratch_image_megs * 900
+        scratch_disk_args = []
+        if scratch_disk:
+            scratch_image_megs = 100
+            make_dense_image(scratch_disk_path, parse_size('%dM' % scratch_image_megs))
+            # Leave a 10% safety margin
+            max_result_size_k = scratch_image_megs * 900
 
-        if vmm_is_xen(self.vmm):
-            scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
-        elif self.vmm == 'qemu':
-            if self.dist.arch() == 'evbarm-earmv7hf':
-                # Only supports a single SD card
-                scratch_disk_args = []
-            else:
+            if vmm_is_xen(self.vmm):
+                scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
+            elif self.vmm == 'qemu':
                 scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
-        elif self.vmm == 'noemu':
-            scratch_disk_args = []
-        elif self.vmm == 'gxemul':
-            scratch_disk_args = self.gxemul_disk_args(os.path.abspath(scratch_disk_path))
-        elif self.vmm == 'simh':
-            scratch_disk_args = ['set rq1 ra92', 'attach rq1 ' + scratch_disk_path]
-        else:
-            raise RuntimeError('unknown vmm')
+            elif self.vmm == 'noemu':
+                pass
+            elif self.vmm == 'gxemul':
+                scratch_disk_args = self.gxemul_disk_args(os.path.abspath(scratch_disk_path))
+            elif self.vmm == 'simh':
+                scratch_disk_args = ['set rq1 ra92', 'attach rq1 ' + scratch_disk_path]
+            else:
+                raise RuntimeError('unknown vmm')
 
         child = self.boot(scratch_disk_args)
         self.login()
 
+        # Build a shell command to run the tests
         if self.tests == "kyua":
             if self.shell_cmd("grep -q 'MKKYUA.*=.*yes' /etc/release") != 0:
                 raise RuntimeError("kyua is not installed.")
@@ -1898,12 +1897,16 @@ class Anita:
         else:
             raise RuntimeError('unknown testing framework %s' % self.test)
 
-        exit_status = self.shell_cmd(
-            "df -k | sed 's/^/df-pre-test /'; " +
-            "mkdir /tmp/tests && " +
-            "cd /usr/tests && " +
-            test_cmd +
-            ("{ cd /tmp && " +
+        # Build a shell command to save the test results
+        if results_by_net:
+            save_test_results_cmd = (
+                "{ cd /tmp && " +
+                "tar cf tests-results.img tests && " +
+                "(echo blksize 8192; echo put tests-results.img) | tftp 10.169.0.1; }; "
+            )
+        elif scratch_disk:
+            save_test_results_cmd = (
+            "{ cd /tmp && " +
                 # Make sure the files will fit on the scratch disk
                 "test `du -sk tests | awk '{print $1}'` -lt %d && " % max_result_size_k +
                 # To guard against accidentally overwriting the wrong
@@ -1912,8 +1915,17 @@ class Anita:
                 "test `</dev/r%s tr -d '\\000' | wc -c` = 0 && " % scratch_disk +
                 # "disklabel -W /dev/rwd1d && " +
                 "tar cf /dev/r%s tests; " % scratch_disk +
-            "}; " if not results_by_net else \
-            "{ cd /tmp && tar cf tests-results.img tests && (echo blksize 8192; echo put tests-results.img) | tftp 10.169.0.1; };") +
+            "}; "
+            )
+        else:
+            save_test_results_cmd = ""
+
+        exit_status = self.shell_cmd(
+            "df -k | sed 's/^/df-pre-test /'; " +
+            "mkdir /tmp/tests && " +
+            "cd /usr/tests && " +
+            test_cmd +
+            save_test_results_cmd +
             "df -k | sed 's/^/df-post-test /'; " +
             "ps -glaxw | sed 's/^/ps-post-test /'; " +
             "vmstat -s; " +
