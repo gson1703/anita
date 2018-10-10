@@ -27,28 +27,28 @@ netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 
 arch_props = {
     'i386': {
-        'scratch_disk': 'wd1d',
         'qemu': {
             'executable': 'qemu-system-i386',
         },
+        'scratch_disk': 'wd1d',
     },
     'amd64': {
-        'scratch_disk': 'wd1d',
         'qemu': {
             'executable': 'qemu-system-x86_64',
         },
+        'scratch_disk': 'wd1d',
     },
     'sparc': {
-        'scratch_disk': 'sd1c',
         'qemu': {
             'executable': 'qemu-system-sparc',
         },
+        'scratch_disk': 'sd1c',
     },
     'sparc64': {
-        'scratch_disk': 'wd1d',
         'qemu': {
             'executable': 'qemu-system-sparc64',
         },
+        'scratch_disk': 'wd1d',
     },
     'evbarm-earmv7hf': {
         'qemu': {
