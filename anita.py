@@ -870,6 +870,7 @@ class Anita:
         self.extra_vmm_args = vmm_args
 
         self.is_logged_in = False
+        self.halted = False
         self.tests = tests
         if dist.arch() == 'evbarm-earmv7hf':
             self.boot_from = 'sd'
@@ -1970,6 +1971,8 @@ class Anita:
 
     # Halt the VM
     def halt(self):
+        if self.halted:
+            return
         self.login()
         self.child.send("halt\n")
         try:
@@ -1981,6 +1984,7 @@ class Anita:
         except pexpect.TIMEOUT, e:
             # This is unexpected but mostly harmless
             print "timeout waiting for halt confirmation:", e
+        self.halted = True
 
 # Calling this directly is deprecated, use Anita.login()
 
