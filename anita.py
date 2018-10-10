@@ -50,9 +50,6 @@ arch_props = {
             'executable': 'qemu-system-sparc64',
         },
     },
-    'vax': {
-        'scratch_disk': 'ra1a',
-    },
     'evbarm-earmv7hf': {
         'qemu': {
             'executable': 'qemu-system-arm',
@@ -87,6 +84,7 @@ arch_props = {
     'vax': {
         'simh': {
         },
+        'scratch_disk': None,
     },
      # The following ones don't actually work
     'macppc': {
