@@ -80,6 +80,7 @@ arch_props = {
     'landisk': {
         'gxemul': {
         },
+        'scratch_disk': 'wd1d'
     },
     'vax': {
         'simh': {
