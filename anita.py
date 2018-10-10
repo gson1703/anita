@@ -73,10 +73,12 @@ arch_props = {
     'pmax': {
         'gxemul': {
         },
+        'scratch_disk': 'sd1c',
     },
     'hpcmips': {
         'gxemul': {
         },
+        'scratch_disk': None,
     },
     'landisk': {
         'gxemul': {
