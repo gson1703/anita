@@ -872,8 +872,6 @@ class Anita:
         self.is_logged_in = False
         self.halted = False
         self.tests = tests
-        if dist.arch() == 'evbarm-earmv7hf':
-            self.boot_from = 'sd'
 
     def slog(self, message):
         slog_info(self.structured_log_f, message)
