@@ -1938,17 +1938,19 @@ class Anita:
         # when using gxemul.
         self.halt()
 
-        # We give tar an explicit path to extract to guard against
-        # the possibility of an arbitrary file overwrite attack if
-        # anita is used to test an untrusted virtual machine.
-        tarfile = open(scratch_disk_path, "r")
-        subprocess.call(["tar", "xf", "-", "tests"],
-                        cwd = self.workdir, stdin = tarfile)
+        if scratch_disk:
+            # Extract the ATF results from the scratch disk.
+            # We give tar an explicit path to extract to guard against
+            # the possibility of an arbitrary file overwrite attack if
+            # anita is used to test an untrusted virtual machine.
+            tarfile = open(scratch_disk_path, "r")
+            subprocess.call(["tar", "xf", "-", "tests"],
+                            cwd = self.workdir, stdin = tarfile)
 
-        # For backwards compatibility, point workdir/atf to workdir/tests.
-        compat_link = os.path.join(self.workdir, 'atf')
-        if not os.path.lexists(compat_link):
-            os.symlink('tests', compat_link)
+            # For backwards compatibility, point workdir/atf to workdir/tests.
+            compat_link = os.path.join(self.workdir, 'atf')
+            if not os.path.lexists(compat_link):
+                os.symlink('tests', compat_link)
 
         return exit_status
 
