@@ -48,7 +48,7 @@ arch_props = {
         'qemu': {
             'executable': 'qemu-system-sparc64',
         },
-        'scratch_disk': 'wd1d',
+        'scratch_disk': 'wd1c',
     },
     'evbarm-earmv7hf': {
         'qemu': {
