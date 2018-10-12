@@ -65,7 +65,7 @@ arch_props = {
         'image_name': 'arm64.img.gz',
         'kernel_name': 'netbsd-GENERIC64.img.gz',
         'reverse_virtio_drives': True,
-        'scratch_disk': 'ld5a',
+        'scratch_disk': 'ld5c',
     },
     'pmax': {
         'gxemul': {
