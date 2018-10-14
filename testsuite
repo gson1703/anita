@@ -63,7 +63,7 @@ runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-5.1.5/i386/
 runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
 
 # Test CD boot
-runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-7.1/amd64/
+runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-7.2/amd64/
 
 # Test newest version
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.0/amd64/
@@ -95,5 +95,7 @@ rm -f $workdir/wd0.img
 # "esp0: !TC on DATA XFER [intr 18, stat 82, step 4] prevphase 2, resid 0"
 # being printed during set extraction with qemu 2.9.0.
 #runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.1.3/images/NetBSD-6.1.3-sparc.iso
+
+runtest boot http://ftp.netbsd.org/pub/NetBSD/iso/7.2/NetBSD-7.2-sparc.iso
 
 echo "pass"
