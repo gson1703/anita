@@ -39,11 +39,9 @@ The host (the system running
 can be any NetBSD port or even a different Unix-like system such
 as Linux, FreeBSD, or macOS.
 .Pp
-The default virtual machine monitor used by
-.Nm
-is
-.Ic qemu ,
-but there is also experimental support for Xen.
+i386 and amd64 targets can be run under either qemu
+or Xen.  Other targets use either qemu, gxemul, or simh
+depending on the target architecture.
 .Sh EXAMPLES
 To install NetBSD 7.1/i386 from the master NetBSD FTP site, enter
 .Pp
