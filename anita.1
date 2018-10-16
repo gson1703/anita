@@ -58,10 +58,10 @@ using sysinst, so anita will instead install them by decompressing
 the pre-built disk image from the release onto the beginning
 of the virtual disk.  The image will be automatically resized
 at boot time, and after that, the evbarm ports work the
-same as the other ports.  To install them, use a command like
-the following, adjusting the URL to point to a current shapshot:
+same as the other ports.  To download an evbarm image,
+use a command like the following:
 .Pp
-.Dl anita install http://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/201706211330Z/evbarm-earmv7hf/
+.Dl anita install http://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/evbarm-aarch64/
 .Pp
 To boot the newly installed hard disk image and get a login prompt,
 replace
