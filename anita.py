@@ -37,6 +37,7 @@ arch_props = {
             'executable': 'qemu-system-x86_64',
         },
         'scratch_disk': 'wd1d',
+        'memory_size': '128M',
     },
     'sparc': {
         'qemu': {
@@ -49,6 +50,7 @@ arch_props = {
             'executable': 'qemu-system-sparc64',
         },
         'scratch_disk': 'wd1c',
+        'memory_size': '128M',
     },
     'evbarm-earmv7hf': {
         'qemu': {
@@ -57,6 +59,7 @@ arch_props = {
         'image_name': 'armv7.img.gz',
         'kernel_name': 'netbsd-VEXPRESS_A15.ub.gz',
         'scratch_disk': None,
+        'memory_size': '128M',
     },
     'evbarm-aarch64': {
         'qemu': {
@@ -66,11 +69,13 @@ arch_props = {
         'kernel_name': 'netbsd-GENERIC64.img.gz',
         'reverse_virtio_drives': True,
         'scratch_disk': 'ld5c',
+        'memory_size': '512M',
     },
     'pmax': {
         'gxemul': {
         },
         'scratch_disk': 'sd1c',
+        'memory_size': '128M',
     },
     'hpcmips': {
         'gxemul': {
@@ -800,11 +805,9 @@ class Anita:
         self.disk_size = disk_size
 
         # Set the default memory size if none was given.
-        if memory_size is None:
-            if dist.arch() in ['amd64', 'evbarm-earmv7hf', 'evbarm-aarch64', 'pmax', 'sparc64']:
-                memory_size = "128M"
-            else:
-                memory_size = "32M"
+        memory_size = memory_size or \
+            arch_props[self.dist.arch()].get('memory_size') or \
+            '32M'
         self.memory_size_bytes = parse_size(memory_size)
 
         self.persist = persist
