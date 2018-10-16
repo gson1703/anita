@@ -1825,7 +1825,7 @@ class Anita:
         self.child.interact()
 
     # Run the NetBSD ATF test suite on the guest
-    def run_tests(self, timeout = 10800):
+    def run_tests(self, timeout = 86400):
         mkdir_p(self.workdir)
         results_by_net = (self.vmm == 'noemu')
 
