@@ -31,9 +31,9 @@ distribution, installing it in a virtual machine, booting the
 installed system, and running the NetBSD test suite.
 .Pp
 The NetBSD ports currently supported as targets (i.e., as the
-system to install and run under emulation) are i386, amd64, sparc,
-evbarm-earmv7hf (using the VEXPRESS_A15 kernel), pmax, hpcmips,
-and vax.
+system to install and run under emulation) are i386, amd64,
+sparc, sparc64, evbarm-earmv7hf (using the VEXPRESS_A15 kernel),
+evbarm-aarch64, pmax, hpcmips, and vax.
 The host (the system running
 .Nm )
 can be any NetBSD port or even a different Unix-like system such
@@ -47,18 +47,18 @@ To install NetBSD 7.2/i386 from the master NetBSD FTP site, enter
 .Pp
 .Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-7.2/i386/
 .Pp
-Installing NetBSD/sparc works a bit differently from i386 and amd64:
-it uses an ISO image instead of a directory containing boot floppies
-and sets:
+Installing NetBSD/sparc, sparc64, or vax works a bit differently
+from i386 and amd64: it uses an ISO image instead of a directory
+containing boot floppies and sets:
 .Pp
 .Dl anita install http://ftp.netbsd.org/pub/NetBSD/iso/7.2/NetBSD-7.2-sparc.iso
 .Pp
-The evbarm-earmv7hf port does not currently support installation
-using sysinst, so anita will instead install it by decompressing
+The evbarm ports do not currently support installation
+using sysinst, so anita will instead install them by decompressing
 the pre-built disk image from the release onto the beginning
 of the virtual disk.  The image will be automatically resized
-at boot time, and after that, the evbarm-earmv7hf port works the
-same as the other ports.  To install it, use a command like
+at boot time, and after that, the evbarm ports work the
+same as the other ports.  To install them, use a command like
 the following, adjusting the URL to point to a current shapshot:
 .Pp
 .Dl anita install http://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/201706211330Z/evbarm-earmv7hf/

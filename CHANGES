@@ -1,3 +1,7 @@
+Add support for NetBSD/evbarm-aarch64 targets.
+
+Add support for NetBSD/sparc64 targets, from Utkarsh Anand.
+
 The run_tests() method now halts the VM, to ensure that the
 scratch disk containing ATF test results is flushed by the
 guest before being read by the host.
