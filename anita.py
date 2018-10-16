@@ -60,6 +60,7 @@ arch_props = {
         'kernel_name': 'netbsd-VEXPRESS_A15.ub.gz',
         'scratch_disk': None,
         'memory_size': '128M',
+        'disk_size': '2G',
     },
     'evbarm-aarch64': {
         'qemu': {
@@ -70,6 +71,7 @@ arch_props = {
         'reverse_virtio_drives': True,
         'scratch_disk': 'ld5c',
         'memory_size': '512M',
+        'disk_size': '2G',
     },
     'pmax': {
         'gxemul': {
@@ -797,11 +799,9 @@ class Anita:
                 self.unstructured_log_f = sys.stdout
 
         # Set the default disk size if none was given.
-        if disk_size is None:
-            if self.dist.arch() in ['evbarm-earmv7hf', 'evbarm-aarch64'] :
-                disk_size = '2G'
-            else:
-                disk_size = '1536M'
+        disk_size = disk_size or \
+            arch_props[self.dist.arch()].get('disk_size') or \
+            '1536M'
         self.disk_size = disk_size
 
         # Set the default memory size if none was given.
