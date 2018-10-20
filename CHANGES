@@ -1,3 +1,6 @@
+
+- 1.46 released -
+
 Add support for NetBSD/evbarm-aarch64 targets.
 
 Add support for NetBSD/sparc64 targets, from Utkarsh Anand.
