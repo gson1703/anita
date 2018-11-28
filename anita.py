@@ -499,10 +499,7 @@ class Version:
     def boot_from_default(self):
         return None
     def scratch_disk(self):
-        arch = self.arch()
-        if arch in arch_props and 'scratch_disk' in arch_props[arch]:
-            return arch_props[arch]['scratch_disk']
-        return None
+        return arch_props[self.arch()].get('scratch_disk')
 
     def xen_kernel(self):
         arch = self.arch()
@@ -1048,10 +1045,13 @@ class Anita:
         self.configure_child(child)
         return child
 
+    def get_arch_prop(self, key):
+        return arch_props[self.dist.arch()].get(key)
+
     def _install(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
-        if self.dist.arch() == 'evbarm-earmv7hf' or self.dist.arch() == 'evbarm-aarch64':
+        if self.get_arch_prop('image_name'):
             self.dist.download()
         else:
             self.dist.make_iso()
@@ -1062,7 +1062,7 @@ class Anita:
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
             print "done."
 
-        image_name = self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('image_name')
+        image_name = self.get_arch_prop('image_name')
         if image_name:
             # Unzip the image
             gzimage_fn = os.path.join(self.workdir,
@@ -1072,7 +1072,7 @@ class Anita:
             subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc', shell = True, stdin = gzimage)
             gzimage.close()
             # Unzip the kernel
-            kernel_name = arch_props[self.dist.arch()]['kernel_name']
+            kernel_name = self.get_arch_prop('kernel_name')
             gzkernel_fn = os.path.join(self.workdir,
                 'download', self.dist.arch(), 'binary', 'kernel', kernel_name)
             kernel_name_nogz = kernel_name[:-3]
