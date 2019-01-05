@@ -419,6 +419,13 @@ any PCI buses when run under qemu; see PRs 38729 and 42681.
 NetBSD/vax is unable to run the ATF tests as of source date
 2018.03.22.12.16.11.
 .Pp
+Timing is off by a factor of two when running on NetBSD hosts;
+see PR 43997.
+.Pp
+For current reports of other NetBSD bugs found using anita, see
+.Pp
+.Dl http://releng.netbsd.org/test-results.html
+.Pp
 .Sh BUGS IN QEMU
 .Pp
 Versions of qemu known to work with
@@ -427,9 +434,8 @@ on NetBSD hosts are
 0.15, 1.2, 1.4.1, and 2.0.0nb4
 or newer.
 .Pp
-Even with these versions, timing is off by a factor of two,
-which causes some of the tests in the NetBSD test suite to fail.
-Some floating point tests also fail.
+Some floating point tests fail under qemu but not on real hardware,
+presuambly due to bugs qemu's floating point emulation.
 .Pp
 Running multithreaded programs (such as the NetBSD test suite) on
 an emulated i386 or amd64 system requires qemu patches that are in
