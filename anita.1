@@ -498,9 +498,16 @@ option looks useful for making the tests less dependent on host timing,
 and its
 .Ar sleep=on|off
 argument might be used to speed up the tests by emulating the passage
-of time instead of waiting for actual time to pass, but they are broken:
+of time instead of waiting for actual time to pass.  This is now
+partly functional as
 .Pp
 .Dl https://bugs.launchpad.net/qemu/+bug/1774677
+.Pp
+has been fixed, but causes spurious IDE disk errors in the guest.
+Qemu also advertises record/replay capability, but it does not actually
+work, as reported in
+.Pp
+.Dl https://bugs.launchpad.net/qemu/+bug/1810590
 .Pp
 .Sh BUGS IN KVM
 .Pp
