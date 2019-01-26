@@ -239,12 +239,14 @@ def parse_size(size):
 # exists locally, do nothing.  If "optional" is true, ignore download
 # failures and cache the absence of a missing file by creating a marker
 # file with the extension ".MISSING".
+#
+# Returns true iff the file is present.
 
 def download_if_missing_2(url, file, optional = False):
     if os.path.exists(file):
-        return
+        return True
     if os.path.exists(file + ".MISSING"):
-        return
+        return False
     dir = os.path.dirname(file)
     mkdir_p(dir)
     try:
@@ -253,6 +255,7 @@ def download_if_missing_2(url, file, optional = False):
         if optional:
             f = open(file + ".MISSING", "w")
             f.close()
+            return False
         else:
             raise
 
@@ -566,7 +569,8 @@ class Version:
         if 'image_name' in arch_props[self.arch()]:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", arch_props[self.arch()]['image_name']])
             for file in arch_props[self.arch()]['kernel_name']:
-                download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file], True)
+                if download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file], True):
+                    break
             # Nothing more to do as we aren't doing a full installation
             return
 
