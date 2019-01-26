@@ -1,4 +1,4 @@
-#
+
 # This is the library part of Anita, the Automated NetBSD Installation
 # and Test Application.
 #
@@ -24,6 +24,12 @@ netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
 #netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
 
 # The supported architectures, and their properties.
+
+# If an 'image_name' property is present, installation is done
+# using a pre-built image of that name and a kernel from the
+# 'kernel_name' list, rather than using sysinst.  If multiple
+# kernel names are listed, the first one present in the release
+# is used.
 
 arch_props = {
     'i386': {
@@ -57,7 +63,7 @@ arch_props = {
             'executable': 'qemu-system-arm',
         },
         'image_name': 'armv7.img.gz',
-        'kernel_name': 'netbsd-VEXPRESS_A15.ub.gz',
+        'kernel_name': ['netbsd-VEXPRESS_A15.ub.gz', 'netbsd-GENERIC.ub.gz'],
         'scratch_disk': None,
         'memory_size': '128M',
         'disk_size': '2G',
@@ -67,7 +73,7 @@ arch_props = {
             'executable': 'qemu-system-aarch64',
         },
         'image_name': 'arm64.img.gz',
-        'kernel_name': 'netbsd-GENERIC64.img.gz',
+        'kernel_name': ['netbsd-GENERIC64.img.gz'],
         'reverse_virtio_drives': True,
         'scratch_disk': 'ld5c',
         'memory_size': '512M',
@@ -554,11 +560,16 @@ class Version:
         #    if not os.path.lexists(os.path.join(self.workdir, 'download', self.arch())):
         #        os.symlink(self.url[7:], os.path.join(self.workdir, 'download', self.arch()))
         #    return
-        if self.arch() in ['evbarm-earmv7hf', 'evbarm-aarch64']:
-            for file in [arch_props[self.arch()]['kernel_name']]:
-                download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file])
+
+        # Deal with architectures that we don't know how to install
+        # using sysinst, but instead use a pre-installed image
+        if 'image_name' in arch_props[self.arch()]:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "gzimg", arch_props[self.arch()]['image_name']])
+            for file in arch_props[self.arch()]['kernel_name']:
+                download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", file], True)
+            # Nothing more to do as we aren't doing a full installation
             return
+
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
         if self.arch() in ['hpcmips', 'landisk']:
@@ -844,34 +855,48 @@ class Anita:
             vmm = 'xm'
 
         self.vmm = vmm
-
         if vmm_args is None:
             vmm_args = []
-        if self.dist.arch() == 'pmax':
-            vmm_args += ["-e3max"]
-        elif self.dist.arch() == 'landisk':
-            vmm_args += ["-Elandisk"]
-        elif self.dist.arch() == 'hpcmips':
-            vmm_args += ["-emobilepro880"]
-        elif dist.arch() == 'evbarm-earmv7hf':
-            vmm_args += [
-                '-M', 'vexpress-a15',
-                '-kernel', os.path.join(self.workdir, 'netbsd-VEXPRESS_A15.ub'),
-                '-append', 'root=ld0a',
-                '-dtb', dtb
-            ]
-        elif dist.arch() == 'evbarm-aarch64':
-            vmm_args += [
-                '-M', 'virt',
-                '-cpu', 'cortex-a57',
-                '-kernel', os.path.join(self.workdir, 'netbsd-GENERIC64.img'),
-                '-append', 'root=ld4a'
-            ]
         self.extra_vmm_args = vmm_args
+
+        self.dtb = dtb
 
         self.is_logged_in = False
         self.halted = False
         self.tests = tests
+
+    # Get the name of the actual uncompressed kernel file, out of
+    # potentially multiple alternative kernels.  Used with images.
+    def actual_kernel(self):
+        for kernel_name in self.get_arch_prop('kernel_name'):
+            kernel_name_nogz = kernel_name[:-3]
+            kernel_fn = os.path.join(self.workdir, kernel_name_nogz)
+            if os.path.exists(kernel_fn):
+                return kernel_fn
+        raise RuntimeError("missing kernel")
+
+    def arch_vmm_args(self):
+        if self.dist.arch() == 'pmax':
+            return ["-e3max"]
+        elif self.dist.arch() == 'landisk':
+            return ["-Elandisk"]
+        elif self.dist.arch() == 'hpcmips':
+            return ["-emobilepro880"]
+        elif self.dist.arch() == 'evbarm-earmv7hf':
+            return [
+                '-M', 'vexpress-a15',
+                '-kernel', self.actual_kernel(),
+                '-append', 'root=ld0a',
+                '-dtb', self.dtb
+            ]
+        elif self.dist.arch() == 'evbarm-aarch64':
+            return [
+                '-M', 'virt',
+                '-cpu', 'cortex-a57',
+                '-kernel', self.actual_kernel(),
+                '-append', 'root=ld4a'
+            ]
+        return []
 
     def slog(self, message):
         slog_info(self.structured_log_f, message)
@@ -935,7 +960,7 @@ class Anita:
 
     def start_gxemul(self, vmm_args):
         child = self.pexpect_spawn('gxemul', ["-M", str(self.memory_megs()) + 'M',
-         "-d", os.path.abspath(self.wd0_path())] + self.extra_vmm_args + vmm_args)
+         "-d", os.path.abspath(self.wd0_path())] + self.extra_vmm_args + self.arch_vmm_args() + vmm_args)
         self.configure_child(child)
         return child
 
@@ -946,7 +971,7 @@ class Anita:
                 "-m", str(self.memory_megs())
             ] + self.qemu_disk_args(self.wd0_path(), 0, True, snapshot_system_disk) + [
                 "-nographic"
-            ] + vmm_args + self.extra_vmm_args
+            ] + vmm_args + self.extra_vmm_args + self.arch_vmm_args()
         # Deal with virtio device ordering issues
         if self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('reverse_virtio_drives'):
             print "reversing virtio devices"
@@ -1007,7 +1032,7 @@ class Anita:
             self.xen_disk_arg(os.path.abspath(self.wd0_path()), 0, True),
             "memory=" + str(self.memory_megs()),
             self.xen_string_arg('name', name)
-        ] + vmm_args + self.extra_vmm_args
+        ] + vmm_args + self.extra_vmm_args + self.arch_vmm_args()
 
         # Multiple "disk=" arguments are no longer supported with xl;
         # combine them
@@ -1041,7 +1066,7 @@ class Anita:
             '--arch', self.dist.arch()
         ]
         child = self.pexpect_spawn('sudo', ['noemu'] +
-            noemu_always_args + vmm_args + self.extra_vmm_args)
+            noemu_always_args + vmm_args + self.extra_vmm_args + self.arch_vmm_args())
         self.configure_child(child)
         return child
 
@@ -1071,17 +1096,19 @@ class Anita:
             gzimage = open(gzimage_fn, 'r')
             subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc', shell = True, stdin = gzimage)
             gzimage.close()
-            # Unzip the kernel
-            kernel_name = self.get_arch_prop('kernel_name')
-            gzkernel_fn = os.path.join(self.workdir,
-                'download', self.dist.arch(), 'binary', 'kernel', kernel_name)
-            kernel_name_nogz = kernel_name[:-3]
-            gzkernel = open(gzkernel_fn, 'r')
-            kernel_fn = os.path.join(self.workdir, kernel_name_nogz)
-            kernel = open(kernel_fn, 'w')
-            subprocess.call('gunzip', stdin = gzkernel, stdout = kernel)
-            kernel.close()
-            gzkernel.close()
+            # Unzip the kernel, whatever its name
+            for kernel_name in self.get_arch_prop('kernel_name'):
+                gzkernel_fn = os.path.join(self.workdir,
+                    'download', self.dist.arch(), 'binary', 'kernel', kernel_name)
+                if not os.path.exists(gzkernel_fn):
+                    continue
+                kernel_name_nogz = kernel_name[:-3]
+                gzkernel = open(gzkernel_fn, 'r')
+                kernel_fn = os.path.join(self.workdir, kernel_name_nogz)
+                kernel = open(kernel_fn, 'w')
+                subprocess.call('gunzip', stdin = gzkernel, stdout = kernel)
+                kernel.close()
+                gzkernel.close()
             return
 
         # The name of the CD-ROM device holding the sets
