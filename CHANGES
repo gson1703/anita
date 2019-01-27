@@ -1,4 +1,6 @@
 
+- 1.47 released -
+
 Deal with the removal of the VEXPRESS_A15 kernel, used by the
 evbarm-earmv7hf target, in favor of GENERIC.
 
