@@ -1084,39 +1084,45 @@ class Anita:
             self.dist.download()
         else:
             self.dist.make_iso()
-        arch = self.dist.arch()
         if self.vmm != 'noemu':
             print "Creating hard disk image...",
             sys.stdout.flush()
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
             print "done."
 
-        image_name = self.get_arch_prop('image_name')
-        if image_name:
-            # Unzip the image
-            gzimage_fn = os.path.join(self.workdir,
-                'download', self.dist.arch(),
-                'binary', 'gzimg', image_name)
-            gzimage = open(gzimage_fn, 'r')
-            subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc', shell = True, stdin = gzimage)
-            gzimage.close()
-            # Unzip the kernel, whatever its name
-            for kernel_name in self.get_arch_prop('kernel_name'):
-                gzkernel_fn = os.path.join(self.workdir,
-                    'download', self.dist.arch(), 'binary', 'kernel', kernel_name)
-                if not os.path.exists(gzkernel_fn):
-                    continue
-                kernel_name_nogz = kernel_name[:-3]
-                gzkernel = open(gzkernel_fn, 'r')
-                kernel_fn = os.path.join(self.workdir, kernel_name_nogz)
-                kernel = open(kernel_fn, 'w')
-                subprocess.call('gunzip', stdin = gzkernel, stdout = kernel)
-                kernel.close()
-                gzkernel.close()
-            return
+        if self.get_arch_prop('image_name'):
+            self._install_from_image()
+        else:
+            self._install_using_sysinst()
 
+    def _install_from_image(self):
+        image_name = self.get_arch_prop('image_name')
+        # Unzip the image
+        gzimage_fn = os.path.join(self.workdir,
+            'download', self.dist.arch(),
+            'binary', 'gzimg', image_name)
+        gzimage = open(gzimage_fn, 'r')
+        subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc', shell = True, stdin = gzimage)
+        gzimage.close()
+        # Unzip the kernel, whatever its name
+        for kernel_name in self.get_arch_prop('kernel_name'):
+            gzkernel_fn = os.path.join(self.workdir,
+                'download', self.dist.arch(), 'binary', 'kernel', kernel_name)
+            if not os.path.exists(gzkernel_fn):
+                continue
+            kernel_name_nogz = kernel_name[:-3]
+            gzkernel = open(gzkernel_fn, 'r')
+            kernel_fn = os.path.join(self.workdir, kernel_name_nogz)
+            kernel = open(kernel_fn, 'w')
+            subprocess.call('gunzip', stdin = gzkernel, stdout = kernel)
+            kernel.close()
+            gzkernel.close()
+
+    def _install_using_sysinst(self):
         # The name of the CD-ROM device holding the sets
         cd_device = None
+
+        arch = self.dist.arch()
 
         if vmm_is_xen(self.vmm):
             # Download XEN kernels
