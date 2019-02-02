@@ -1,4 +1,4 @@
-
+#
 # This is the library part of Anita, the Automated NetBSD Installation
 # and Test Application.
 #
