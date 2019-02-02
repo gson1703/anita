@@ -1117,6 +1117,12 @@ class Anita:
             subprocess.call('gunzip', stdin = gzkernel, stdout = kernel)
             kernel.close()
             gzkernel.close()
+        # Boot the system to let it resize the image.
+        self.start_boot(install = False, snapshot_system_disk = False)
+        # The system will resize the image and then reboot.
+        # Waith for the login prompt and shut down cleanly.
+        self.child.expect("login:")
+        self.halt()
 
     def _install_using_sysinst(self):
         # The name of the CD-ROM device holding the sets
@@ -1812,18 +1818,22 @@ class Anita:
     # booting, but not when installing.  Does not wait for
     # a login prompt.
 
-    def start_boot(self, vmm_args = None):
+    def start_boot(self, vmm_args = None, install = None, snapshot_system_disk = None):
         if vmm_args is None:
             vmm_args = []
+        if install is None:
+            install = not self.no_install
+        if snapshot_system_disk is None:
+            snapshot_system_disk = not self.persist
 
-        if not self.no_install:
+        if install:
             self.install()
             if self.dist.arch() in ['hpcmips', 'landisk']:
                 vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                  "binary", "kernel", "netbsd-GENERIC.gz"))]
 
         if self.vmm == 'qemu':
-            child = self.start_qemu(vmm_args, snapshot_system_disk = not self.persist)
+            child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
         elif vmm_is_xen(self.vmm):
             child = self.start_xen_domu(vmm_args + [self.xen_string_arg('kernel',
