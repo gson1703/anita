@@ -1828,17 +1828,21 @@ class Anita:
 
         if install:
             self.install()
-            if self.dist.arch() in ['hpcmips', 'landisk']:
-                vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+
+        if self.dist.arch() in ['hpcmips', 'landisk']:
+            vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                  "binary", "kernel", "netbsd-GENERIC.gz"))]
+
+        if vmm_is_xen(self.vmm):
+            vmm_args += [self.xen_string_arg('kernel',
+                os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                             "binary", "kernel", self.dist.xen_kernel())))]
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
         elif vmm_is_xen(self.vmm):
-            child = self.start_xen_domu(vmm_args + [self.xen_string_arg('kernel',
-                os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-                             "binary", "kernel", self.dist.xen_kernel())))])
+            child = self.start_xen_domu(vmm_args)
         elif self.vmm == 'noemu':
             child = self.start_noemu(vmm_args + ['--boot-from', 'disk'])
         elif self.vmm == 'gxemul':
