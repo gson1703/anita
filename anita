@@ -82,18 +82,8 @@ def main(argv = None):
     else:
         sets = None
 
-    if re.search(r'\.iso$', distarg):
-        dist = anita.ISO(distarg, sets = sets)
-    elif re.match(r'/', distarg):
-        if not re.search(r'/$', distarg):
-            raise Usage("distribution directory should end in a slash")
-        dist = anita.LocalDirectory(distarg, sets = sets)
-    elif re.match(r'[a-z0-9\.0-]+:', distarg):
-        if not re.search(r'/$', distarg):
-            raise Usage("distribution URL should end in a slash")
-        dist = anita.URL(distarg, sets = sets)
-    else:
-        raise Usage("expected distribution URL or directory, got " + distarg)
+    dist = anita.distribution(distarg, sets = sets)
+
     if dist.arch() == 'evbarm-earmv7hf':
         if not os.path.exists(options.dtb):
             raise IOError("The Device Tree Blob %s does not exist." % options.dtb)

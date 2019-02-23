@@ -1,3 +1,10 @@
+
+Move the automatic determination of the type of the URL argument
+(e.g., distribution directory vs. installation ISO) into a new library
+function anita.distribution() so that it can be used not only from the
+command line but also by by Python programs calling anita as a
+library.
+
 When using a pre-installed image, "anita install" will now boot it to
 let it resize itself, rather than postponing the resize to when the
 image is later booted in another mode such as "anita test".

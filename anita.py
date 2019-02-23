@@ -739,6 +739,23 @@ class ISO(Version):
     def boot_from_default(self):
         return 'cdrom-with-sets'
 
+# Virtual constructior that accepts a release URL, ISO, or local path
+# and constructs an URL, ISO, or LocalDirectory object as needed.
+
+def distribution(distarg, **kwargs):
+    if re.search(r'\.iso$', distarg):
+        return ISO(distarg, **kwargs)
+    elif re.match(r'/', distarg):
+        if not re.search(r'/$', distarg):
+            raise runtime_error("distribution directory should end in a slash")
+        return LocalDirectory(distarg, **kwargs)
+    elif re.match(r'[a-z0-9\.0-]+:', distarg):
+        if not re.search(r'/$', distarg):
+            raise runtime_error("distribution URL should end in a slash")
+        return URL(distarg, **kwargs)
+    else:
+        raise runtime_error("expected distribution URL or directory, got " + distarg)
+
 #############################################################################
 
 # Helper class for killing the DomU when the last reference to the
