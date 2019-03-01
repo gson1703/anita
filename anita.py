@@ -774,6 +774,7 @@ def vmm_is_xen(vmm):
 
 def slog(fd, tag, data):
     print >>fd, "%s(%.3f, %s)" % (tag, time.time(), repr(data))
+    fd.flush()
 
 def slog_info(fd, data):
     slog(fd, 'info', data)
