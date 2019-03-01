@@ -1,3 +1,6 @@
+The structured log file is now flushed after each line so that
+it can be used to debug a hung installation without waiting for
+it to time out first.
 
 Move the automatic determination of the type of the URL argument
 (e.g., distribution directory vs. installation ISO) into a new library
