@@ -2000,7 +2000,7 @@ class Anita:
             test_cmd +
             save_test_results_cmd +
             "df -k | sed 's/^/df-post-test /'; " +
-            "ps -glaxw | sed 's/^/ps-post-test /'; " +
+            "ps -glaxww | sed 's/^/ps-post-test /'; " +
             "vmstat -s; " +
             "sh -c 'exit `cat /tmp/tests/test.status`'",
             timeout)
