@@ -1552,7 +1552,9 @@ class Anita:
                          # Group 24
                          "(a: Set sizes of NetBSD partitions)|" +
                          # Group 25
-                         "(Sysinst could not automatically determine the BIOS geometry of the disk)",
+                         "(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
+                         # Group 26
+                        "(a partitioning scheme)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1778,6 +1780,10 @@ class Anita:
                 child.send("\n")
                 child.expect("b: Use the entire disk")
                 child.send("b\n")
+            elif child.match.group(26):
+                # "a partitioning scheme"
+                child.expect("([a-z]): Master Boot Record")
+                child.send(child.match.group(1) + "\n")
             else:
                 raise AssertionError
 
