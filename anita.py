@@ -1562,7 +1562,11 @@ class Anita:
                          # Group 29
                          r'(Do you want to install the NetBSD bootcode)|' +
                          # Group 30
-                         r'(Do you want to update the bootcode)',
+                         r'(Do you want to update the bootcode)|' +
+                         # Group 31
+                         r"(Please enter a name for your NetBSD disk)|" +
+                         # Group 32
+                         r"(This is your last chance)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1756,15 +1760,6 @@ class Anita:
                 child.send(cursor_down * 8 + "\n")
                 child.expect("x: Partition sizes ok")
                 child.send("\n")
-                child.expect("Please enter a name for your NetBSD disk")
-                child.send("\n")
-
-                # "This is your last chance to quit this process..."
-                child.expect("Shall we continue")
-                child.expect("b: Yes")
-                child.send("b\n")
-
-                # newfs is run at this point
             elif child.match.group(25):
                 # We need to enter these values in cases where sysinst could not
                 # determine disk geometry. Currently, this happens for NetBSD/hpcmips
@@ -1788,6 +1783,15 @@ class Anita:
                 # Install or replace bootcode
                 child.expect("a: Yes")
                 child.send("\n")
+            elif child.match.group(31):
+                # "Please enter a name for your NetBSD disk"
+                child.send("\n")
+            elif child.match.group(32):
+                # "This is your last chance"
+                child.expect("Shall we continue")
+                child.expect("b: Yes")
+                child.send("b\n")
+                # newfs is run at this point
             else:
                 raise AssertionError
 
