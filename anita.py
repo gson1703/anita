@@ -1554,7 +1554,15 @@ class Anita:
                          # Group 25
                          "(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
                          # Group 26
-                        "(a partitioning scheme)",
+                        "(a partitioning scheme)|" +
+                         # Group 27
+                         "(b: Use the entire disk)|" +
+                         # Group 28
+                         r'(Your disk currently has a non-NetBSD partition)|' +
+                         # Group 29
+                         r'(Do you want to install the NetBSD bootcode)|' +
+                         # Group 30
+                         r'(Do you want to update the bootcode)',
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1719,32 +1727,18 @@ class Anita:
                 choose_sets(self.dist.sets)
             # On non-Xen i386/amd64 we first get group 22 or 23,
             # then group 24; on sparc and Xen, we just get group 24.
-            elif (child.match.group(22) or child.match.group(23)):
-                if child.match.group(22):
-                    child.send("\n")
-                elif child.match.group(23):
-                    child.send("a\n")
-                    child.expect("Choose disk")
-                    child.send("0\n")
-                child.expect("b: Use the entire disk")
-                child.send("b\n")
-                while True:
-                    child.expect(r'(Your disk currently has a non-NetBSD partition)|' +
-                        r'(Do you want to install the NetBSD bootcode)|' +
-                        r'(Do you want to update the bootcode)')
-                    if child.match.group(1):
-                        # Your disk currently has a non-NetBSD partition
-                        child.expect("a: Yes")
-                        child.send("\n")
-                    elif child.match.group(2) or child.match.group(3):
-                        # Install or replace bootcode
-                        child.expect("a: Yes")
-                        child.send("\n")
-                        break
+            elif child.match.group(22):
+                # "This is the correct geometry"
+                child.send("\n")
+            elif child.match.group(23):
+                # "a: Use one of these disks"
+                child.send("a\n")
+                child.expect("Choose disk")
+                child.send("0\n")
             elif child.match.group(24):
                 # (a: Set sizes of NetBSD partitions)
                 child.send("a\n")
-                child.expect("Accept partition sizes")
+                child.expect(r"(Accept partition sizes)|(Go on)")
                 # Press cursor-down enough times to get to the end of the list,
                 # to the "Accept partition sizes" entry, then press
                 # enter to continue.  Previously, we used control-N ("\016"),
@@ -1784,6 +1778,16 @@ class Anita:
                 # "a partitioning scheme"
                 child.expect("([a-z]): Master Boot Record")
                 child.send(child.match.group(1) + "\n")
+            elif child.match.group(27):
+                child.send("b\n")
+            elif child.match.group(28):
+                # Your disk currently has a non-NetBSD partition
+                child.expect("a: Yes")
+                child.send("\n")
+            elif child.match.group(29) or child.match.group(30):
+                # Install or replace bootcode
+                child.expect("a: Yes")
+                child.send("\n")
             else:
                 raise AssertionError
 
