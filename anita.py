@@ -1506,7 +1506,7 @@ class Anita:
         loop = 0
         while True:
             loop = loop + 1
-            if loop == 20:
+            if loop == 40:
                 raise RuntimeError("loop detected")
             child.expect(
                          # Group 1
@@ -1566,7 +1566,10 @@ class Anita:
                          # Group 31
                          r"(Please enter a name for your NetBSD disk)|" +
                          # Group 32
-                         r"(This is your last chance)",
+                         # Matching "This is your last chance" will not work
+                         r"(ready to install NetBSD on your hard disk)|" +
+                         # Group 33
+                         r"(We now have your BSD.disklabel partitions)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1742,7 +1745,11 @@ class Anita:
             elif child.match.group(24):
                 # (a: Set sizes of NetBSD partitions)
                 child.send("a\n")
+                # In 2.1, no letter label like "x: " is printed before
+                # "Accept partition sizes", hence the kludge of sending
+                # multiple cursor-down sequences.
                 child.expect(r"(Accept partition sizes)|(Go on)")
+                #child.send(child.match.group(1) + "\n")
                 # Press cursor-down enough times to get to the end of the list,
                 # to the "Accept partition sizes" entry, then press
                 # enter to continue.  Previously, we used control-N ("\016"),
@@ -1758,8 +1765,8 @@ class Anita:
                     # Use the default ANSI cursor-down escape sequence
                     cursor_down = "\033[B"
                 child.send(cursor_down * 8 + "\n")
-                child.expect("x: Partition sizes ok")
-                child.send("\n")
+                #child.expect("x: Partition sizes ok")
+                #child.send("\n")
             elif child.match.group(25):
                 # We need to enter these values in cases where sysinst could not
                 # determine disk geometry. Currently, this happens for NetBSD/hpcmips
@@ -1767,13 +1774,12 @@ class Anita:
                 child.send("\n")
                 child.expect("heads")
                 child.send("\n")
-                child.expect("b: Use the entire disk")
-                child.send("b\n")
             elif child.match.group(26):
                 # "a partitioning scheme"
                 child.expect("([a-z]): Master Boot Record")
                 child.send(child.match.group(1) + "\n")
             elif child.match.group(27):
+                # "b: use the entire disk"
                 child.send("b\n")
             elif child.match.group(28):
                 # Your disk currently has a non-NetBSD partition
@@ -1787,11 +1793,15 @@ class Anita:
                 # "Please enter a name for your NetBSD disk"
                 child.send("\n")
             elif child.match.group(32):
-                # "This is your last chance"
+                # "ready to install NetBSD on your hard disk"
                 child.expect("Shall we continue")
                 child.expect("b: Yes")
                 child.send("b\n")
                 # newfs is run at this point
+            elif child.match.group(33):
+                # "We now have your BSD disklabel partitions"
+                child.expect("x: Partition sizes ok")
+                child.send("x\n")
             else:
                 raise AssertionError
 
