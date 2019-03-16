@@ -1,3 +1,5 @@
+Support some upcoming sysinst UI changes.
+
 The structured log file is now flushed after each line so that
 it can be used to debug a hung installation without waiting for
 it to time out first.
