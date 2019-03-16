@@ -1568,8 +1568,8 @@ class Anita:
                          # Group 32
                          # Matching "This is your last chance" will not work
                          r"(ready to install NetBSD on your hard disk)|" +
-                         # Group 33
-                         r"(We now have your BSD.disklabel partitions)",
+                         # Group 33-34
+                         r"(We now have your (BSD.)?disklabel partitions)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1765,8 +1765,6 @@ class Anita:
                     # Use the default ANSI cursor-down escape sequence
                     cursor_down = "\033[B"
                 child.send(cursor_down * 8 + "\n")
-                #child.expect("x: Partition sizes ok")
-                #child.send("\n")
             elif child.match.group(25):
                 # We need to enter these values in cases where sysinst could not
                 # determine disk geometry. Currently, this happens for NetBSD/hpcmips
