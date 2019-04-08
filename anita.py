@@ -12,6 +12,10 @@ import sys
 import time
 import urllib
 import urlparse
+try:
+    from shlex import quote as sh_quote
+except ImportError:
+    from pipes import quote as sh_quote
 
 __version__='1.47a'
 
@@ -145,20 +149,11 @@ def mkdir_p(dir):
     if not os.path.isdir(dir):
         os.makedirs(dir)
 
-# Quote a shell command.  This is not fully correct, and intended only
-# to make it possible to cut and paste logged command into a shell
-# when arguments contain spaces; it must never be used to run
-# untrusted commands automatically, because that would be a security
-# hole.  If or when we ever switch to Python 3, this should be replaced
-# by shlex.quote().
+# Quote a shell command.  This is intended to make it possible to
+# manually cut and paste logged command into a shell.
 
 def quote_shell_command(v):
-    def quote_word(w):
-        if ' ' in w:
-            return '"' + w + '"'
-        else:
-            return w
-    return " \\\n    ".join([quote_word(w) for w in v])
+    return " \\\n    ".join([sh_quote(w) for w in v])
 
 # Run a shell command safely and with error checking
 
