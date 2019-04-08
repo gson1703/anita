@@ -63,6 +63,8 @@ def main(argv = None):
                       type="string", default="atf")
     parser.add_option("--dtb", help='use the Device Tree Blob (.dtb) PATH_TO_DTB',
                       type="string", metavar="PATH_TO_DTB", default=dtb_path)
+    parser.add_option("--xen-type", help='select the Xen guest type: \"pv\" or \"hvm\"',
+                      type="string", metavar="TYPE", default='pv')
 
     (options, args) = parser.parse_args()
 
@@ -100,7 +102,8 @@ def main(argv = None):
         structured_log_file = options.structured_log_file,
         no_install = options.no_install,
         tests = options.tests,
-        dtb = options.dtb
+        dtb = options.dtb,
+        xen_type = options.xen_type
         )
 
     def maybe_run_command(a):

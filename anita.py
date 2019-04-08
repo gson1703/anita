@@ -505,7 +505,7 @@ class Version:
     def scratch_disk(self):
         return arch_props[self.arch()].get('scratch_disk')
 
-    def xen_kernel(self):
+    def xe_kernel(self):
         arch = self.arch()
         if arch == 'i386':
             return 'netbsd-XEN3PAE_DOMU.gz'
@@ -802,7 +802,8 @@ class multifile(object):
 class Anita:
     def __init__(self, dist, workdir = None, vmm = None, vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
-        structured_log = None, structured_log_file = None, no_install = False, tests = 'atf', dtb = ''):
+        structured_log = None, structured_log_file = None, no_install = False,
+        tests = 'atf', dtb = '', xen_type = 'pv'):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -877,6 +878,7 @@ class Anita:
         self.extra_vmm_args = vmm_args
 
         self.dtb = dtb
+        self.xen_type = xen_type
 
         self.is_logged_in = False
         self.halted = False
@@ -1869,9 +1871,12 @@ class Anita:
                  "binary", "kernel", "netbsd-GENERIC.gz"))]
 
         if vmm_is_xen(self.vmm):
-            vmm_args += [self.xen_string_arg('kernel',
-                os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-                             "binary", "kernel", self.dist.xen_kernel())))]
+            if self.xen_type == 'pv':
+                vmm_args += [self.xen_string_arg('kernel',
+                    os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                                 "binary", "kernel", self.dist.xen_kernel())))]
+            else:
+                vmm_args += xen_string_arg('type', 'hvm')
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
