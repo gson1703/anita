@@ -742,14 +742,14 @@ def distribution(distarg, **kwargs):
         return ISO(distarg, **kwargs)
     elif re.match(r'/', distarg):
         if not re.search(r'/$', distarg):
-            raise runtime_error("distribution directory should end in a slash")
+            raise RuntimeError("distribution directory should end in a slash")
         return LocalDirectory(distarg, **kwargs)
     elif re.match(r'[a-z0-9\.0-]+:', distarg):
         if not re.search(r'/$', distarg):
-            raise runtime_error("distribution URL should end in a slash")
+            raise RuntimeError("distribution URL should end in a slash")
         return URL(distarg, **kwargs)
     else:
-        raise runtime_error("expected distribution URL or directory, got " + distarg)
+        raise RuntimeError("expected distribution URL or directory, got " + distarg)
 
 #############################################################################
 
