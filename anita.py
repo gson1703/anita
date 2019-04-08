@@ -505,7 +505,7 @@ class Version:
     def scratch_disk(self):
         return arch_props[self.arch()].get('scratch_disk')
 
-    def xe_kernel(self):
+    def xen_kernel(self):
         arch = self.arch()
         if arch == 'i386':
             return 'netbsd-XEN3PAE_DOMU.gz'
