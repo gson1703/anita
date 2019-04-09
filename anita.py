@@ -1163,9 +1163,9 @@ class Anita:
                     os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                  "binary", "kernel", self.dist.xen_install_kernel())))]
             else:
-                vmm_args += self.xen_string_arg('type', 'hvm')
+                vmm_args += [self.xen_string_arg('type', 'hvm')]
 
-            vmm_args += self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)
+            vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)]
             child = self.start_xen_domu(vmm_args)
             cd_device = 'xbd1d'
         elif self.vmm == 'qemu':
