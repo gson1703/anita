@@ -1154,11 +1154,18 @@ class Anita:
                         ["binary", "kernel", kernel],
                         True)
 
-            vmm_args = [
-                self.xen_string_arg('kernel', os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-                    "binary", "kernel", self.dist.xen_install_kernel()))),
-                self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)
-            ]
+            vmm_args = []
+
+            # This is almost a duplicate of some code in start_boot(), but
+            # uses xen_install_kernel() instead of xen_kernel()
+            if self.xen_type == 'pv':
+                vmm_args += [self.xen_string_arg('kernel',
+                    os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                                 "binary", "kernel", self.dist.xen_install_kernel())))]
+            else:
+                vmm_args += self.xen_string_arg('type', 'hvm')
+
+            vmm_args += self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)
             child = self.start_xen_domu(vmm_args)
             cd_device = 'xbd1d'
         elif self.vmm == 'qemu':
@@ -1876,7 +1883,7 @@ class Anita:
                     os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                  "binary", "kernel", self.dist.xen_kernel())))]
             else:
-                vmm_args += xen_string_arg('type', 'hvm')
+                vmm_args += self.xen_string_arg('type', 'hvm')
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
