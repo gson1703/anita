@@ -1040,6 +1040,17 @@ class Anita:
         else: # xl
             return '%s="%s"' % (name, value)
 
+    def xen_args(self, install):
+        if self.xen_type == 'pv':
+            return [self.xen_string_arg('kernel',
+                os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                                "binary", "kernel", self.dist.xen_install_kernel())))]
+        else:
+            return  [
+                self.xen_string_arg('type', 'hvm'),
+                'nographic=0'
+            ]
+
     def start_xen_domu(self, vmm_args):
         frontend = self.vmm
         name = "anita-%i" % os.getpid()
@@ -1153,18 +1164,8 @@ class Anita:
                         self.dist.download_local_arch_dir(),
                         ["binary", "kernel", kernel],
                         True)
-
             vmm_args = []
-
-            # This is almost a duplicate of some code in start_boot(), but
-            # uses xen_install_kernel() instead of xen_kernel()
-            if self.xen_type == 'pv':
-                vmm_args += [self.xen_string_arg('kernel',
-                    os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-                                 "binary", "kernel", self.dist.xen_install_kernel())))]
-            else:
-                vmm_args += [self.xen_string_arg('type', 'hvm')]
-
+            vmm_args += self.xen_args(install = True)
             vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)]
             child = self.start_xen_domu(vmm_args)
             cd_device = 'xbd1d'
@@ -1877,18 +1878,11 @@ class Anita:
             vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                  "binary", "kernel", "netbsd-GENERIC.gz"))]
 
-        if vmm_is_xen(self.vmm):
-            if self.xen_type == 'pv':
-                vmm_args += [self.xen_string_arg('kernel',
-                    os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-                                 "binary", "kernel", self.dist.xen_kernel())))]
-            else:
-                vmm_args += [self.xen_string_arg('type', 'hvm')]
-
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
         elif vmm_is_xen(self.vmm):
+            vmm_args += xen_args(install = False)
             child = self.start_xen_domu(vmm_args)
         elif self.vmm == 'noemu':
             child = self.start_noemu(vmm_args + ['--boot-from', 'disk'])
