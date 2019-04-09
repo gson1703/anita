@@ -1882,7 +1882,7 @@ class Anita:
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
         elif vmm_is_xen(self.vmm):
-            vmm_args += xen_args(install = False)
+            vmm_args += self.xen_args(install = False)
             child = self.start_xen_domu(vmm_args)
         elif self.vmm == 'noemu':
             child = self.start_noemu(vmm_args + ['--boot-from', 'disk'])
