@@ -1883,7 +1883,7 @@ class Anita:
                     os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                  "binary", "kernel", self.dist.xen_kernel())))]
             else:
-                vmm_args += self.xen_string_arg('type', 'hvm')
+                vmm_args += [self.xen_string_arg('type', 'hvm')]
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
