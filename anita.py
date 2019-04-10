@@ -159,6 +159,7 @@ def quote_shell_command(v):
 
 def spawn(command, args):
     print quote_shell_command(args)
+    sys.stdout.flush()
     ret = os.spawnvp(os.P_WAIT, command, args)
     if ret != 0:
         raise RuntimeError("could not run " + command)
@@ -1004,9 +1005,10 @@ class Anita:
 
     def xen_disk_arg(self, path, devno = 0, writable = True):
         if self.vmm == 'xm':
-            return "disk=file:%s,0x%x,%s" % (path, devno, "rw"[writable])
+            dev = "0x%x" % devno
         else: # xl
-            return "disk=file:%s,xvd%s,%s" % (path, chr(ord('a') + devno), "rw"[writable])
+            dev = "xvd%s" % chr(ord('a') + devno)
+        return "disk=file:%s,%s,%s" % (path, dev, "rw"[writable])
 
     def qemu_disk_args(self, path, devno = 0, writable = True, snapshot = False):
         drive_attrs = [
