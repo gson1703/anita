@@ -1003,12 +1003,16 @@ class Anita:
         self.configure_child(child)
         return child
 
-    def xen_disk_arg(self, path, devno = 0, writable = True):
+    def xen_disk_arg(self, path, devno = 0, cdrom = False):
+        writable = not cdrom
         if self.vmm == 'xm':
             dev = "0x%x" % devno
         else: # xl
             dev = "xvd%s" % chr(ord('a') + devno)
-        return "disk=file:%s,%s,%s" % (path, dev, "rw"[writable])
+        s = "disk=file:%s,%s,%s" % (path, dev, "rw"[writable])
+        if cdrom:
+            s += ",cdrom"
+        return s
 
     def qemu_disk_args(self, path, devno = 0, writable = True, snapshot = False):
         drive_attrs = [
@@ -1061,7 +1065,7 @@ class Anita:
             "create",
             "-c",
             "/dev/null",
-            self.xen_disk_arg(os.path.abspath(self.wd0_path()), 0, True),
+            self.xen_disk_arg(os.path.abspath(self.wd0_path()), 0),
             "memory=" + str(self.memory_megs()),
             self.xen_string_arg('name', name)
         ] + vmm_args + self.extra_vmm_args + self.arch_vmm_args()
@@ -1168,7 +1172,7 @@ class Anita:
                         True)
             vmm_args = []
             vmm_args += self.xen_args(install = True)
-            vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, False)]
+            vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, cdrom = True)]
             child = self.start_xen_domu(vmm_args)
             cd_device = 'xbd1d'
         elif self.vmm == 'qemu':
@@ -1947,7 +1951,7 @@ class Anita:
             max_result_size_k = scratch_image_megs * 900
 
             if vmm_is_xen(self.vmm):
-                scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1, True)]
+                scratch_disk_args = [self.xen_disk_arg(os.path.abspath(scratch_disk_path), 1)]
             elif self.vmm == 'qemu':
                 scratch_disk_args = self.qemu_disk_args(os.path.abspath(scratch_disk_path), 1, True, False)
             elif self.vmm == 'noemu':
