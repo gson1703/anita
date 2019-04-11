@@ -1197,7 +1197,8 @@ class Anita:
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
-                vmm_args += ["-drive", "file=%s,format=raw,if=floppy,readonly=on" % floppy_paths[0], "-boot", "a"]
+                vmm_args += ["-drive", "file=%s,format=raw,if=floppy,readonly=on"
+                             % floppy_paths[0], "-boot", "a"]
                 cd_device = 'cd0a';
             elif self.boot_from == 'cdrom-with-sets':
                 # Single CD
