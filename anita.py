@@ -1008,7 +1008,11 @@ class Anita:
         if self.vmm == 'xm':
             dev = "0x%x" % devno
         else: # xl
-            dev = "xvd%s" % chr(ord('a') + devno)
+            if self.xen_type == 'hvm':
+                devtype = 'hd'
+            else:
+                devtype = 'xvd'
+            dev = devtype + chr(ord('a') + devno)
         s = "disk=file:%s,%s,%s" % (path, dev, "rw"[writable])
         if cdrom:
             s += ",cdrom"
