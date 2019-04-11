@@ -1058,7 +1058,7 @@ class Anita:
         else:
             return  [
                 self.xen_string_arg('type', 'hvm'),
-                'nographic=0'
+                self.xen_string_arg('serial', 'pty'),
             ]
 
     def start_xen_domu(self, vmm_args):
@@ -1167,18 +1167,26 @@ class Anita:
         arch = self.dist.arch()
 
         if vmm_is_xen(self.vmm):
-            # Download XEN kernels
-            xenkernels = [k for k in [self.dist.xen_kernel(), self.dist.xen_install_kernel()] if k]
-            for kernel in xenkernels:
-                download_if_missing_3(self.dist.dist_url(),
-                        self.dist.download_local_arch_dir(),
-                        ["binary", "kernel", kernel],
-                        True)
+            if self.xen_type == 'pv':
+                # Download XEN kernels
+                xenkernels = [k for k in [self.dist.xen_kernel(), self.dist.xen_install_kernel()] if k]
+                for kernel in xenkernels:
+                    download_if_missing_3(self.dist.dist_url(),
+                            self.dist.download_local_arch_dir(),
+                            ["binary", "kernel", kernel],
+                            True)
             vmm_args = []
             vmm_args += self.xen_args(install = True)
-            vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, cdrom = True)]
+            if self.xen_type == 'pv':
+                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, cdrom = True)]
+                cd_device = 'xbd1d'
+            else:
+                # HVM, similar the qemu boot_from == 'cdrom' case below
+                boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
+                vmm_args += [self.xen_disk_arg(os.path.abspath(boot_cd_path), 1, cdrom = True)]
+                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 2, cdrom = True)]
+                cd_device = 'cd1a'
             child = self.start_xen_domu(vmm_args)
-            cd_device = 'xbd1d'
         elif self.vmm == 'qemu':
             # Determine what kind of media to boot from.
             floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
