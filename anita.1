@@ -464,12 +464,12 @@ regression in the 1.x series of qemu that have impacted
 .Pp
 These are believed to be fixed in qemu 1.5.
 .Pp
-Installing most versions of NetBSD/i386 and NetBSD/amd64 takes a long
+Installing NetBSD 5 or older on i386 or amd64 takes a long
 time with recent versions of qemu because the bootloader countdown
 runs at 1/20 the normal speed, and there is a long delay between
 loading the kernel and the kernel printing its first console output,
 which can easily be mistaken for a hang.  Please be patient. This
-issue has been worked around in NetBSD-current; see PR 43156 for
+issue has been worked around NetBSD 6 and newer; see PR 43156 for
 details.
 .Pp
 Installing using qemu version 1.5.1, 1.6.0, 1.7.0, or 2.0.0
