@@ -253,6 +253,7 @@ def download_if_missing_2(url, file, optional = False):
     mkdir_p(dir)
     try:
         download_file(file, url, optional)
+        return True
     except:
         if optional:
             f = open(file + ".MISSING", "w")
