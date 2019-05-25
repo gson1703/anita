@@ -601,14 +601,19 @@ class Version:
             ["binary", "kernel", "netbsd-INSTALL.gz"],
             True)
 
-        for ext in set_exts:
-            for set in self.flat_sets:
-                if set['install']:
+        for set in self.flat_sets:
+            if set['install']:
+                present = [
                     download_if_missing_3(self.mi_url(),
                                           self.download_local_mi_dir(),
                                           self.set_path(set['filename'],
                                                         ext),
                                           True)
+                    for ext in set_exts
+                ]
+                if not set['optional'] and not any(present):
+                    raise RuntimeError('install set %s does not exist with extension %s' %
+                                       (set['filename'], ' nor '.join(set_exts)))
 
     # Create an install ISO image to install from
     def make_iso(self):
