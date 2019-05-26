@@ -1259,7 +1259,7 @@ class Anita:
             raise RuntimeError('unknown vmm %s' % self.vmm)
 
         term = None
-        if self.dist.arch() in ['hpcmips', 'landisk']:
+        if self.dist.arch() in ['hpcmips', 'landisk', 'hppa']:
             term = 'vt100'
 
         # Do the floppy swapping dance and other pre-sysinst interaction
