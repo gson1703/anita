@@ -2105,7 +2105,8 @@ class Anita:
             # Wait for text confirming the halt, or EOF
             self.child.expect([r'The operating system has halted',
                                r'entering state S5',
-                               r'> ' # sparc64 firmware prompt
+                               r'> ' # sparc64 firmware prompt,
+                               r'System halted!' # hppa
                               ], timeout = 60)
         except pexpect.EOF:
             # Didn't see the text but got an EOF; that's OK.
