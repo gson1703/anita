@@ -1810,8 +1810,11 @@ class Anita:
                 child.send("\n")
             elif child.match.group(26):
                 # "a partitioning scheme"
-                child.expect("([a-z]): Master Boot Record")
-                child.send(child.match.group(1) + "\n")
+                #child.expect("([a-z]): Master Boot Record")
+                #child.send(child.match.group(1) + "\n")
+                # Sparc asks the question but does not have MBR as an option,
+                # only disklabel.  Just use the first choice, whatever that is.
+                child.send("a\n")
             elif child.match.group(27):
                 # "b: use the entire disk"
                 child.send("b\n")
