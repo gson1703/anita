@@ -1,3 +1,5 @@
+Add support for NetBSD/hppa targets.
+
 Support some upcoming sysinst UI changes.
 
 The structured log file is now flushed after each line so that
