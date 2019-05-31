@@ -33,7 +33,8 @@ installed system, and running the NetBSD test suite.
 The NetBSD ports currently supported as targets (i.e., as the
 system to install and run under emulation) are i386, amd64,
 sparc, sparc64, evbarm-earmv7hf (using the qemu vexpress-a15
-system emulation), evbarm-aarch64, pmax, hpcmips, and vax.
+system emulation), evbarm-aarch64, pmax, hpcmips, vax, and
+hppa.
 The host (the system running
 .Nm )
 can be any NetBSD port or even a different Unix-like system such
@@ -47,7 +48,7 @@ To install NetBSD 7.2/i386 from the master NetBSD FTP site, enter
 .Pp
 .Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-7.2/i386/
 .Pp
-Installing NetBSD/sparc, sparc64, or vax works a bit differently
+Installing NetBSD/sparc, sparc64, vax, or hppa works a bit differently
 from i386 and amd64: it uses an ISO image instead of a directory
 containing boot floppies and sets:
 .Pp
