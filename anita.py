@@ -961,7 +961,7 @@ class Anita:
         child.logfile_read = multifile([self.unstructured_log_f, Logger('recv', self.structured_log_f)])
         # Log writes to child
         child.logfile_send = Logger('send', self.structured_log_f)
-        child.timeout = 1200
+        child.timeout = 1800
         child.setecho(False)
         # Xen installs sometimes fail if we don't increase this
         # from the default of 0.1 seconds.  And powering down noemu
