@@ -1605,7 +1605,7 @@ class Anita:
                          # Matching "This is your last chance" will not work
                          r"(ready to install NetBSD on your hard disk)|" +
                          # Group 33-34
-                         r"(We now have your (BSD.)?disklabel partitions)",
+                         r"(We now have your (BSD.|GPT.)?(disklabel )?partitions)",
                          10800)
 
             if child.match.groups() == prevmatch:
