@@ -104,18 +104,18 @@ arch_props = {
         },
         'scratch_disk': None,
     },
+    'hppa': {
+        'qemu': {
+            'executable': 'qemu-system-hppa',
+        },
+        'scratch_disk': 'sd1c',
+    },
      # The following ones don't actually work
     'macppc': {
         'qemu': {
             'executable': 'qemu-system-ppc',
         },
         'scratch_disk': None,
-    },
-    'hppa': {
-        'qemu': {
-            'executable': 'qemu-system-hppa',
-        },
-        'scratch_disk': 'sd1c',
     },
 }
 
