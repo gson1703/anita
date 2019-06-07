@@ -1,3 +1,6 @@
+
+- 1.48 released -
+
 When sysinst offers a choice of partitioning schemes, anita now uses
 the one listed first.  Therefore, i386 and amd64 installs of versions
 where sysinst offers GPT as the first choice will use GPT rather than
