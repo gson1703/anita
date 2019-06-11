@@ -17,7 +17,7 @@ try:
 except ImportError:
     from pipes import quote as sh_quote
 
-__version__='1.48'
+__version__='1.48a'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -1064,9 +1064,13 @@ class Anita:
 
     def xen_args(self, install):
         if self.xen_type == 'pv':
+            if install:
+                k = self.dist.xen_install_kernel()
+            else:
+                k = self.dist.xen_kernel()
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
-                                "binary", "kernel", self.dist.xen_install_kernel())))]
+                                "binary", "kernel", k)))]
         else:
             return  [
                 self.xen_string_arg('type', 'hvm'),

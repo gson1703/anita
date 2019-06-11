@@ -1,4 +1,8 @@
 
+Fix issue introduced in 1.48 that caused the Xen install kernel to be
+used instead of the regular Xen kernel when booting the installed
+system.
+
 - 1.48 released -
 
 When sysinst offers a choice of partitioning schemes, anita now uses
