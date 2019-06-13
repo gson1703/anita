@@ -17,7 +17,7 @@ try:
 except ImportError:
     from pipes import quote as sh_quote
 
-__version__='1.49'
+__version__='1.49a'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -1589,16 +1589,12 @@ class Anita:
                          "(a: This is the correct geometry)|" +
                          # Group 23
                          "(a: Use one of these disks)|" +
-                         # Group 24
-                         "(a: Set sizes of NetBSD partitions)|" +
-                         # Group 25
-                         "(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
+                         # Group 24-25
+                         "(([a-z]): Set sizes of NetBSD partitions)|" +
                          # Group 26
                         "(a partitioning scheme)|" +
-                         # Group 27
-                         "(b: Use the entire disk)|" +
-                         # Group 28
-                         r'(Your disk currently has a non-NetBSD partition)|' +
+                         # Group 27-28
+                         "(([a-z]): Use the entire disk)|" +
                          # Group 29
                          r'(Do you want to install the NetBSD bootcode)|' +
                          # Group 30
@@ -1608,8 +1604,14 @@ class Anita:
                          # Group 32
                          # Matching "This is your last chance" will not work
                          r"(ready to install NetBSD on your hard disk)|" +
-                         # Group 33-34
-                         r"(We now have your (BSD.|GPT.)?(disklabel )?partitions)",
+                         # Group 33
+                         r"(We now have your (?:BSD.|GPT.)?(?:disklabel )?partitions)|" +
+                         # Group 34 (formerly 28)
+                         r'(Your disk currently has a non-NetBSD partition)|' +
+                         # Group 35 (formerly 25)
+                         "(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
+                         # Group 36
+                         "(Do you want to re-edit the disklabel partitions)",
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -1783,8 +1785,8 @@ class Anita:
                 child.expect("Choose disk")
                 child.send("0\n")
             elif child.match.group(24):
-                # (a: Set sizes of NetBSD partitions)
-                child.send("a\n")
+                # "(([a-z]): Set sizes of NetBSD partitions)"
+                child.send(child.match.group(25) + "\n")
                 # In 2.1, no letter label like "x: " is printed before
                 # "Accept partition sizes", hence the kludge of sending
                 # multiple cursor-down sequences.
@@ -1805,13 +1807,6 @@ class Anita:
                     # Use the default ANSI cursor-down escape sequence
                     cursor_down = "\033[B"
                 child.send(cursor_down * 8 + "\n")
-            elif child.match.group(25):
-                # We need to enter these values in cases where sysinst could not
-                # determine disk geometry. Currently, this happens for NetBSD/hpcmips
-                child.expect("sectors")
-                child.send("\n")
-                child.expect("heads")
-                child.send("\n")
             elif child.match.group(26):
                 # "a partitioning scheme"
                 #child.expect("([a-z]): Master Boot Record")
@@ -1820,12 +1815,8 @@ class Anita:
                 # only disklabel.  Just use the first choice, whatever that is.
                 child.send("a\n")
             elif child.match.group(27):
-                # "b: use the entire disk"
-                child.send("b\n")
-            elif child.match.group(28):
-                # Your disk currently has a non-NetBSD partition
-                child.expect("a: Yes")
-                child.send("\n")
+                # "([a-z]): use the entire disk"
+                child.send(child.match.group(28) + "\n")
             elif child.match.group(29) or child.match.group(30):
                 # Install or replace bootcode
                 child.expect("a: Yes")
@@ -1843,6 +1834,19 @@ class Anita:
                 # "We now have your BSD disklabel partitions"
                 child.expect("x: Partition sizes ok")
                 child.send("x\n")
+            elif child.match.group(34):
+                # Your disk currently has a non-NetBSD partition
+                child.expect("a: Yes")
+                child.send("\n")
+            elif child.match.group(35):
+                # We need to enter these values in cases where sysinst could not
+                # determine disk geometry. Currently, this happens for NetBSD/hpcmips
+                child.expect("sectors")
+                child.send("\n")
+                child.expect("heads")
+                child.send("\n")
+            elif child.match.group(36):
+                raise RuntimeError('setting up partitions did not work first time')
             else:
                 raise AssertionError
 
