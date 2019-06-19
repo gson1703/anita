@@ -999,6 +999,18 @@ class Anita:
     def start_qemu(self, vmm_args, snapshot_system_disk):
         # Log the qemu version to stdout
         subprocess.call([self.qemu, '--version'])
+        try:
+            # Identify the exact qemu version in pkgsrc if applicable,
+            # ignoring exceptions that may be raised if qemu was not
+            # installed from pkgsrc
+            qemu_path = subprocess.check_output(['which', self.qemu]).rstrip()
+            print "qemu path:", qemu_path
+            sys.stdout.flush()
+            qemu_package = subprocess.check_output(['pkg_info', '-Fe', qemu_path]).rstrip()
+            print "qemu package:", qemu_package
+            sys.stdout.flush()
+        except:
+            pass
         qemu_args = [
                 "-m", str(self.memory_megs())
             ] + self.qemu_disk_args(self.wd0_path(), 0, True, snapshot_system_disk) + [
@@ -1141,7 +1153,7 @@ class Anita:
             sys.stdout.flush()
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
             print "done."
-
+            sys.stdout.flush()
         if self.get_arch_prop('image_name'):
             self._install_from_image()
         else:
