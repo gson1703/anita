@@ -1009,6 +1009,9 @@ class Anita:
             qemu_package = subprocess.check_output(['pkg_info', '-Fe', qemu_path]).rstrip()
             print "qemu package:", qemu_package
             sys.stdout.flush()
+            glib2_package = subprocess.check_output(['pkg_info', '-e', 'glib2']).rstrip()
+            print "glib2 package:", glib2_package
+            sys.stdout.flush()
         except:
             pass
         qemu_args = [
