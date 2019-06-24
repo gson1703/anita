@@ -177,9 +177,9 @@ class pexpect_spawn_log(pexpect.spawn):
         self.structured_log_f = logf
         return super(pexpect_spawn_log, self).__init__(*args, **kwargs)
     def expect(self, pattern, *args, **kwargs):
-        print >>self.structured_log_f, "expect(" + repr(pattern) + ")"
+        slog(self.structured_log_f, "expect", pattern, timestamp = False);
         r = pexpect.spawn.expect(self, pattern, *args, **kwargs)
-        print >>self.structured_log_f, "match(" + repr(self.match.group(0)) + ")"
+        slog(self.structured_log_f, "match", self.match.group(0), timestamp = False);
         return r
 
 # Subclass urllib.FancyURLopener so that we can catch
@@ -780,8 +780,13 @@ class DomUKiller:
 def vmm_is_xen(vmm):
     return vmm == 'xm' or vmm == 'xl'
 
-def slog(fd, tag, data):
-    print >>fd, "%s(%.3f, %s)" % (tag, time.time(), repr(data))
+# Log a message to the structured log file "fd".
+
+def slog(fd, tag, data, timestamp = True):
+    if timestamp:
+        print >>fd, "%s(%.3f, %s)" % (tag, time.time(), repr(data))
+    else:
+        print >>fd, "%s(%s)" % (tag, repr(data))
     fd.flush()
 
 def slog_info(fd, data):
