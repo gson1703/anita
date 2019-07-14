@@ -1,9 +1,18 @@
 from __future__ import print_function
+from __future__ import division
 #
 # This is the library part of Anita, the Automated NetBSD Installation
 # and Test Application.
 #
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import chr
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import os
 import pexpect
 import re
@@ -11,8 +20,8 @@ import string
 import subprocess
 import sys
 import time
-import urllib
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 try:
     from shlex import quote as sh_quote
 except ImportError:
@@ -186,7 +195,7 @@ class pexpect_spawn_log(pexpect.spawn):
 # Subclass urllib.FancyURLopener so that we can catch
 # HTTP 404 errors
 
-class MyURLopener(urllib.FancyURLopener):
+class MyURLopener(urllib.request.FancyURLopener):
     def http_error_default(self, url, fp, errcode, errmsg, headers):
         raise IOError('HTTP error code %d' % errcode)
 
@@ -194,7 +203,7 @@ def my_urlretrieve(url, filename):
     r = MyURLopener().retrieve(url, filename)
     if sys.version_info >= (2, 7, 12):
         # Work around https://bugs.python.org/issue27973
-        urllib.urlcleanup()
+        urllib.request.urlcleanup()
     return r
 
 # Download a file, cleaning up the partial file if the transfer
@@ -405,7 +414,7 @@ def reverse_virtio_drives(v):
 #        e.g., i386
 
 def make_item(t):
-    d = dict(zip(['filename', 'label', 'install'], t[0:3]))
+    d = dict(list(zip(['filename', 'label', 'install'], t[0:3])))
     if isinstance(t[3], list):
         d['group'] = make_set_dict_list(t[3])
     else:
@@ -424,7 +433,7 @@ def flatten_set_dict_list(list_):
             return [item]
     return sum([item2list(item) for item in list_], [])
 
-class Version:
+class Version(object):
     # Information about the available installation file sets.  As the
     # set of sets (sic) has evolved over time, this actually represents
     # the union of those sets of sets, in other words, this list should
@@ -718,7 +727,7 @@ class ISO(Version):
         # directory is not known at this point, but we can precalculate the
         # basename of it.
         self.m_iso_basename = os.path.basename(
-            urllib.url2pathname(urlparse.urlparse(iso_url)[2]))
+            urllib.request.url2pathname(urllib.parse.urlparse(iso_url)[2]))
         m = re.match(r"(.*)cd.*iso|NetBSD-[0-9\._A-Z]+-(.*).iso", self.m_iso_basename)
         if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'"
@@ -770,7 +779,7 @@ def distribution(distarg, **kwargs):
 # Helper class for killing the DomU when the last reference to the
 # child process is dropped
 
-class DomUKiller:
+class DomUKiller(object):
     def __init__(self, frontend, name):
         self.name = name
         self.frontend = frontend
@@ -796,7 +805,7 @@ def slog_info(fd, data):
 # A file-like object that escapes unprintable data and prefixes each
 # line with a tag, for logging I/O.
 
-class Logger:
+class Logger(object):
     def __init__(self, tag, fd):
         self.tag = tag
         self.fd = fd
@@ -818,7 +827,7 @@ class multifile(object):
             return res
         return g
 
-class Anita:
+class Anita(object):
     def __init__(self, dist, workdir = None, vmm = None, vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
         structured_log = None, structured_log_file = None, no_install = False,
@@ -955,8 +964,8 @@ class Anita:
 
     # Return the memory size rounded up to whole megabytes
     def memory_megs(self):
-        megs = (self.memory_size_bytes + 2 ** 20 - 1) / 2 ** 20
-        if megs != self.memory_size_bytes / 2 **20:
+        megs = old_div((self.memory_size_bytes + 2 ** 20 - 1), 2 ** 20)
+        if megs != old_div(self.memory_size_bytes, 2 **20):
             print("warning: rounding up memory size of %i bytes to %i megabytes" \
                 % (self.memory_size_bytes, megs), file=sys.stderr)
         return megs
@@ -2173,7 +2182,7 @@ def gen_shell_prompt():
 # mistaken for the prompt itself.
 
 def quote_prompt(s):
-    midpoint = len(s) / 2
+    midpoint = old_div(len(s), 2)
     return "".join("'%s'" % part for part in (s[0:midpoint], s[midpoint:]))
 
 # Calling this directly is deprecated, use Anita.shell_cmd()
