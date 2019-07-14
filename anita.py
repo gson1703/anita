@@ -11,7 +11,6 @@ from builtins import zip
 from builtins import chr
 from builtins import str
 from builtins import range
-from past.utils import old_div
 from builtins import object
 import os
 import pexpect
@@ -964,8 +963,8 @@ class Anita(object):
 
     # Return the memory size rounded up to whole megabytes
     def memory_megs(self):
-        megs = old_div((self.memory_size_bytes + 2 ** 20 - 1), 2 ** 20)
-        if megs != old_div(self.memory_size_bytes, 2 **20):
+        megs = (self.memory_size_bytes + 2 ** 20 - 1) // 2 ** 20
+        if megs != self.memory_size_bytes // 2 **20:
             print("warning: rounding up memory size of %i bytes to %i megabytes" \
                 % (self.memory_size_bytes, megs), file=sys.stderr)
         return megs
@@ -2182,7 +2181,7 @@ def gen_shell_prompt():
 # mistaken for the prompt itself.
 
 def quote_prompt(s):
-    midpoint = old_div(len(s), 2)
+    midpoint = len(s) // 2
     return "".join("'%s'" % part for part in (s[0:midpoint], s[midpoint:]))
 
 # Calling this directly is deprecated, use Anita.shell_cmd()
