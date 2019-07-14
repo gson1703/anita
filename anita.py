@@ -1570,51 +1570,51 @@ class Anita:
                 raise RuntimeError("loop detected")
             child.expect(
                          # Group 1
-                         "(a: Progress bar)|" +
+                         r"(a: Progress bar)|" +
                          # Group 2
-                         "(Select medium|Install from)|" +
+                         r"(Select medium|Install from)|" +
                          # Group 3-4
-                         "(([cx]): Continue)|" +
+                         r"(([cx]): Continue)|" +
                          # Group 5
-                         "(Hit enter to continue)|" +
+                         r"(Hit enter to continue)|" +
                          # Group 6
-                         "(b: Use serial port com0)|" +
+                         r"(b: Use serial port com0)|" +
                          # Group 7
-                         "(Please choose the timezone)|" +
+                         r"(Please choose the timezone)|" +
                          # Group 8
-                         "(essential things)|" +
+                         r"(essential things)|" +
                          # Group 9
-                         "(Configure the additional items)|" +
+                         r"(Configure the additional items)|" +
                          # Group 10
-                         "(Multiple CDs found)|" +
+                         r"(Multiple CDs found)|" +
                          # Group 11
-                         "(The following are the http site)|" +
+                         r"(The following are the http site)|" +
                          # Group 12
-                         "(Is the network information you entered accurate)|" +
+                         r"(Is the network information you entered accurate)|" +
                          # Group 13-14 (old-style / new-style)
-                         "(I have found the following network interfaces)|(Which network device would you like to use)|" +
+                         r"(I have found the following network interfaces)|(Which network device would you like to use)|" +
                          # Group 15
-                         "(No allows you to continue anyway)|" +
+                         r"(No allows you to continue anyway)|" +
                          # Group 16
                          r"(Can't connect to)|" +
                          # Group 17
-                         "(/sbin/newfs)|" +
+                         r"(/sbin/newfs)|" +
                          # Group 18
-                         "(Do you want to install the NetBSD bootcode)|" +
+                         r"(Do you want to install the NetBSD bootcode)|" +
                          # Group 19
-                         "(Do you want to update the bootcode in the Master Boot Record to the latest)|" +
+                         r"(Do you want to update the bootcode in the Master Boot Record to the latest)|" +
                          # Group 20-21
-                         "(([a-z]): Custom installation)|" +
+                         r"(([a-z]): Custom installation)|" +
                          # Group 22
-                         "(a: This is the correct geometry)|" +
+                         r"(a: This is the correct geometry)|" +
                          # Group 23
-                         "(a: Use one of these disks)|" +
+                         r"(a: Use one of these disks)|" +
                          # Group 24-25
-                         "(([a-z]): Set sizes of NetBSD partitions)|" +
+                         r"(([a-z]): Set sizes of NetBSD partitions)|" +
                          # Group 26
-                        "(a partitioning scheme)|" +
+                         r"(a partitioning scheme)|" +
                          # Group 27-28
-                         "(([a-z]): Use the entire disk)|" +
+                         r"(([a-z]): Use the entire disk)|" +
                          # Group 29
                          r'(Do you want to install the NetBSD bootcode)|' +
                          # Group 30
@@ -1629,9 +1629,9 @@ class Anita:
                          # Group 34 (formerly 28)
                          r'(Your disk currently has a non-NetBSD partition)|' +
                          # Group 35 (formerly 25)
-                         "(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
+                         r"(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
                          # Group 36
-                         "(Do you want to re-edit the disklabel partitions)",
+                         r"(Do you want to re-edit the disklabel partitions)",
                          10800)
 
             if child.match.groups() == prevmatch:
