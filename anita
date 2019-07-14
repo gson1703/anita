@@ -1,5 +1,6 @@
 #!/usr/pkg/bin/python2.4
 
+from __future__ import print_function
 import sys
 import re
 import anita
@@ -69,7 +70,7 @@ def main(argv = None):
     (options, args) = parser.parse_args()
 
     if options.version:
-        print anita.__version__
+        print(anita.__version__)
         sys.exit(0)
 
     if len(args) < 2:
@@ -116,9 +117,9 @@ def main(argv = None):
     mode = args[0]
 
     if mode != 'print-workdir':
-        print "This is anita version", anita.__version__
-        print "Using pexpect version", pexpect.__version__
-        print anita.quote_shell_command(sys.argv)
+        print("This is anita version", anita.__version__)
+        print("Using pexpect version", pexpect.__version__)
+        print(anita.quote_shell_command(sys.argv))
         sys.stdout.flush()
 
     if mode == 'install':
@@ -134,7 +135,7 @@ def main(argv = None):
     elif mode == 'test':
         status = a.run_tests(timeout = options.test_timeout)
     elif mode == 'print-workdir':
-        print a.workdir
+        print(a.workdir)
     else:
         raise Usage("unknown mode: " + mode)
     return status
@@ -143,7 +144,7 @@ if __name__ == "__main__":
     try:
         status = main()
         sys.exit(status)
-    except Usage, err:
-        print >>sys.stderr, "%s: %s" % (os.path.basename(sys.argv[0]), err.msg)
-        print >>sys.stderr, "for help use --help"
+    except Usage as err:
+        print("%s: %s" % (os.path.basename(sys.argv[0]), err.msg), file=sys.stderr)
+        print("for help use --help", file=sys.stderr)
         sys.exit(1)

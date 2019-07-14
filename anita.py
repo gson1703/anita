@@ -1,3 +1,4 @@
+from __future__ import print_function
 #
 # This is the library part of Anita, the Automated NetBSD Installation
 # and Test Application.
@@ -164,7 +165,7 @@ def quote_shell_command(v):
 # Run a shell command safely and with error checking
 
 def spawn(command, args):
-    print quote_shell_command(args)
+    print(quote_shell_command(args))
     sys.stdout.flush()
     ret = os.spawnvp(os.P_WAIT, command, args)
     if ret != 0:
@@ -187,7 +188,7 @@ class pexpect_spawn_log(pexpect.spawn):
 
 class MyURLopener(urllib.FancyURLopener):
     def http_error_default(self, url, fp, errcode, errmsg, headers):
-        raise IOError, 'HTTP error code %d' % errcode
+        raise IOError('HTTP error code %d' % errcode)
 
 def my_urlretrieve(url, filename):
     r = MyURLopener().retrieve(url, filename)
@@ -201,16 +202,16 @@ def my_urlretrieve(url, filename):
 
 def download_file(file, url, optional = False):
     try:
-        print "Downloading", url + "...",
+        print("Downloading", url + "...", end=' ')
         sys.stdout.flush()
         my_urlretrieve(url, file)
-        print "OK"
+        print("OK")
         sys.stdout.flush()
-    except IOError, e:
+    except IOError as e:
         if optional:
-            print "missing but optional, so that's OK"
+            print("missing but optional, so that's OK")
         else:
-            print e
+            print(e)
         sys.stdout.flush()
         if os.path.exists(file):
             os.unlink(file)
@@ -774,7 +775,7 @@ class DomUKiller:
         self.name = name
         self.frontend = frontend
     def __del__(self):
-        print "destroying domU", self.name
+        print("destroying domU", self.name)
         spawn(self.frontend, [self.frontend, "destroy", self.name])
 
 def vmm_is_xen(vmm):
@@ -784,9 +785,9 @@ def vmm_is_xen(vmm):
 
 def slog(fd, tag, data, timestamp = True):
     if timestamp:
-        print >>fd, "%s(%.3f, %s)" % (tag, time.time(), repr(data))
+        print("%s(%.3f, %s)" % (tag, time.time(), repr(data)), file=fd)
     else:
-        print >>fd, "%s(%s)" % (tag, repr(data))
+        print("%s(%s)" % (tag, repr(data)), file=fd)
     fd.flush()
 
 def slog_info(fd, data):
@@ -943,9 +944,9 @@ class Anita:
     # the name of the command.
 
     def pexpect_spawn(self, command, args):
-        print quote_shell_command([command] + args)
+        print(quote_shell_command([command] + args))
         child = pexpect_spawn_log(self.structured_log_f, command, args)
-        print "child pid is %d" % child.pid
+        print("child pid is %d" % child.pid)
         return child
 
     # The path to the NetBSD hard disk image
@@ -956,9 +957,8 @@ class Anita:
     def memory_megs(self):
         megs = (self.memory_size_bytes + 2 ** 20 - 1) / 2 ** 20
         if megs != self.memory_size_bytes / 2 **20:
-            print >>sys.stderr, \
-                "warning: rounding up memory size of %i bytes to %i megabytes" \
-                % (self.memory_size_bytes, megs)
+            print("warning: rounding up memory size of %i bytes to %i megabytes" \
+                % (self.memory_size_bytes, megs), file=sys.stderr)
         return megs
 
     def configure_child(self, child):
@@ -1009,13 +1009,13 @@ class Anita:
             # ignoring exceptions that may be raised if qemu was not
             # installed from pkgsrc
             qemu_path = subprocess.check_output(['which', self.qemu]).rstrip()
-            print "qemu path:", qemu_path
+            print("qemu path:", qemu_path)
             sys.stdout.flush()
             qemu_package = subprocess.check_output(['pkg_info', '-Fe', qemu_path]).rstrip()
-            print "qemu package:", qemu_package
+            print("qemu package:", qemu_package)
             sys.stdout.flush()
             glib2_package = subprocess.check_output(['pkg_info', '-e', 'glib2']).rstrip()
-            print "glib2 package:", glib2_package
+            print("glib2 package:", glib2_package)
             sys.stdout.flush()
         except:
             pass
@@ -1026,10 +1026,10 @@ class Anita:
             ] + vmm_args + self.extra_vmm_args + self.arch_vmm_args()
         # Deal with virtio device ordering issues
         if self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('reverse_virtio_drives'):
-            print "reversing virtio devices"
+            print("reversing virtio devices")
             reverse_virtio_drives(qemu_args)
         else:
-            print "not reversing virtio devices"
+            print("not reversing virtio devices")
         # Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, qemu_args)
         self.configure_child(child)
@@ -1157,10 +1157,10 @@ class Anita:
         else:
             self.dist.make_iso()
         if self.vmm != 'noemu':
-            print "Creating hard disk image...",
+            print("Creating hard disk image...", end=' ')
             sys.stdout.flush()
             make_dense_image(self.wd0_path(), parse_size(self.disk_size))
-            print "done."
+            print("done.")
             sys.stdout.flush()
         if self.get_arch_prop('image_name'):
             self._install_from_image()
@@ -2141,10 +2141,10 @@ class Anita:
                               ], timeout = 60)
         except pexpect.EOF:
             # Didn't see the text but got an EOF; that's OK.
-            print "EOF"
-        except pexpect.TIMEOUT, e:
+            print("EOF")
+        except pexpect.TIMEOUT as e:
             # This is unexpected but mostly harmless
-            print "timeout waiting for halt confirmation:", e
+            print("timeout waiting for halt confirmation:", e)
         self.halted = True
 
 # Calling this directly is deprecated, use Anita.login()
@@ -2190,10 +2190,10 @@ def shell_cmd(child, cmd, timeout = -1):
     try:
         child.expect(prompt_re, timeout)
     except pexpect.EOF:
-        print "pexpect reported EOF - VMM exited unexpectedly"
+        print("pexpect reported EOF - VMM exited unexpectedly")
         child.close()
-        print "exitstatus", child.exitstatus
-        print "signalstatus", child.signalstatus
+        print("exitstatus", child.exitstatus)
+        print("signalstatus", child.signalstatus)
         raise
     except:
         raise
