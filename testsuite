@@ -4,15 +4,26 @@
 # NetBSD versions still works.
 #
 
+python=python2.7
+
+case $1 in
+  --python)
+      shift
+      python=$1
+      shift
+      ;;
+  *)
+      echo "unknown option $1" >&2
+      exit 1
+      ;;
+esac
+
+set -x -e
+
 logdir=log/testsuite.log.`date +%Y%m%d-%H%M%S`
 echo "logging to $logdir"
 
 mkdir -p $logdir
-
-python=python2.7
-#python=python3.7
-
-set -x -e
 
 runtest() {
     mode=$1
