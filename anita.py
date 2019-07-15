@@ -420,6 +420,7 @@ def make_item(t):
         d['group'] = make_set_dict_list(t[3])
     else:
         d['optional'] = t[3]
+    d['label'] = d['label'].encode('ASCII')
     return d
 
 def make_set_dict_list(list_):
@@ -828,6 +829,14 @@ class multifile(object):
             return res
         return g
 
+class BytesWriter(object):
+    def __init__(self, fd):
+        self.fd = fd
+    def write(self, data):
+        self.fd.buffer.write(data)
+    def __getattr__(self, name):
+        return getattr(self.fd, name)
+
 class Anita(object):
     def __init__(self, dist, workdir = None, vmm = None, vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
@@ -842,16 +851,22 @@ class Anita(object):
         self.structured_log = structured_log
         self.structured_log_file = structured_log_file
 
+        out = sys.stdout
+        null = open("/dev/null", "w")
+        if sys.version_info[0] >= 3:
+            out = BytesWriter(out)
+            null = BytesWriter(null)
+
         if self.structured_log_file:
             self.structured_log_f = open(self.structured_log_file, "w")
-            self.unstructured_log_f = sys.stdout
+            self.unstructured_log_f = out
         else:
             if self.structured_log:
                 self.structured_log_f = sys.stdout
-                self.unstructured_log_f = open("/dev/null", "w")
+                self.unstructured_log_f = null
             else:
                 self.structured_log_f = open("/dev/null", "w")
-                self.unstructured_log_f = sys.stdout
+                self.unstructured_log_f = out
 
         # Set the default disk size if none was given.
         disk_size = disk_size or \
@@ -1344,8 +1359,8 @@ class Anita(object):
                     child.expect(r'\n(fda|floppy0)')
                     floppy0_name = child.match.group(1)
                 # Now we can change the floppy
-                child.send("change %s %s\n" %
-                    (floppy0_name, floppy_paths[floppy_index]))
+                child.send(b"change " + floppy0_name + b" " +
+                           floppy_paths[floppy_index].encode('ASCII') + b"\n")
                 # Exit qemu command mode
                 child.send("\001c\n")
             elif child.match.group(3):
@@ -1410,10 +1425,10 @@ class Anita(object):
 
         def choose_no():
             child.expect("([a-z]): No")
-            child.send(child.match.group(1) + "\n")
+            child.send(child.match.group(1) + b"\n")
         def choose_yes():
             child.expect("([a-z]): Yes")
-            child.send(child.match.group(1) + "\n")
+            child.send(child.match.group(1) + b"\n")
 
         # Keep track of sets we have already handled, by label.
         # This is needed so that parsing a pop-up submenu is not
@@ -1460,7 +1475,7 @@ class Anita(object):
                 if (enable and state == "No" or \
                        not enable and state == "Yes") \
                        or group:
-                    child.send(item['letter'] + "\n")
+                    child.send(item['letter'] + b"\n")
                 if group:
                     # Recurse to handle sub-menu
                     choose_sets(group, level + 1)
@@ -1479,10 +1494,10 @@ class Anita(object):
                 child.expect(r"([a-z]+)([0-9]) ")
                 ifname = child.match.group(1)
                 ifno = child.match.group(2)
-                self.slog('old-style interface: <%s,%s>' % (ifname, ifno))
+                self.slog('old-style interface: <%s,%s>' % (repr(ifname), repr(ifno)))
                 if ifname != 'fwip':
                     # Found an acceptable interface
-                    child.send("%s%s\n" % (ifname, ifno))
+                    child.send(ifname + ifno + b"\n")
                     break
 
         def choose_interface_newstyle():
@@ -1496,7 +1511,7 @@ class Anita(object):
                 child.expect(r"([a-z]): ([a-z]+)[0-9]")
                 if child.match.group(2) != 'fwip':
                     # Found an acceptable interface
-                    child.send(child.match.group(1) + "\n")
+                    child.send(child.match.group(1) + b"\n")
                     break
 
         def configure_network():
@@ -1504,13 +1519,13 @@ class Anita(object):
             child.send("\n")
             child.expect("Perform (DHCP )?autoconfiguration")
             child.expect("([a-z]): No")
-            child.send(child.match.group(1) + "\n")
+            child.send(child.match.group(1) + b"\n")
 
             def choose_a():
                 child.send("a\n")
             def choose_dns_server():
                 child.expect("([a-z]): other")
-                child.send(child.match.group(1) + "\n")
+                child.send(child.match.group(1) + b"\n")
                 child.send("10.0.1.1\n")
 
             expect_any(child,
@@ -1529,7 +1544,7 @@ class Anita(object):
             # Noemu installs from HTTP, otherwise we use the CD-ROM
             media = ['CD-ROM', 'HTTP'][self.vmm == 'noemu']
             child.expect('([a-h]): ' + media)
-            child.send(child.match.group(1) + "\n")
+            child.send(child.match.group(1) + b"\n")
 
         self.network_configured = False
 
@@ -1657,11 +1672,11 @@ class Anita(object):
             elif child.match.group(3):
                 # CDROM device selection
                 if cd_device != 'cd0a':
-                    child.send("a\n" + cd_device + "\n")
+                    child.send(b"a\n" + cd_device.encode('ASCII') + b"\n")
                 # (([cx]): Continue)
                 # In 3.0.1, you type "c" to continue, whereas in -current,
                 # you type "x".  Handle both cases.
-                child.send(child.match.group(4) + "\n")
+                child.send(child.match.group(4) + b"\n")
             elif child.match.group(5):
                 # (Hit enter to continue)
                 if seen_essential_things >= 2:
@@ -1683,7 +1698,7 @@ class Anita(object):
                     child.expect("(([a-z]): DES)|(root password)|(Hit enter to continue)")
                     if child.match.group(1):
                         # DES
-                        child.send(child.match.group(2) + "\n")
+                        child.send(child.match.group(2) + b"\n")
                     elif child.match.group(3):
                         # root password
                         break
@@ -1765,7 +1780,7 @@ class Anita(object):
             elif child.match.group(12):
                 # "Is the network information you entered accurate"
                 child.expect("([a-z]): Yes")
-                child.send(child.match.group(1) + "\n")
+                child.send(child.match.group(1) + b"\n")
             elif child.match.group(13):
                  # "(I have found the following network interfaces)"
                 choose_interface_oldstyle()
@@ -1801,7 +1816,7 @@ class Anita(object):
                 # but choice "c" or "b" in older versions
                 # We could use "Minimal", but it doesn't exist in
                 # older versions.
-                child.send(child.match.group(21) + "\n")
+                child.send(child.match.group(21) + b"\n")
                 # Enable/disable sets.
                 choose_sets(self.dist.sets)
             # On non-Xen i386/amd64 we first get group 22 or 23,
@@ -1816,7 +1831,7 @@ class Anita(object):
                 child.send("0\n")
             elif child.match.group(24):
                 # "(([a-z]): Set sizes of NetBSD partitions)"
-                child.send(child.match.group(25) + "\n")
+                child.send(child.match.group(25) + b"\n")
                 # In 2.1, no letter label like "x: " is printed before
                 # "Accept partition sizes", hence the kludge of sending
                 # multiple cursor-down sequences.
@@ -1832,11 +1847,11 @@ class Anita(object):
                     # For unknown reasons, when using a terminal type of "xterm",
                     # sysinst puts the terminal in "application mode", causing the
                     # cursor keys to send a different escape sequence than the default.
-                    cursor_down = "\033OB"
+                    cursor_down = b"\033OB"
                 else:
                     # Use the default ANSI cursor-down escape sequence
-                    cursor_down = "\033[B"
-                child.send(cursor_down * 8 + "\n")
+                    cursor_down = b"\033[B"
+                child.send(cursor_down * 8 + b"\n")
             elif child.match.group(26):
                 # "a partitioning scheme"
                 #child.expect("([a-z]): Master Boot Record")
@@ -1846,7 +1861,7 @@ class Anita(object):
                 child.send("a\n")
             elif child.match.group(27):
                 # "([a-z]): use the entire disk"
-                child.send(child.match.group(28) + "\n")
+                child.send(child.match.group(28) + b"\n")
             elif child.match.group(29) or child.match.group(30):
                 # Install or replace bootcode
                 child.expect("a: Yes")
@@ -2192,10 +2207,10 @@ def shell_cmd(child, cmd, timeout = -1):
     child.send("exec /bin/sh\n")
     child.expect("# ")
     prompt = gen_shell_prompt()
-    child.send("PS1=" + quote_prompt(prompt) + "\n")
+    child.send(b"PS1=" + quote_prompt(prompt) + b"\n")
     prompt_re = prompt
     child.expect(prompt_re)
-    child.send(cmd + "\n")
+    child.send(cmd + b"\n")
     # Catch EOF to log the signalstatus, to help debug qemu crashes
     try:
         child.expect(prompt_re, timeout)
