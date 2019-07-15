@@ -291,7 +291,7 @@ def download_if_missing_3(urlbase, dirbase, relpath, optional = False):
 def url2dir(url):
     tail = []
     def munge(match):
-        index = match.group().find("/:+-")
+        index = "/:+-".find(match.group())
         if index != 0:
             tail.append(chr(0x60 + index) + str(match.start()))
         return "-"
