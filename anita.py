@@ -1472,8 +1472,8 @@ class Anita(object):
                 enable = set['install']
                 state = item['state']
                 group = set.get('group')
-                if (enable and state == "No" or \
-                       not enable and state == "Yes") \
+                if (enable and state == b"No" or \
+                       not enable and state == b"Yes") \
                        or group:
                     child.send(item['letter'] + b"\n")
                 if group:
