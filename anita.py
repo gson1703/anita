@@ -6,14 +6,6 @@
 from __future__ import print_function
 from __future__ import division
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import zip
-from builtins import chr
-from builtins import str
-from builtins import range
-from builtins import object
-
 import os
 import pexpect
 import re
@@ -21,8 +13,14 @@ import string
 import subprocess
 import sys
 import time
-import urllib.request, urllib.parse, urllib.error
-import urllib.parse
+
+if sys.version_info[0] >= 3:
+    import urllib.request as good_old_urllib
+    import urllib.parse as good_old_urlparse
+else:
+    import urllib as good_old_urllib
+    import urlparse as good_old_urlparse
+
 try:
     from shlex import quote as sh_quote
 except ImportError:
@@ -196,7 +194,7 @@ class pexpect_spawn_log(pexpect.spawn):
 # Subclass urllib.FancyURLopener so that we can catch
 # HTTP 404 errors
 
-class MyURLopener(urllib.request.FancyURLopener):
+class MyURLopener(good_old_urllib.FancyURLopener):
     def http_error_default(self, url, fp, errcode, errmsg, headers):
         raise IOError('HTTP error code %d' % errcode)
 
@@ -204,7 +202,7 @@ def my_urlretrieve(url, filename):
     r = MyURLopener().retrieve(url, filename)
     if sys.version_info >= (2, 7, 12):
         # Work around https://bugs.python.org/issue27973
-        urllib.request.urlcleanup()
+        good_old_urllib.urlcleanup()
     return r
 
 # Download a file, cleaning up the partial file if the transfer
@@ -560,7 +558,10 @@ class Version(object):
 
     def cleanup(self):
         for fn in self.tempfiles:
-            os.unlink(fn)
+            try:
+                os.unlink(fn)
+            except:
+                pass
 
     def set_path(self, setname, ext):
         if re.match(r'.*src$', setname):
@@ -729,7 +730,7 @@ class ISO(Version):
         # directory is not known at this point, but we can precalculate the
         # basename of it.
         self.m_iso_basename = os.path.basename(
-            urllib.request.url2pathname(urllib.parse.urlparse(iso_url)[2]))
+            good_old_urllib.url2pathname(good_old_urlparse.urlparse(iso_url)[2]))
         m = re.match(r"(.*)cd.*iso|NetBSD-[0-9\._A-Z]+-(.*).iso", self.m_iso_basename)
         if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'"
@@ -2207,10 +2208,10 @@ def shell_cmd(child, cmd, timeout = -1):
     child.send("exec /bin/sh\n")
     child.expect("# ")
     prompt = gen_shell_prompt()
-    child.send(b"PS1=" + quote_prompt(prompt) + b"\n")
+    child.send("PS1=" + quote_prompt(prompt) + "\n")
     prompt_re = prompt
     child.expect(prompt_re)
-    child.send(cmd + b"\n")
+    child.send(cmd + "\n")
     # Catch EOF to log the signalstatus, to help debug qemu crashes
     try:
         child.expect(prompt_re, timeout)

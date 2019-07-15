@@ -1,8 +1,6 @@
 
 Add support for Python 3.
 
-Anita now requires the "future" Python module.
-
 When using qemu from pkgsrc, log the exact pkgsrc version of qemu and
 glib2, including any nb suffix.
 
