@@ -228,7 +228,7 @@ def download_file(file, url, optional = False):
 # Create a file of the given size, containing NULs, without holes.
 
 def make_dense_image(fn, size):
-    f = open(fn, "w")
+    f = open(fn, "wb")
     blocksize = 64 * 1024
     while size > 0:
         chunk = min(size, blocksize)
