@@ -232,7 +232,7 @@ def make_dense_image(fn, size):
     blocksize = 64 * 1024
     while size > 0:
         chunk = min(size, blocksize)
-        f.write("\000" * chunk)
+        f.write(b"\000" * chunk)
         size = size - chunk
     f.close()
 
