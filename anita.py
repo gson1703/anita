@@ -28,7 +28,7 @@ try:
 except ImportError:
     from pipes import quote as sh_quote
 
-__version__='1.49a'
+__version__='1.49b'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
