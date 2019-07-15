@@ -1,9 +1,10 @@
-from __future__ import print_function
-from __future__ import division
 #
 # This is the library part of Anita, the Automated NetBSD Installation
 # and Test Application.
 #
+
+from __future__ import print_function
+from __future__ import division
 
 from future import standard_library
 standard_library.install_aliases()
@@ -12,6 +13,7 @@ from builtins import chr
 from builtins import str
 from builtins import range
 from builtins import object
+
 import os
 import pexpect
 import re
