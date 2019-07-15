@@ -4,14 +4,13 @@
 # NetBSD versions still works.
 #
 
-mkdir -p log
+logdir=log/testsuite.log.`date +%Y%m%d-%H%M%S`
+echo "logging to $logdir"
 
-logfile=log/testsuite.log.`date +%Y%m%d-%H%M%S`
-echo "logging to $logfile"
+mkdir -p $logdir
 
-exec >$logfile 2>&1
-
-python=python2.7
+#python=python2.7
+python=python3.7
 
 set -x -e
 
@@ -19,9 +18,15 @@ runtest() {
     mode=$1
     shift
     workdir=`$python ./anita print-workdir "$@"`
+    logfile=$logdir/$workdir
+    test ! -f $logfile || echo "warning: $logfile exists"
     rm -f $workdir/wd0.img
-    $python ./anita --structured-log $mode "$@"
-    rm -f $workdir/wd0.img    
+    (
+        set -x -e
+        $python ./anita --structured-log $mode "$@"
+        rm -f $workdir/wd0.img
+        echo "passed"
+    ) >$logfile 2>&1 &
 }
 
 # Test a local hpcmips build, if available
@@ -68,29 +73,6 @@ runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-7.2/
 # Test newest version
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.0/amd64/
 
-# Test anita 1.2 compatibility.
-$python <<END
-import anita
-ver = anita.Release("7.0.1")
-ver.install()
-END
-
-url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/iso/5.0.2/sparccd-5.0.2.iso
-workdir=`$python ./anita print-workdir $url`
-rm -f $workdir/wd0.img
-$python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot $url | tee stdout
-grep "127 9721" stdout
-rm -f stdout
-
-url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-5.1/i386/
-workdir=`$python ./anita print-workdir $url`
-rm -f $workdir/wd0.img
-$python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee stdout || true
-# This is not to check that tests pass, but only that they at least run to completion
-grep 'passed test cases' stdout
-rm -f stdout
-rm -f $workdir/wd0.img
-
 # This panics with qemu 2.0.0, and fails due to the message
 # "esp0: !TC on DATA XFER [intr 18, stat 82, step 4] prevphase 2, resid 0"
 # being printed during set extraction with qemu 2.9.0.
@@ -98,4 +80,59 @@ rm -f $workdir/wd0.img
 
 runtest boot http://ftp.netbsd.org/pub/NetBSD/iso/7.2/NetBSD-7.2-sparc.iso
 
-echo "pass"
+# Test selecting and installing the games set
+url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/iso/5.0.2/sparccd-5.0.2.iso
+workdir=`$python ./anita print-workdir $url`
+logfile=$logdir/$workdir
+(
+  set -x -e
+  rm -f $workdir/wd0.img
+  $python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot $url | tee stdout
+  grep "127 9721" stdout
+  rm -f stdout
+  rm -f $workdir/wd0.img
+  echo "passed"
+) >$logfile 2>&1 &
+
+# Test running the ATF tests
+url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/NetBSD-5.1/i386/
+workdir=`$python ./anita print-workdir $url`
+logfile=$logdir/$workdir
+(
+  set -x -e
+  rm -f $workdir/wd0.img
+  $python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee stdout || true
+  # This is not to check that tests pass, but only that they at least run to completion
+  grep 'passed test cases' stdout
+  rm -f stdout
+  rm -f $workdir/wd0.img
+  echo "passed"
+) >$logfile 2>&1 &
+
+# Test anita 1.2 compatibility (in foreground)
+logfile=$logdir/7.0.1
+(
+$python <<END
+import anita
+ver = anita.Release("7.0.1")
+ver.install()
+END
+echo "passed"
+) >$logfile 2>&1 &
+
+wait
+
+pass=true
+for f in $logdir/*
+do
+    echo -n $f:
+    if tail -1 $f | grep 'passed' >/dev/null
+    then
+        echo "pass"
+    else
+        echo "fail"
+        pass=false
+   fi
+done
+
+$pass
