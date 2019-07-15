@@ -9,8 +9,8 @@ echo "logging to $logdir"
 
 mkdir -p $logdir
 
-#python=python2.7
-python=python3.7
+python=python2.7
+#python=python3.7
 
 set -x -e
 
@@ -87,9 +87,9 @@ logfile=$logdir/$workdir
 (
   set -x -e
   rm -f $workdir/wd0.img
-  $python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot $url | tee stdout
-  grep "127 9721" stdout
-  rm -f stdout
+  $python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot $url | tee stdout.games
+  grep "127 9721" stdout.games
+  rm -f stdout.games
   rm -f $workdir/wd0.img
   echo "passed"
 ) >$logfile 2>&1 &
@@ -101,10 +101,10 @@ logfile=$logdir/$workdir
 (
   set -x -e
   rm -f $workdir/wd0.img
-  $python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee stdout || true
+  $python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee stdout.atf || true
   # This is not to check that tests pass, but only that they at least run to completion
-  grep 'passed test cases' stdout
-  rm -f stdout
+  grep 'passed test cases' stdout.atf
+  rm -f stdout.atf
   rm -f $workdir/wd0.img
   echo "passed"
 ) >$logfile 2>&1 &
@@ -112,11 +112,14 @@ logfile=$logdir/$workdir
 # Test anita 1.2 compatibility (in foreground)
 logfile=$logdir/7.0.1
 (
+workdir=netbsd-7.0.1
+rm -f $workdir/wd0.img
 $python <<END
 import anita
 ver = anita.Release("7.0.1")
 ver.install()
 END
+rm -f $workdir/wd0.img
 echo "passed"
 ) >$logfile 2>&1 &
 
@@ -125,12 +128,10 @@ wait
 pass=true
 for f in $logdir/*
 do
-    echo -n $f:
     if tail -1 $f | grep 'passed' >/dev/null
     then
-        echo "pass"
+        :
     else
-        echo "fail"
         pass=false
    fi
 done
