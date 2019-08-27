@@ -133,7 +133,7 @@ set_exts = ['.tgz', '.tar.xz']
 # External commands we rely on
 
 if os.uname()[0] == 'NetBSD':
-    makefs = ["makefs", "-t", "cd9660", "-o", "rockridge"]
+    makefs = ["/usr/sbin/makefs", "-t", "cd9660", "-o", "rockridge"]
 elif os.uname()[0] == 'FreeBSD':
     makefs = ["mkisofs", "-r", "-o"]
 elif os.uname()[0] == 'Darwin':
