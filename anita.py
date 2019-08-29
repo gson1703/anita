@@ -263,7 +263,7 @@ def download_if_missing_2(url, file, optional = False):
     try:
         download_file(file, url, optional)
         return True
-    except:
+    except IOError:
         if optional:
             f = open(file + ".MISSING", "w")
             f.close()
