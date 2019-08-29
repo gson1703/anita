@@ -1,3 +1,5 @@
+Downloads can now be interrupted using SIGING (control-C).
+
 On NetBSD, invoke makefs using its absolute path /usr/sbin/makefs
 as /usr/sbin may not be in PATH.
 
