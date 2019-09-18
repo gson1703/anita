@@ -1,3 +1,8 @@
+
+- 2.0 released -
+
+In the test suite, run the tests in parallel to reduce the run time.
+
 Downloads can now be interrupted using SIGINT (control-C).
 
 On NetBSD, invoke makefs using its absolute path /usr/sbin/makefs
