@@ -1,4 +1,6 @@
 
+Fix failure to install the sharesrc set due to curses optimization.
+
 - 2.0 released -
 
 In the test suite, run the tests in parallel to reduce the run time.
