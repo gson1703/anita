@@ -6,10 +6,12 @@
 from __future__ import print_function
 from __future__ import division
 
+import gzip
 import os
 import pexpect
 import re
 import string
+import shutil
 import subprocess
 import sys
 import time
@@ -389,6 +391,13 @@ def reverse_virtio_drives(v):
             and sublist[3].startswith('virtio-blk-device')
     reverse_sublists(v, 4, is_virtio_blk)
 
+
+# Format at set of key-value pairs as used in qemu command line options.
+# Takes a sequence of tuples.
+
+def qemu_format_attrs(attrs):
+    return ','.join(["%s=%s" % pair for pair in attrs])
+
 #############################################################################
 
 # A NetBSD version.
@@ -603,6 +612,10 @@ class Version(object):
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
         if self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
+        if self.arch() in ['i386', 'amd64']:
+            # This is used when netbooting only
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "misc", "pxeboot_ia32.bin"])
+
         i = 0
         # Depending on the NetBSD version, there may be two or more
         # boot floppies.  Treat any floppies past the first two as
@@ -1100,9 +1113,7 @@ class Anita(object):
             dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
         else:
             pass
-        def format_attrs(attrs):
-            return ','.join(["%s=%s" % pair for pair in attrs])
-        return ["-drive", format_attrs(drive_attrs)] + dev_args
+        return ["-drive", qemu_format_attrs(drive_attrs)] + dev_args
 
     def qemu_cdrom_args(self, path, devno):
         return ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
@@ -1291,7 +1302,49 @@ class Anita(object):
                     vmm_args = ['-cdrom', self.dist.iso_path()]
                 vmm_args += ["-boot", "d"]
                 cd_device = 'cd0a'
+            elif self.boot_from == 'net':
+                # This is incomplete.  It gets as far as running
+                # pxeboot, but pxeboot is unable to load the kernel
+                # because it defaults to loading the kernel over NFS,
+                # and we support only TFTP.  To specify "tftp:netbsd",
+                # we would need a way to respond with different bootfile
+                # DHCP options at the PXE ROM and pxeboot stages, but
+                # the built-in BOOTP/DHCP server in qemu has no way to
+                # do that.  A pxeboot patched to load "tftp:netbsd"
+                # instead of "netbsd" does successfully load the kernel.
 
+                # We're also still missing support for serving the sets
+                # over HTTP.
+
+                tftpdir = os.path.join(self.workdir, 'tftp')
+                mkdir_p(tftpdir)
+
+                # XXX dup wrt noemu
+                pxeboot_com_fn = 'pxeboot_ia32_com.bin'
+                pxeboot_com_path = os.path.join(tftpdir, pxeboot_com_fn)
+                shutil.copyfile(os.path.join(self.dist.download_local_arch_dir(),
+                                             'installation/misc/pxeboot_ia32.bin'),
+                                pxeboot_com_path)
+                # Configure the boot image for a serial console
+                # Alas, this will only work on a NetBSD host.
+                subprocess.check_call(['/usr/sbin/installboot', '-e',
+                                       '-o', 'console=com0', pxeboot_com_path])
+
+                inst_kernel = os.path.join(tftpdir, 'netbsd')
+                # Use the INSTALL kernel
+                # Unzip the install kernel into the tftp directory
+                zipped_kernel = os.path.join(self.dist.download_local_arch_dir(),
+                                             'binary/kernel/netbsd-INSTALL.gz')
+                with gzip.open(zipped_kernel, 'rb') as srcf:
+                    with open(inst_kernel, 'wb') as dstf:
+                        shutil.copyfileobj(srcf, dstf)
+
+                vmm_args = ['-boot', 'n',
+                            '-nic',
+                            'user,' +
+                                qemu_format_attrs([('id', 'um0'),
+                                                   ('tftp', tftpdir),
+                                                   ('bootfile', pxeboot_com_fn)])]
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
