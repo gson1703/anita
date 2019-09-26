@@ -471,20 +471,20 @@ class Version(object):
           ['xserver', 'X11 servers', 0, 1 ],
       ]],
       [ '_src', 'Source (and debug )?sets', 0, [
-          # The lack of an "es" after "sourc" is deliberate.
-          # The source sets are displayed in a pop-up box atop
-          # the main distribution set list, and as of source
-          # date 2019.09.12.06.19.47, the "es" in "Share sources"
-          # happens to land exactly on top of an existing "es"
-          # from the word "Yes" in the underlying window.
+          ['syssrc', 'Kernel sources', 0, 1],
+          ['src', 'Base sources', 0, 1],
+          # The optionsal "es"? is because the source sets are
+          # displayed in a pop-up box atop the main distribution
+          # set list, and as of source date 2019.09.12.06.19.47,
+          # the "es" in "Share sources" happens to land exactly
+          # on top of an existing "es" from the word "Yes" in
+          # the underlying window.
           # Curses, eager to to optimize, will reuse that
           # existing "es" instead of outputting it anew, causing
           # the pattern not to match if it includes the "es".
-          ['syssrc', 'Kernel sourc', 0, 1],
-          ['src', 'Base sourc', 0, 1],
-          ['sharesrc', 'Share sourc', 0, 1],
-          ['gnusrc', 'GNU sourc', 0, 1],
-          ['xsrc', 'X11 sourc', 0, 1],
+          ['sharesrc', 'Share sourc(es)?', 0, 1],
+          ['gnusrc', 'GNU sources', 0, 1],
+          ['xsrc', 'X11 sources', 0, 1],
           ['debug', '(debug sets)|(Debug symbols)', 0, 1],
           ['xdebug', '(debug X11 sets)|(X11 debug symbols)', 0, 1],
       ]]
@@ -1454,14 +1454,18 @@ class Anita(object):
                 # or None.  The label can be separated from the "Yes/No"
                 # field either by spaces (at least two, so that there can
                 # be single spaces within the label), or by a cursor
-                # positioning escape sequence.  In the case of the
-                # "X11 fonts" set, we strangely get both a single space
-                # and an escape sequence, which seems disoptimal.
+                # positioning escape sequence.  The escape sequence may
+                # be preceded by zero or more spaces.  Apparently this
+                # variety arises from the fact that the submenus are drawn
+                # on top of the existing text of the main menu without
+                # clearing the screen inbetween, so that the preexisting
+                # screen content between the label and the "Yes/No" may
+                # or may not consist of spaces that curses can reuse.
                 #
                 # Alternatively, match the special letter "x: " which
                 # is not followed by an installation status.
                 child.expect(
-                    "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s?\x1b\[\d+;\d+H\x00*))(Yes|No|All|None))|(x: )")
+                    "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s*\x1b\[\d+;\d+H\x00*))(Yes|No|All|None))|(x: )")
                 (letter, label, yesno, exit) = child.match.groups()
                 if exit:
                     if len(sets_this_screen) != 0:
