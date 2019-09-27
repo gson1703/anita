@@ -1115,7 +1115,7 @@ class Anita(object):
             pass
         return ["-drive", qemu_format_attrs(drive_attrs)] + dev_args
 
-    def qemu_cdrom_args(self, path, devno):
+    def qemu_cdrom_args(self, path):
         return ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
     def gxemul_cdrom_args(self):
         return ('', 'd:')[self.dist.arch() == 'landisk'] + self.dist.iso_path()
@@ -1283,12 +1283,12 @@ class Anita(object):
 
             # Set up VM arguments based on the chosen boot media
             if self.boot_from == 'cdrom':
-                vmm_args = self.qemu_cdrom_args(boot_cd_path, 1)
-                vmm_args += self.qemu_cdrom_args(self.dist.iso_path(), 2)
+                vmm_args = self.qemu_cdrom_args(boot_cd_path)
+                vmm_args += self.qemu_cdrom_args(self.dist.iso_path())
                 vmm_args += ["-boot", "d"]
                 sets_cd_device = 'cd1a'
             elif self.boot_from == 'floppy':
-                vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
+                vmm_args = self.qemu_cdrom_args(self.dist.iso_path())
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
                 vmm_args += ["-drive", "file=%s,format=raw,if=floppy,readonly=on"
@@ -1297,7 +1297,7 @@ class Anita(object):
             elif self.boot_from == 'cdrom-with-sets':
                 # Single CD
                 if not self.dist.arch() == 'sparc64':
-                    vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
+                    vmm_args = self.qemu_cdrom_args(self.dist.iso_path())
                 else:
                     vmm_args = ['-cdrom', self.dist.iso_path()]
                 vmm_args += ["-boot", "d"]
@@ -1316,7 +1316,7 @@ class Anita(object):
                 # Note that although the kernel is netbooted, the sets
                 # are still read from a CD (unlike the noemu case).
 
-                vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
+                vmm_args = self.qemu_cdrom_args(self.dist.iso_path())
                 sets_cd_device = 'cd0a'
 
                 tftpdir = os.path.join(self.workdir, 'tftp')
