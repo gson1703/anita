@@ -1313,8 +1313,11 @@ class Anita(object):
                 # do that.  A pxeboot patched to load "tftp:netbsd"
                 # instead of "netbsd" does successfully load the kernel.
 
-                # We're also still missing support for serving the sets
-                # over HTTP.
+                # Note that although the kernel is netbooted, the sets
+                # are still read from a CD (unlike the noemu case).
+
+                vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
+                cd_device = 'cd0a'
 
                 tftpdir = os.path.join(self.workdir, 'tftp')
                 mkdir_p(tftpdir)
@@ -1339,12 +1342,12 @@ class Anita(object):
                     with open(inst_kernel, 'wb') as dstf:
                         shutil.copyfileobj(srcf, dstf)
 
-                vmm_args = ['-boot', 'n',
-                            '-nic',
-                            'user,' +
-                                qemu_format_attrs([('id', 'um0'),
-                                                   ('tftp', tftpdir),
-                                                   ('bootfile', pxeboot_com_fn)])]
+                vmm_args += ['-boot', 'n',
+                             '-nic',
+                             'user,' +
+                             qemu_format_attrs([('id', 'um0'),
+                                                ('tftp', tftpdir),
+                                                ('bootfile', pxeboot_com_fn)])]
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
