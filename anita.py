@@ -1244,7 +1244,7 @@ class Anita(object):
 
     def _install_using_sysinst(self):
         # The name of the CD-ROM device holding the sets
-        cd_device = None
+        sets_cd_device = None
 
         arch = self.dist.arch()
 
@@ -1261,13 +1261,13 @@ class Anita(object):
             vmm_args += self.xen_args(install = True)
             if self.xen_type == 'pv':
                 vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, cdrom = True)]
-                cd_device = 'xbd1d'
+                sets_cd_device = 'xbd1d'
             else:
                 # HVM, similar the qemu boot_from == 'cdrom' case below
                 boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
                 vmm_args += [self.xen_disk_arg(os.path.abspath(boot_cd_path), 1, cdrom = True)]
                 vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 2, cdrom = True)]
-                cd_device = 'cd1a'
+                sets_cd_device = 'cd1a'
             child = self.start_xen_domu(vmm_args)
         elif self.vmm == 'qemu':
             # Determine what kind of media to boot from.
@@ -1286,14 +1286,14 @@ class Anita(object):
                 vmm_args = self.qemu_cdrom_args(boot_cd_path, 1)
                 vmm_args += self.qemu_cdrom_args(self.dist.iso_path(), 2)
                 vmm_args += ["-boot", "d"]
-                cd_device = 'cd1a'
+                sets_cd_device = 'cd1a'
             elif self.boot_from == 'floppy':
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
                 vmm_args += ["-drive", "file=%s,format=raw,if=floppy,readonly=on"
                              % floppy_paths[0], "-boot", "a"]
-                cd_device = 'cd0a';
+                sets_cd_device = 'cd0a';
             elif self.boot_from == 'cdrom-with-sets':
                 # Single CD
                 if not self.dist.arch() == 'sparc64':
@@ -1301,7 +1301,7 @@ class Anita(object):
                 else:
                     vmm_args = ['-cdrom', self.dist.iso_path()]
                 vmm_args += ["-boot", "d"]
-                cd_device = 'cd0a'
+                sets_cd_device = 'cd0a'
             elif self.boot_from == 'net':
                 # This is incomplete.  It gets as far as running
                 # pxeboot, but pxeboot is unable to load the kernel
@@ -1317,7 +1317,7 @@ class Anita(object):
                 # are still read from a CD (unlike the noemu case).
 
                 vmm_args = self.qemu_cdrom_args(self.dist.iso_path(), 1)
-                cd_device = 'cd0a'
+                sets_cd_device = 'cd0a'
 
                 tftpdir = os.path.join(self.workdir, 'tftp')
                 mkdir_p(tftpdir)
@@ -1352,11 +1352,11 @@ class Anita(object):
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
         elif self.vmm == 'gxemul':
-            cd_device = 'cd0a'
+            sets_cd_device = 'cd0a'
             if self.dist.arch() == 'hpcmips':
-                cd_device = 'cd0d'
+                sets_cd_device = 'cd0d'
             elif self.dist.arch() == 'landisk':
-                cd_device = 'wd1a'
+                sets_cd_device = 'wd1a'
             vmm_args = ["-d", self.gxemul_cdrom_args()]
             if self.dist.arch() in ['pmax', 'landisk']:
                 vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
@@ -1366,7 +1366,7 @@ class Anita(object):
                  "installation", "netbsd.gz"))]
             child = self.start_gxemul(vmm_args)
         elif self.vmm == 'simh':
-            cd_device = 'cd0a'
+            sets_cd_device = 'cd0a'
             child = self.start_simh()
             child.expect(">>>")
             child.send("boot dua3\r\n")
@@ -1741,8 +1741,8 @@ class Anita(object):
                 choose_install_media()
             elif child.match.group(3):
                 # CDROM device selection
-                if cd_device != 'cd0a':
-                    child.send(b"a\n" + cd_device.encode('ASCII') + b"\n")
+                if sets_cd_device != 'cd0a':
+                    child.send(b"a\n" + sets_cd_device.encode('ASCII') + b"\n")
                 # (([cx]): Continue)
                 # In 3.0.1, you type "c" to continue, whereas in -current,
                 # you type "x".  Handle both cases.
