@@ -951,6 +951,9 @@ class Anita(object):
         self.halted = False
         self.tests = tests
 
+        # Number of CD-ROM devices
+        self.n_cdrom = 0
+
     # Get the name of the actual uncompressed kernel file, out of
     # potentially multiple alternative kernels.  Used with images.
     def actual_kernel(self):
@@ -1115,8 +1118,12 @@ class Anita(object):
             pass
         return ["-drive", qemu_format_attrs(drive_attrs)] + dev_args
 
-    def qemu_cdrom_args(self, path):
-        return ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
+    def qemu_add_cdrom(self, path):
+        argv = ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
+        dev = 'cd%da' % self.n_cdrom
+        self.n_cdrom += 1
+        return argv, dev
+
     def gxemul_cdrom_args(self):
         return ('', 'd:')[self.dist.arch() == 'landisk'] + self.dist.iso_path()
     def gxemul_disk_args(self, path):
@@ -1283,25 +1290,17 @@ class Anita(object):
 
             # Set up VM arguments based on the chosen boot media
             if self.boot_from == 'cdrom':
-                vmm_args = self.qemu_cdrom_args(boot_cd_path)
-                vmm_args += self.qemu_cdrom_args(self.dist.iso_path())
+                vmm_args, dummy = self.qemu_add_cdrom(boot_cd_path)
                 vmm_args += ["-boot", "d"]
-                sets_cd_device = 'cd1a'
             elif self.boot_from == 'floppy':
-                vmm_args = self.qemu_cdrom_args(self.dist.iso_path())
                 if len(floppy_paths) == 0:
                     raise RuntimeError("found no boot floppies")
-                vmm_args += ["-drive", "file=%s,format=raw,if=floppy,readonly=on"
-                             % floppy_paths[0], "-boot", "a"]
-                sets_cd_device = 'cd0a';
+                vmm_args = ["-drive", "file=%s,format=raw,if=floppy,readonly=on"
+                            % floppy_paths[0]]
+                vmm_args += ["-boot", "a"]
             elif self.boot_from == 'cdrom-with-sets':
                 # Single CD
-                if not self.dist.arch() == 'sparc64':
-                    vmm_args = self.qemu_cdrom_args(self.dist.iso_path())
-                else:
-                    vmm_args = ['-cdrom', self.dist.iso_path()]
-                vmm_args += ["-boot", "d"]
-                sets_cd_device = 'cd0a'
+                vmm_args = ["-boot", "d"]
             elif self.boot_from == 'net':
                 # This is incomplete.  It gets as far as running
                 # pxeboot, but pxeboot is unable to load the kernel
@@ -1315,9 +1314,6 @@ class Anita(object):
 
                 # Note that although the kernel is netbooted, the sets
                 # are still read from a CD (unlike the noemu case).
-
-                vmm_args = self.qemu_cdrom_args(self.dist.iso_path())
-                sets_cd_device = 'cd0a'
 
                 tftpdir = os.path.join(self.workdir, 'tftp')
                 mkdir_p(tftpdir)
@@ -1342,12 +1338,16 @@ class Anita(object):
                     with open(inst_kernel, 'wb') as dstf:
                         shutil.copyfileobj(srcf, dstf)
 
-                vmm_args += ['-boot', 'n',
-                             '-nic',
-                             'user,' +
-                             qemu_format_attrs([('id', 'um0'),
-                                                ('tftp', tftpdir),
-                                                ('bootfile', pxeboot_com_fn)])]
+                vmm_args = ['-boot', 'n',
+                            '-nic',
+                            'user,' +
+                            qemu_format_attrs([('id', 'um0'),
+                                               ('tftp', tftpdir),
+                                               ('bootfile', pxeboot_com_fn)])]
+
+            # The sets are in the next available CD drive regardless of the boot device
+            sets_cd_args, sets_cd_device = self.qemu_add_cdrom(self.dist.iso_path())
+            vmm_args += sets_cd_args
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
