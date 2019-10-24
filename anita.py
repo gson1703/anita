@@ -1351,6 +1351,9 @@ class Anita(object):
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
+            child.expect('(PXE boot)|(BIOS Boot)')
+            if child.match.group(2):
+                raise RuntimeError("got BIOS bootloader instead of PXE")
         elif self.vmm == 'gxemul':
             sets_cd_device = 'cd0a'
             if self.dist.arch() == 'hpcmips':
