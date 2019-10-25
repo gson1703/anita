@@ -549,14 +549,14 @@ class Version(object):
         return self.workdir + "/download/"
     def download_local_arch_dir(self):
         return self.download_local_mi_dir() + self.arch() + "/"
-    # The path to the install ISO image (the one containing the sets,
-    # may be separate from the installation boot ISO)
-    def iso_path(self):
-        return os.path.join(self.workdir, self.iso_name())
+    # The path to the install sets ISO image, which
+    # may or may not also be the install boot ISO
+    def install_sets_iso_path(self):
+        return os.path.join(self.workdir, self.install_sets_iso_name())
     # The path to the ISO used for booting an installed
     # macppc system (not to be confused with the installation
     # boot ISO)
-    def boot_iso_path(self):
+    def runtime_boot_iso_path(self):
         return os.path.join(self.workdir, 'boot.iso')
     # The directory for the install floppy images
     def floppy_dir(self):
@@ -694,14 +694,14 @@ class Version(object):
     # Create an install ISO image to install from
     def make_iso(self):
         self.download()
-        args = [self.iso_path()]
+        args = [self.install_sets_iso_path()]
         if self.arch() == 'macppc':
             args.extend(["-hfs", "-part", "-l", "-J", "-N", "-m", "netbsd"])
         args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         spawn(makefs[0], makefs + args)
-        self.tempfiles.append(self.iso_path())
+        self.tempfiles.append(self.install_sets_iso_path())
         if self.arch() == 'macppc':
-            args = [self.boot_iso_path()]
+            args = [self.runtime_boot_iso_path()]
             args.extend(["-hfs", "-part", "-l", "-J", "-N", "-m", "netbsd.macppc"])
             args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
             spawn(makefs[0], makefs + args)
@@ -727,7 +727,7 @@ class NumberedVersion(Version):
         Version.__init__(self, **kwargs)
         self.ver = ver
     # The file name of the install ISO (sans directory)
-    def iso_name(self):
+    def install_sets_iso_name(self):
         if re.match("^[3-9]", self.ver) is not None:
             return "i386cd-" + self.ver + ".iso"
         else:
@@ -765,7 +765,7 @@ class URL(Version):
         return self.url
     def mi_url(self):
         return self.url_mi_part
-    def iso_name(self):
+    def install_sets_iso_name(self):
         return "install_tmp.iso"
     def default_workdir(self):
         return url2dir(self.url)
@@ -804,7 +804,7 @@ class ISO(Version):
         if m.group(2) is not None:
             self.m_arch = m.group(2)
         check_arch_supported(self.m_arch, 'iso')
-    def iso_path(self):
+    def install_sets_iso_path(self):
         if self.m_iso_path is not None:
             return self.m_iso_path
         else:
@@ -816,7 +816,7 @@ class ISO(Version):
         self.download()
     def download(self):
         if self.m_iso_path is None:
-            download_if_missing_2(self.m_iso_url, self.iso_path())
+            download_if_missing_2(self.m_iso_url, self.install_sets_iso_path())
         else:
             mkdir_p(self.workdir)
     def arch(self):
@@ -1083,7 +1083,7 @@ class Anita(object):
                 'set rq3 cdrom\n' +
                 '\n'.join(vmm_args) + '\n' +
                 'attach rq0 ' + self.wd0_path() + '\n' +
-                'attach -r rq3 ' + self.dist.iso_path() + '\n' +
+                'attach -r rq3 ' + self.dist.install_sets_iso_path() + '\n' +
                 'boot cpu')
         f.close()
         child = self.pexpect_spawn('simh-vax', [os.path.join(self.workdir, 'netbsd.ini')])
@@ -1177,7 +1177,7 @@ class Anita(object):
         return argv, dev
 
     def gxemul_cdrom_args(self):
-        return ('', 'd:')[self.dist.arch() == 'landisk'] + self.dist.iso_path()
+        return ('', 'd:')[self.dist.arch() == 'landisk'] + self.dist.install_sets_iso_path()
     def gxemul_disk_args(self, path):
         return ["-d", path]
 
@@ -1319,13 +1319,13 @@ class Anita(object):
             vmm_args = []
             vmm_args += self.xen_args(install = True)
             if self.xen_type == 'pv':
-                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 1, cdrom = True)]
+                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.install_sets_iso_path()), 1, cdrom = True)]
                 sets_cd_device = 'xbd1d'
             else:
                 # HVM, similar the qemu boot_from == 'cdrom' case below
                 boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
                 vmm_args += [self.xen_disk_arg(os.path.abspath(boot_cd_path), 1, cdrom = True)]
-                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.iso_path()), 2, cdrom = True)]
+                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.install_sets_iso_path()), 2, cdrom = True)]
                 sets_cd_device = 'cd1a'
             child = self.start_xen_domu(vmm_args)
         elif self.vmm == 'qemu':
@@ -1344,7 +1344,7 @@ class Anita(object):
                 if self.dist.arch() == 'macppc':
                     # Boot from the CD we just built, with the sets.
                     # The drive must have index 2.
-                    cd_path = self.dist.iso_path()
+                    cd_path = self.dist.install_sets_iso_path()
                     vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path, [('index', '2')])
                     print("ARGS", vmm_args)
                 else:
@@ -1408,7 +1408,7 @@ class Anita(object):
             # If we don't have a CD with sets already, use the next
             # available CD drive
             if not sets_cd_device:
-                sets_cd_args, sets_cd_device = self.qemu_add_cdrom(self.dist.iso_path())
+                sets_cd_args, sets_cd_device = self.qemu_add_cdrom(self.dist.install_sets_iso_path())
                 vmm_args += sets_cd_args
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
 
@@ -2110,7 +2110,7 @@ class Anita(object):
         if self.dist.arch() == 'macppc':
             # macppc does not support booting from FFS, so boot from
             # a CD instead
-            args, dummy = self.qemu_add_cdrom(self.dist.boot_iso_path(), [('index', '2')])
+            args, dummy = self.qemu_add_cdrom(self.dist.runtime_boot_iso_path(), [('index', '2')])
             vmm_args += args
             vmm_args += ["-prom-env", "auto-boot?=false"]
         if self.vmm == 'qemu':
