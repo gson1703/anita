@@ -52,6 +52,7 @@ arch_props = {
             'executable': 'qemu-system-i386',
         },
         'scratch_disk': 'wd1d',
+        'boot_from_default': 'floppy',
     },
     'amd64': {
         'qemu': {
@@ -121,22 +122,23 @@ arch_props = {
         },
         'scratch_disk': 'sd1c',
     },
-     # The following ones don't actually work
     'macppc': {
         'qemu': {
             'executable': 'qemu-system-ppc',
         },
+        'memory_size': '256M',
         'scratch_disk': None,
     },
 }
 
 set_exts = ['.tgz', '.tar.xz']
 
-# External commands we rely on
+# External command to build ISO images.  This must be mkisofs to
+# build the macppc ISO images.  If it weren't for macppc, NetBSD could
+# use its native makefs as ["/usr/sbin/makefs", "-t", "cd9660", "-o",
+# "rockridge"].
 
-if os.uname()[0] == 'NetBSD':
-    makefs = ["/usr/sbin/makefs", "-t", "cd9660", "-o", "rockridge"]
-elif os.uname()[0] == 'FreeBSD':
+if os.uname()[0] == 'NetBSD' or os.uname()[0] == 'FreeBSD':
     makefs = ["mkisofs", "-r", "-o"]
 elif os.uname()[0] == 'Darwin':
     makefs = ["hdiutil", "makehybrid", "-iso", "-o"]
@@ -526,9 +528,15 @@ class Version(object):
         return self.workdir + "/download/"
     def download_local_arch_dir(self):
         return self.download_local_mi_dir() + self.arch() + "/"
-    # The path to the install ISO image
+    # The path to the install ISO image (the one containing the sets,
+    # may be separate from the installation boot ISO)
     def iso_path(self):
         return os.path.join(self.workdir, self.iso_name())
+    # The path to the ISO used for booting an installed
+    # macppc system (not to be confused with the installation
+    # boot ISO)
+    def boot_iso_path(self):
+        return os.path.join(self.workdir, 'boot.iso')
     # The directory for the install floppy images
     def floppy_dir(self):
         return os.path.join(self.download_local_arch_dir(),
@@ -537,7 +545,7 @@ class Version(object):
         return os.path.join(self.download_local_arch_dir(),
             "installation/cdrom")
     def boot_from_default(self):
-        return None
+        return arch_props[self.arch()].get('boot_from_default')
     def scratch_disk(self):
         return arch_props[self.arch()].get('scratch_disk')
 
@@ -571,6 +579,7 @@ class Version(object):
         return [f for f in self.potential_floppies() \
             if os.path.exists(os.path.join(self.floppy_dir(), f))]
 
+    # The list of boot ISOs we should try downloading
     def boot_isos(self):
         return ['boot-com.iso']
 
@@ -610,6 +619,10 @@ class Version(object):
 
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
+        if self.arch() == 'macppc':
+            download_if_missing_2(self.dist_url() + 'binary/kernel/netbsd-INSTALL.gz', self.download_local_mi_dir() + "netbsd.macppc")
+            download_if_missing_2(self.dist_url() + 'binary/kernel/netbsd-GENERIC.gz', self.download_local_mi_dir() + "netbsd")
+            download_if_missing_2(self.dist_url() + 'installation/ofwboot.xcf', self.download_local_mi_dir() + "ofwboot.xcf")
         if self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         if self.arch() in ['i386', 'amd64']:
@@ -660,9 +673,17 @@ class Version(object):
     # Create an install ISO image to install from
     def make_iso(self):
         self.download()
-        spawn(makefs[0], makefs + \
-            [self.iso_path(), os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
+        args = [self.iso_path()]
+        if self.arch() == 'macppc':
+            args.extend(["-hfs", "-part", "-l", "-J", "-N", "-m", "netbsd"])
+        args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
+        spawn(makefs[0], makefs + args)
         self.tempfiles.append(self.iso_path())
+        if self.arch() == 'macppc':
+            args = [self.boot_iso_path()]
+            args.extend(["-hfs", "-part", "-l", "-J", "-N", "-m", "netbsd.macppc"])
+            args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
+            spawn(makefs[0], makefs + args)
 
     # Get the architecture name.  This is a hardcoded default for use
     # by the obsolete subclasses; the "URL" class overrides it.
@@ -971,6 +992,8 @@ class Anita(object):
             return ["-Elandisk"]
         elif self.dist.arch() == 'hpcmips':
             return ["-emobilepro880"]
+        elif self.dist.arch() == 'macppc':
+            return ["-M", "mac99", "-prom-env", "auto-boot?=false"]
         elif self.dist.arch() == 'evbarm-earmv7hf':
             return [
                 '-M', 'vexpress-a15',
@@ -1118,8 +1141,16 @@ class Anita(object):
             pass
         return ["-drive", qemu_format_attrs(drive_attrs)] + dev_args
 
-    def qemu_add_cdrom(self, path):
-        argv = ["-drive", "file=%s,format=raw,media=cdrom,readonly=on" % (path)]
+    def qemu_add_cdrom(self, path, extra_attrs):
+        if extra_attrs is None:
+            extra_attrs = []
+        drive_attrs = [
+            ('file', path),
+            ('format', 'raw'),
+            ('media', 'cdrom'),
+            ('readonly', 'on'),
+        ] + extra_attrs
+        argv = ["-drive", qemu_format_attrs(drive_attrs)]
         dev = 'cd%da' % self.n_cdrom
         self.n_cdrom += 1
         return argv, dev
@@ -1280,17 +1311,25 @@ class Anita(object):
             # Determine what kind of media to boot from.
             floppy_paths = [ os.path.join(self.dist.floppy_dir(), f) \
                 for f in self.dist.floppies() ]
-            boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
             if self.boot_from is None:
                 self.boot_from = self.dist.boot_from_default()
-            if self.boot_from is None and len(floppy_paths) == 0:
-                self.boot_from = 'cdrom'
             if self.boot_from is None:
-                self.boot_from = 'floppy'
+                self.boot_from = 'cdrom'
+
+            sets_cd_device = None
 
             # Set up VM arguments based on the chosen boot media
             if self.boot_from == 'cdrom':
-                vmm_args, dummy = self.qemu_add_cdrom(boot_cd_path)
+                if self.dist.arch() == 'macppc':
+                    # Boot from the CD we just built, with the sets.
+                    # The drive must have index 2.
+                    cd_path = self.dist.iso_path()
+                    vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path, [('index', '2')])
+                    print("ARGS", vmm_args)
+                else:
+                    # Boot from a downloaded boot CD w/o sets
+                    cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
+                    vmm_args, dummy = self.qemu_add_cdrom(cd_path)
                 vmm_args += ["-boot", "d"]
             elif self.boot_from == 'floppy':
                 if len(floppy_paths) == 0:
@@ -1345,10 +1384,16 @@ class Anita(object):
                                                ('tftp', tftpdir),
                                                ('bootfile', pxeboot_com_fn)])]
 
-            # The sets are in the next available CD drive regardless of the boot device
-            sets_cd_args, sets_cd_device = self.qemu_add_cdrom(self.dist.iso_path())
-            vmm_args += sets_cd_args
+            # If we don't have a CD with sets already, use the next
+            # available CD drive
+            if not sets_cd_device:
+                sets_cd_args, sets_cd_device = self.qemu_add_cdrom(self.dist.iso_path())
+                vmm_args += sets_cd_args
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
+
+            if self.dist.arch() == 'macppc':
+                child.expect('Welcome to OpenBIOS')
+                child.send("boot cd:,ofwboot.xcf\r\n")
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
             child.expect('(PXE boot)|(BIOS Boot)')
@@ -1402,7 +1447,9 @@ class Anita(object):
                 # Group 5
                 "(Installation medium to load the additional utilities from: )|"
                 # Group 6
-                "(1. Install NetBSD)"
+                "(1. Install NetBSD)|" +
+                # Group 7
+                "(\\(I\\)nstall, \\(S\\)hell or \\(H\\)alt)"
                 )
             if child.match.group(1):
                 # We got the "insert disk" prompt
@@ -1439,7 +1486,6 @@ class Anita(object):
                 # "Terminal type"
                 child.send("xterm\n")
                 term = "xterm"
-                continue
             elif child.match.group(5):
                 # "Installation medium to load the additional utilities from"
                 # (SPARC)
@@ -1459,6 +1505,9 @@ class Anita(object):
             elif child.match.group(6):
                 # "1. Install NetBSD"
                 child.send("1\n")
+            elif child.match.group(7):
+                # "(I)nstall, (S)hell or (H)alt ?"
+                child.send("i\n")
 
         if self.vmm == 'noemu':
             self.slog("wait for envsys to settle down")
@@ -2037,10 +2086,27 @@ class Anita(object):
         if self.dist.arch() in ['hpcmips', 'landisk']:
             vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                  "binary", "kernel", "netbsd-GENERIC.gz"))]
-
+        if self.dist.arch() == 'macppc':
+            # macppc does not support booting from FFS, so boot from
+            # a CD instead
+            args, dummy = self.qemu_add_cdrom(self.dist.boot_iso_path(), [('index', '2')])
+            vmm_args += args
+            vmm_args += ["-prom-env", "auto-boot?=false"]
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
+            if self.dist.arch() == 'macppc':
+                child.expect('Welcome to OpenBIOS')
+                child.send("boot cd:,ofwboot.xcf\r\n")
+                child.expect('root device:')
+                for c in "wd0a\r\n":
+                  child.send(c)
+                child.expect("dump device \(default wd0b\):")
+                child.send("\r\n")
+                child.expect("file system \(default generic\):")
+                child.send("\r\n")
+                child.expect("init path \(default /sbin/init\):")
+                child.send("\r\n")
         elif vmm_is_xen(self.vmm):
             vmm_args += self.xen_args(install = False)
             child = self.start_xen_domu(vmm_args)

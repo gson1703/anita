@@ -1,4 +1,4 @@
-.Dd May 31, 2019
+.Dd Oct 25, 2019
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -33,8 +33,8 @@ installed system, and running the NetBSD test suite.
 The NetBSD ports currently supported as targets (i.e., as the
 system to install and run under emulation) are i386, amd64,
 sparc, sparc64, evbarm-earmv7hf (using the qemu vexpress-a15
-system emulation), evbarm-aarch64, pmax, hpcmips, vax, and
-hppa.
+system emulation), evbarm-aarch64, pmax, hpcmips, vax, hppa,
+and macppc.
 The host (the system running
 .Nm )
 can be any NetBSD port or even a different Unix-like system such
@@ -332,8 +332,11 @@ mode can modify the disk contents and all other modes work with
 an ephemeral snapshot copy of the freshly installed system.
 .It Fl -boot-from Ar cdrom | floppy
 For architectures that support booting from either CD-ROM or floppies,
-specify which one to use.  The default is to boot from floppies
-if they are present, otherwise from CD-ROM.
+specify which one to use.  The default is
+.Ar floppy
+for the i386 target, and
+.Ar cdrom
+for all other targets.
 .It Fl -structured-log
 Generate log output in a structured format similar to Python code.
 Commands sent to the serial console by
@@ -408,6 +411,9 @@ Installing NetBSD releases older than 2.1 has not been tested.
 Exporting ATF test reports to the host system does not yet work
 with the evbarm-earmv7hf or hpcmips ports for lack of support for
 a second block device.
+.Pp
+The macppc target will not work on host operating systems where
+the command used to build ISO images is not mkisofs.
 .Pp
 .Sh BUGS IN NETBSD
 .Pp

@@ -1,4 +1,7 @@
 
+Add support for macppc targets, based on a patch from Joerg
+Sonnenberger.
+
 Fix failure to install the sharesrc set due to curses optimization.
 
 - 2.0 released -
