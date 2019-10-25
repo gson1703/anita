@@ -16,6 +16,7 @@ import subprocess
 import sys
 import time
 
+# Deal with gratuitous urllib naming changes in Python 3
 if sys.version_info[0] >= 3:
     import urllib.request as good_old_urllib
     import urllib.parse as good_old_urlparse
@@ -23,6 +24,7 @@ else:
     import urllib as good_old_urllib
     import urlparse as good_old_urlparse
 
+# Find a function for quoting shell commands
 try:
     from shlex import quote as sh_quote
 except ImportError:
@@ -131,6 +133,8 @@ arch_props = {
     },
 }
 
+# Filename extensions used for the installation sets in different
+# versions of NetBSD
 set_exts = ['.tgz', '.tar.xz']
 
 # External command to build ISO images.  This must be mkisofs to
@@ -151,6 +155,23 @@ else:
     else:
        makefs = ["mkisofs", "-r", "-o"]
 
+# Several different kinds of ISO images are used for different purposes:
+#
+#  install boot ISO
+#    for booting the install kernel, e.g., boot-com.iso from the i386
+#    distribution
+#
+#  install sets ISO
+#    for holding the installation sets, e.g., the install_tmp.iso built
+#    by anita for i386 installation
+#
+#  install combined ISO
+#    a single ISO serving both the above roles, e.g., the sparc install ISO
+#
+#  runtime boot ISO
+#    for booting installed maccppc targets only
+
+# A shared file descriptor for /dev/null
 fnull = open(os.devnull, 'w')
 
 # Return true if the given program (+args) can be successfully run
