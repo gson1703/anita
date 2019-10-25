@@ -1141,7 +1141,7 @@ class Anita(object):
             pass
         return ["-drive", qemu_format_attrs(drive_attrs)] + dev_args
 
-    def qemu_add_cdrom(self, path, extra_attrs):
+    def qemu_add_cdrom(self, path, extra_attrs = None):
         if extra_attrs is None:
             extra_attrs = []
         drive_attrs = [
