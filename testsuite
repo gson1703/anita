@@ -6,17 +6,20 @@
 
 python=python2.7
 
-case $1 in
-  --python)
-      shift
-      python=$1
-      shift
-      ;;
-  *)
-      echo "unknown option $1" >&2
-      exit 1
-      ;;
-esac
+while $# -gt 0
+do
+    case $1 in
+        --python)
+            shift
+            python="$1"
+            ;;
+        *)
+            echo "unknown option $1" >&2
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 set -x -e
 
