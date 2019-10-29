@@ -189,6 +189,18 @@ def mkdir_p(dir):
     if not os.path.isdir(dir):
         os.makedirs(dir)
 
+# Remove a file, ignoring errors
+def rm_f(fn):
+    try:
+        os.unlink(fn)
+    except:
+        pass
+
+# Create a hard link, removing the destination first
+def ln_f(src, dst):
+    rm_f(dst)
+    os.link(src, dst)
+
 # Quote a shell command.  This is intended to make it possible to
 # manually cut and paste logged command into a shell.
 
@@ -641,19 +653,13 @@ class Version(object):
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
         if self.arch() == 'macppc':
-            def download_and_link(relpath, linkpath):
+            def download(relpath, linkpath):
                 urlbase = self.dist_url()
                 dirbase = self.download_local_arch_dir()
                 download_if_missing_3(urlbase, dirbase, relpath)
-                dest = os.path.join(*([self.download_local_arch_dir()] + linkpath))
-                try:
-                    os.unlink(dest)
-                except:
-                    pass
-                os.link(os.path.join(*([dirbase] + relpath)), dest)
-            download_and_link(["binary", "kernel", "netbsd-INSTALL.gz"], ['netbsd.macppc'])
-            download_and_link(["binary", "kernel", "netbsd-GENERIC.gz"], ['netbsd'])
-            download_and_link(["installation", "ofwboot.xcf"], ["ofwboot.xcf"])
+            download(["binary", "kernel", "netbsd-INSTALL.gz"], ['netbsd.macppc'])
+            download(["binary", "kernel", "netbsd-GENERIC.gz"], ['netbsd'])
+            download(["installation", "ofwboot.xcf"], ["ofwboot.xcf"])
         if self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         if self.arch() in ['i386', 'amd64']:
@@ -706,7 +712,11 @@ class Version(object):
         self.download()
         args = [self.install_sets_iso_path()]
         if self.arch() == 'macppc':
-            args.extend(["-hfs", "-part", "-l", "-J", "-N", "-m", "netbsd"])
+            ln_f(os.path.join(self.download_local_arch_dir(), 'installation/ofwboot.xcf'),
+                 os.path.join(self.download_local_mi_dir(), 'ofwboot.xcf'))
+            ln_f(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-INSTALL.gz'),
+                 os.path.join(self.download_local_mi_dir(), 'netbsd'))
+            args.extend(["-hfs", "-part", "-l", "-J", "-N"])
         args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         spawn(makefs[0], makefs + args)
         self.tempfiles.append(self.install_sets_iso_path())
@@ -714,7 +724,11 @@ class Version(object):
     # Create the runtime boot ISO image (macppc only)
     def make_runtime_boot_iso(self):
         args = [self.runtime_boot_iso_path()]
-        args.extend(["-hfs", "-part", "-l", "-J", "-N", "-m", "netbsd.macppc"])
+        ln_f(os.path.join(self.download_local_arch_dir(), 'installation/ofwboot.xcf'),
+             os.path.join(self.download_local_mi_dir(), 'ofwboot.xcf'))
+        ln_f(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-GENERIC.gz'),
+             os.path.join(self.download_local_mi_dir(), 'netbsd'))
+        args.extend(["-hfs", "-part", "-l", "-J", "-N"])
         args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         spawn(makefs[0], makefs + args)
 
