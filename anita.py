@@ -1351,7 +1351,6 @@ class Anita(object):
                     # The drive must have index 2.
                     cd_path = self.dist.install_sets_iso_path()
                     vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path, [('index', '2')])
-                    print("ARGS", vmm_args)
                 else:
                     # Boot from a downloaded boot CD w/o sets
                     cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
