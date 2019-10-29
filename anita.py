@@ -641,9 +641,19 @@ class Version(object):
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
         if self.arch() == 'macppc':
-            download_if_missing_2(self.dist_url() + 'binary/kernel/netbsd-INSTALL.gz', self.download_local_mi_dir() + "netbsd.macppc")
-            download_if_missing_2(self.dist_url() + 'binary/kernel/netbsd-GENERIC.gz', self.download_local_mi_dir() + "netbsd")
-            download_if_missing_2(self.dist_url() + 'installation/ofwboot.xcf', self.download_local_mi_dir() + "ofwboot.xcf")
+            def download_and_link(relpath, linkpath):
+                urlbase = self.dist_url()
+                dirbase = self.download_local_arch_dir()
+                download_if_missing_3(urlbase, dirbase, relpath)
+                dest = os.path.join(*([self.download_local_arch_dir()] + linkpath))
+                try:
+                    os.unlink(dest)
+                except:
+                    pass
+                os.link(os.path.join(*([dirbase] + relpath)), dest)
+            download_and_link(["binary", "kernel", "netbsd-INSTALL.gz"], ['netbsd.macppc'])
+            download_and_link(["binary", "kernel", "netbsd-GENERIC.gz"], ['netbsd'])
+            download_and_link(["installation", "ofwboot.xcf"], ["ofwboot.xcf"])
         if self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         if self.arch() in ['i386', 'amd64']:
