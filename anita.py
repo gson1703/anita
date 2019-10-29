@@ -691,8 +691,8 @@ class Version(object):
                     raise RuntimeError('install set %s does not exist with extension %s' %
                                        (set['filename'], ' nor '.join(set_exts)))
 
-    # Create an install ISO image to install from
-    def make_iso(self):
+    # Create the install sets ISO image
+    def make_install_sets_iso(self):
         self.download()
         args = [self.install_sets_iso_path()]
         if self.arch() == 'macppc':
@@ -700,11 +700,13 @@ class Version(object):
         args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         spawn(makefs[0], makefs + args)
         self.tempfiles.append(self.install_sets_iso_path())
-        if self.arch() == 'macppc':
-            args = [self.runtime_boot_iso_path()]
-            args.extend(["-hfs", "-part", "-l", "-J", "-N", "-m", "netbsd.macppc"])
-            args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
-            spawn(makefs[0], makefs + args)
+
+    # Create the runtime boot ISO image (macppc only)
+    def make_runtime_boot_iso(self):
+        args = [self.runtime_boot_iso_path()]
+        args.extend(["-hfs", "-part", "-l", "-J", "-N", "-m", "netbsd.macppc"])
+        args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
+        spawn(makefs[0], makefs + args)
 
     # Get the architecture name.  This is a hardcoded default for use
     # by the obsolete subclasses; the "URL" class overrides it.
@@ -812,7 +814,7 @@ class ISO(Version):
                 self.m_iso_basename)
     def default_workdir(self):
          return url2dir(self.m_iso_url)
-    def make_iso(self):
+    def make_install_sets_iso(self):
         self.download()
     def download(self):
         if self.m_iso_path is None:
@@ -1260,7 +1262,10 @@ class Anita(object):
         if self.get_arch_prop('image_name'):
             self.dist.download()
         else:
-            self.dist.make_iso()
+            self.dist.make_install_sets_iso()
+        # Build the runtime boot ISO if needed
+        if self.dist.arch == 'macppc':
+            self.dist.make_runtime_boot_iso()
         if self.vmm != 'noemu':
             print("Creating hard disk image...", end=' ')
             sys.stdout.flush()
