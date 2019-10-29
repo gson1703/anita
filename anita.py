@@ -717,7 +717,7 @@ class Version(object):
             ln_f(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-INSTALL.gz'),
                  os.path.join(self.download_local_mi_dir(), 'netbsd'))
             args.extend(["-hfs", "-part", "-l", "-J", "-N"])
-        args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
+        args.extend([os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         spawn(makefs[0], makefs + args)
         self.tempfiles.append(self.install_sets_iso_path())
 
@@ -729,7 +729,7 @@ class Version(object):
         ln_f(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-GENERIC.gz'),
              os.path.join(self.download_local_mi_dir(), 'netbsd'))
         args.extend(["-hfs", "-part", "-l", "-J", "-N"])
-        args.extend([ os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
+        args.extend([os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         spawn(makefs[0], makefs + args)
 
     # Get the architecture name.  This is a hardcoded default for use
