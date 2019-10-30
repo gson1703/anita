@@ -723,14 +723,18 @@ class Version(object):
 
     # Create the runtime boot ISO image (macppc only)
     def make_runtime_boot_iso(self):
-        args = [self.runtime_boot_iso_path()]
+        # The ISO will contain only the bootloader and the GENERIC kernel
+        d = os.path.join(self.workdir, 'runtime_boot_iso')
+        mkdir_p(d)
         ln_f(os.path.join(self.download_local_arch_dir(), 'installation/ofwboot.xcf'),
-             os.path.join(self.download_local_mi_dir(), 'ofwboot.xcf'))
+             os.path.join(d, 'ofwboot.xcf'))
         ln_f(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-GENERIC.gz'),
-             os.path.join(self.download_local_mi_dir(), 'netbsd'))
+             os.path.join(d, 'netbsd'))
+        args = [self.runtime_boot_iso_path()]
         args.extend(["-hfs", "-part", "-l", "-J", "-N"])
-        args.extend([os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
+        args.extend([d])
         spawn(makefs[0], makefs + args)
+        # Do not add the ISO to self.tempfiles as it's needed after the install.
 
     # Get the architecture name.  This is a hardcoded default for use
     # by the obsolete subclasses; the "URL" class overrides it.
@@ -1288,7 +1292,7 @@ class Anita(object):
         else:
             self.dist.make_install_sets_iso()
         # Build the runtime boot ISO if needed
-        if self.dist.arch == 'macppc':
+        if self.dist.arch() == 'macppc':
             self.dist.make_runtime_boot_iso()
         if self.vmm != 'noemu':
             print("Creating hard disk image...", end=' ')
