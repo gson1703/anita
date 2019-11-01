@@ -201,6 +201,10 @@ def ln_f(src, dst):
     rm_f(dst)
     os.link(src, dst)
 
+# Uncompress a file
+def gunzip(src, dst):
+    open(dst, "wb").write(gzip.open(src).read())
+
 # Quote a shell command.  This is intended to make it possible to
 # manually cut and paste logged command into a shell.
 
@@ -652,12 +656,10 @@ class Version(object):
 
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
+        if self.arch() in ['hpcmips', 'landisk', 'macppc']:
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         if self.arch() == 'macppc':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-INSTALL.gz"])
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "ofwboot.xcf"])
-        if self.arch() in ['hpcmips', 'landisk']:
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         if self.arch() in ['i386', 'amd64']:
             # This is used when netbooting only
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "misc", "pxeboot_ia32.bin"])
@@ -708,10 +710,8 @@ class Version(object):
         self.download()
         args = [self.install_sets_iso_path()]
         if self.arch() == 'macppc':
-            ln_f(os.path.join(self.download_local_arch_dir(), 'installation/ofwboot.xcf'),
-                 os.path.join(self.download_local_mi_dir(), 'ofwboot.xcf'))
-            ln_f(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-INSTALL.gz'),
-                 os.path.join(self.download_local_mi_dir(), 'netbsd'))
+            gunzip(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-INSTALL.gz'),
+                   os.path.join(self.download_local_mi_dir(), 'netbsd-INSTALL'))
             args.extend(["-hfs", "-part", "-l", "-J", "-N"])
         args.extend([os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
         spawn(makefs[0], makefs + args)
@@ -719,13 +719,11 @@ class Version(object):
 
     # Create the runtime boot ISO image (macppc only)
     def make_runtime_boot_iso(self):
-        # The ISO will contain only the bootloader and the GENERIC kernel
+        # The ISO will contain only the GENERIC kernel
         d = os.path.join(self.workdir, 'runtime_boot_iso')
         mkdir_p(d)
-        ln_f(os.path.join(self.download_local_arch_dir(), 'installation/ofwboot.xcf'),
-             os.path.join(d, 'ofwboot.xcf'))
-        ln_f(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-GENERIC.gz'),
-             os.path.join(d, 'netbsd'))
+        gunzip(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-GENERIC.gz'),
+               os.path.join(d, 'netbsd-GENERIC'))
         args = [self.runtime_boot_iso_path()]
         args.extend(["-hfs", "-part", "-l", "-J", "-N"])
         args.extend([d])
@@ -1040,7 +1038,7 @@ class Anita(object):
         elif self.dist.arch() == 'hpcmips':
             return ["-emobilepro880"]
         elif self.dist.arch() == 'macppc':
-            return ["-M", "mac99", "-prom-env", "auto-boot?=false"]
+            return ["-M", "mac99"]
         elif self.dist.arch() == 'evbarm-earmv7hf':
             return [
                 '-M', 'vexpress-a15',
@@ -1375,6 +1373,7 @@ class Anita(object):
                     # The drive must have index 2.
                     cd_path = self.dist.install_sets_iso_path()
                     vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path, [('index', '2')])
+                    vmm_args += [ "-prom-env", "boot-device=cd:,netbsd-INSTALL" ]
                 else:
                     # Boot from a downloaded boot CD w/o sets
                     cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
@@ -1439,10 +1438,6 @@ class Anita(object):
                 sets_cd_args, sets_cd_device = self.qemu_add_cdrom(self.dist.install_sets_iso_path())
                 vmm_args += sets_cd_args
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
-
-            if self.dist.arch() == 'macppc':
-                child.expect('Welcome to OpenBIOS')
-                child.send("boot cd:,ofwboot.xcf\r\n")
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
             child.expect('(PXE boot)|(BIOS Boot)')
@@ -2140,16 +2135,14 @@ class Anita(object):
             # a CD instead
             args, dummy = self.qemu_add_cdrom(self.dist.runtime_boot_iso_path(), [('index', '2')])
             vmm_args += args
-            vmm_args += ["-prom-env", "auto-boot?=false"]
+            vmm_args += ["-prom-env", "boot-device=cd:,netbsd-GENERIC"]
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
             if self.dist.arch() == 'macppc':
-                child.expect('Welcome to OpenBIOS')
-                child.send("boot cd:,ofwboot.xcf\r\n")
-                child.expect('root device:')
+                child.expect('root device.*:')
                 for c in "wd0a\r\n":
-                  child.send(c)
+                    child.send(c)
                 child.expect("dump device \(default wd0b\):")
                 child.send("\r\n")
                 child.expect("file system \(default generic\):")
