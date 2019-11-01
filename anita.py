@@ -653,13 +653,9 @@ class Version(object):
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
         if self.arch() == 'macppc':
-            def download(relpath, linkpath):
-                urlbase = self.dist_url()
-                dirbase = self.download_local_arch_dir()
-                download_if_missing_3(urlbase, dirbase, relpath)
-            download(["binary", "kernel", "netbsd-INSTALL.gz"], ['netbsd.macppc'])
-            download(["binary", "kernel", "netbsd-GENERIC.gz"], ['netbsd'])
-            download(["installation", "ofwboot.xcf"], ["ofwboot.xcf"])
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-INSTALL.gz"])
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "ofwboot.xcf"])
         if self.arch() in ['hpcmips', 'landisk']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
         if self.arch() in ['i386', 'amd64']:
