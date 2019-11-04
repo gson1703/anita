@@ -30,7 +30,7 @@ try:
 except ImportError:
     from pipes import quote as sh_quote
 
-__version__='2.0a'
+__version__='2.0b'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -138,22 +138,7 @@ arch_props = {
 set_exts = ['.tgz', '.tar.xz']
 
 # External command to build ISO images.  This must be mkisofs to
-# build the macppc ISO images.  If it weren't for macppc, NetBSD could
-# use its native makefs as ["/usr/sbin/makefs", "-t", "cd9660", "-o",
-# "rockridge"].
-
-if os.uname()[0] == 'NetBSD' or os.uname()[0] == 'FreeBSD':
-    makefs = ["mkisofs", "-r", "-o"]
-elif os.uname()[0] == 'Darwin':
-    makefs = ["hdiutil", "makehybrid", "-iso", "-o"]
-else:
-    # Linux distributions differ.  Ubuntu has genisoimage
-    # and mkisofs (as an alias of genisoimage); CentOS has
-    # mkisofs only.  Debian 7 has genisoimage only.
-    if os.path.isfile('/usr/bin/genisoimage'):
-       makefs = ["genisoimage", "-r", "-o"]
-    else:
-       makefs = ["mkisofs", "-r", "-o"]
+# build the macppc ISO images.
 
 # Several different kinds of ISO images are used for different purposes:
 #
@@ -705,16 +690,39 @@ class Version(object):
                     raise RuntimeError('install set %s does not exist with extension %s' %
                                        (set['filename'], ' nor '.join(set_exts)))
 
+    # Create an ISO image
+    def make_iso(self, image, dir):
+        mkisofs = ["mkisofs", "-r", "-o"]
+
+        if self.arch() == 'macppc':
+            # Need to use mkisofs for HFS support
+            makefs = ["mkisofs", "-r", "-hfs", "-part", "-l", "-J", "-N", "-o"]
+        else:
+            # Prefer native tools
+            if os.uname()[0] == 'NetBSD':
+                makefs = ["/usr/sbin/makefs", "-t", "cd9660", "-o", "rockridge"]
+            elif os.uname()[0] == 'FreeBSD':
+                makefs = mkisofs
+            elif os.uname()[0] == 'Darwin':
+                makefs = ["hdiutil", "makehybrid", "-iso", "-o"]
+            else:
+                # Linux distributions differ.  Ubuntu has genisoimage
+                # and mkisofs (as an alias of genisoimage); CentOS has
+                # mkisofs only.  Debian 7 has genisoimage only.
+                if os.path.isfile('/usr/bin/genisoimage'):
+                    makefs = ["genisoimage", "-r", "-o"]
+                else:
+                    makefs = mkisofs
+        spawn(makefs[0], makefs + [image, dir])
+
     # Create the install sets ISO image
     def make_install_sets_iso(self):
         self.download()
-        args = [self.install_sets_iso_path()]
         if self.arch() == 'macppc':
             gunzip(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-INSTALL.gz'),
                    os.path.join(self.download_local_mi_dir(), 'netbsd-INSTALL'))
-            args.extend(["-hfs", "-part", "-l", "-J", "-N"])
-        args.extend([os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch())))])
-        spawn(makefs[0], makefs + args)
+        self.make_iso(self.install_sets_iso_path(),
+            os.path.dirname(os.path.realpath(os.path.join(self.download_local_mi_dir(), self.arch()))))
         self.tempfiles.append(self.install_sets_iso_path())
 
     # Create the runtime boot ISO image (macppc only)
@@ -724,10 +732,7 @@ class Version(object):
         mkdir_p(d)
         gunzip(os.path.join(self.download_local_arch_dir(), 'binary/kernel/netbsd-GENERIC.gz'),
                os.path.join(d, 'netbsd-GENERIC'))
-        args = [self.runtime_boot_iso_path()]
-        args.extend(["-hfs", "-part", "-l", "-J", "-N"])
-        args.extend([d])
-        spawn(makefs[0], makefs + args)
+        self.make_iso(self.runtime_boot_iso_path(), d)
         # Do not add the ISO to self.tempfiles as it's needed after the install.
 
     # Get the architecture name.  This is a hardcoded default for use
