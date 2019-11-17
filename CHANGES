@@ -1,3 +1,5 @@
+Add support for the newly added rescue set.
+
 Deal with the sysinst changes of 2019-11-16.
 
 Add support for macppc targets, based on a patch from Joerg

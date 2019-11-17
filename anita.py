@@ -494,6 +494,7 @@ class Version(object):
       [ 'games', 'Games', 0, 0 ],
       [ 'man', '(Online )?Manual [Pp]ages', 0, 0 ],
       [ 'misc', 'Miscellaneous', 1, 0 ],
+      [ 'resuce', 'Recovery [Tt]ools', 1, 1 ],
       [ 'tests', 'Test programs', 1, 1 ],
       [ 'text', 'Text [Pp]rocessing [Tt]ools', 0, 0 ],
       [ '_x11', 'X11 sets', 0, [
