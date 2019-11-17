@@ -1769,8 +1769,10 @@ class Anita(object):
                          r"(a: Progress bar)|" +
                          # Group 2
                          r"(Select medium|Install from)|" +
-                         # Group 3-4
-                         r"(([cx]): Continue)|" +
+                         # Group 3
+                         r"(Enter the CDROM device)|" +
+                         # Group 4
+                         r"(unused-group-should-not-match)|" +
                          # Group 5
                          r"(Hit enter to continue)|" +
                          # Group 6
@@ -1841,13 +1843,13 @@ class Anita(object):
                 # (Install from)
                 choose_install_media()
             elif child.match.group(3):
-                # CDROM device selection
+                # "(Enter the CDROM device)"
                 if sets_cd_device != 'cd0a':
                     child.send(b"a\n" + sets_cd_device.encode('ASCII') + b"\n")
-                # (([cx]): Continue)
                 # In 3.0.1, you type "c" to continue, whereas in -current,
                 # you type "x".  Handle both cases.
-                child.send(child.match.group(4) + b"\n")
+                child.expect(r"([cx]): Continue")
+                child.send(child.match.group(1) + b"\n")
             elif child.match.group(5):
                 # (Hit enter to continue)
                 if seen_essential_things >= 2:
