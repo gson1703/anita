@@ -1,4 +1,4 @@
-.Dd Oct 25, 2019
+.Dd Nov 17, 2019
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -57,10 +57,10 @@ containing boot floppies and sets:
 The evbarm ports do not currently support installation
 using sysinst, so anita will instead install them by decompressing
 the pre-built disk image from the release onto the beginning
-of the virtual disk.  The image will be automatically resized
-at boot time, and after that, the evbarm ports work the
-same as the other ports.  To download an evbarm image,
-use a command like the following:
+of the virtual disk.  The target will then be rebooted to trigger
+the automatic image resizing that happens on first boot,
+and after that, the evbarm ports work the same as the other ports.
+To download an evbarm image, use a command like the following:
 .Pp
 .Dl anita install http://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/evbarm-aarch64/
 .Pp
@@ -398,7 +398,7 @@ For more details, please see
 .Xr tests 7
 .Sh BUGS IN ANITA
 .Nm
-supports only a limit number of NetBSD ports; there may
+supports only a limited number of NetBSD ports.  There may
 be other ports with working emulators, and support should
 be added for those. Patches are welcome.
 .Pp
@@ -425,6 +425,9 @@ NetBSD/vax is unable to run the ATF tests as of source date
 .Pp
 Timing is off by a factor of two when running on NetBSD hosts;
 see PR 43997.
+.Pp
+Versions of NetBSD/macppc that have ofwoea_machdep.c 1.44 fail
+to install.
 .Pp
 For current reports of other NetBSD bugs found using anita, see
 .Pp
