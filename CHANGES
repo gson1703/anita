@@ -1,3 +1,5 @@
+- 2.1 released -
+
 Add support for the newly added rescue set.
 
 Deal with the sysinst changes of 2019-11-16.
