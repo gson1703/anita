@@ -1,3 +1,7 @@
+
+Make NetBSD-current/macppc boot by passing "-prom-env qemu_boot_hack=y"
+to qemu-system-ppc.  From Joerg Sonnenberger.
+
 - 2.1 released -
 
 Add support for the newly added rescue set.

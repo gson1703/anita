@@ -30,7 +30,7 @@ try:
 except ImportError:
     from pipes import quote as sh_quote
 
-__version__='2.1'
+__version__='2.1a'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -1044,7 +1044,7 @@ class Anita(object):
         elif self.dist.arch() == 'hpcmips':
             return ["-emobilepro880"]
         elif self.dist.arch() == 'macppc':
-            return ["-M", "mac99"]
+            return ["-M", "mac99", "-prom-env", "qemu_boot_hack=y"]
         elif self.dist.arch() == 'evbarm-earmv7hf':
             return [
                 '-M', 'vexpress-a15',
