@@ -30,7 +30,7 @@ try:
 except ImportError:
     from pipes import quote as sh_quote
 
-__version__='2.1a'
+__version__='2.1b'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -1200,7 +1200,11 @@ class Anita(object):
             ('format', 'raw'),
             ('media', 'cdrom'),
             ('readonly', 'on'),
-        ] + extra_attrs
+        ]
+        if self.dist.arch() in ('macppc', 'sparc64'):
+            assert(self.n_cdrom == 0)
+            drive_attrs += [('index', '2')]
+        drive_attrs += extra_attrs
         argv = ["-drive", qemu_format_attrs(drive_attrs)]
         dev = 'cd%da' % self.n_cdrom
         self.n_cdrom += 1
@@ -1378,7 +1382,7 @@ class Anita(object):
                     # Boot from the CD we just built, with the sets.
                     # The drive must have index 2.
                     cd_path = self.dist.install_sets_iso_path()
-                    vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path, [('index', '2')])
+                    vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path)
                     vmm_args += [ "-prom-env", "boot-device=cd:,netbsd-INSTALL" ]
                 else:
                     # Boot from a downloaded boot CD w/o sets

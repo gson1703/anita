@@ -1,3 +1,5 @@
+Fix sparc64 CD install broken in 2.1, by adding an index=2 argument to
+the virtual CD drive.
 
 Make NetBSD-current/macppc boot by passing "-prom-env qemu_boot_hack=y"
 to qemu-system-ppc.  From Joerg Sonnenberger.
