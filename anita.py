@@ -30,7 +30,13 @@ try:
 except ImportError:
     from pipes import quote as sh_quote
 
-__version__='2.1b'
+# Disable buffering of all printed messages (Python 3 only)
+
+if sys.version_info[0] >= 3:
+    import functools
+    print = functools.partial(print, flush = True)
+
+__version__='2.1c'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
