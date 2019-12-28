@@ -268,6 +268,23 @@ def make_dense_image(fn, size):
         size = size - chunk
     f.close()
 
+# As above but with holes
+
+def make_sparse_image(fn, size):
+    f = open(fn, "wb")
+    f.seek(size - 1)
+    f.write(b"\000")
+    f.close()
+
+def make_image(fn, size, format):
+    if format == 'dense':
+        f = make_dense_image
+    elif format == 'sparse':
+        f = make_sparse_image
+    else:
+        raise RuntimeError("unknown image format %s" % format)
+    f(fn, size)
+
 # Parse a size with optional k/M/G/T suffix and return an integer
 
 def parse_size(size):
@@ -942,7 +959,7 @@ class Anita(object):
     def __init__(self, dist, workdir = None, vmm = None, vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
         structured_log = None, structured_log_file = None, no_install = False,
-        tests = 'atf', dtb = '', xen_type = 'pv'):
+        tests = 'atf', dtb = '', xen_type = 'pv', image_format = 'dense'):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -1024,6 +1041,7 @@ class Anita(object):
 
         self.dtb = dtb
         self.xen_type = xen_type
+        self.image_format = image_format
 
         self.is_logged_in = False
         self.halted = False
@@ -1307,7 +1325,8 @@ class Anita(object):
         if self.vmm != 'noemu':
             print("Creating hard disk image...", end=' ')
             sys.stdout.flush()
-            make_dense_image(self.wd0_path(), parse_size(self.disk_size))
+            make_image(self.wd0_path(), parse_size(self.disk_size),
+                       self.image_format)
             print("done.")
             sys.stdout.flush()
         if self.get_arch_prop('image_name'):

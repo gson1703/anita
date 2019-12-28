@@ -37,7 +37,7 @@ runtest() {
     rm -f $workdir/wd0.img
     (
         set -x -e
-        $python ./anita --structured-log $mode "$@"
+        $python ./anita --structured-log $mode --image-format sparse "$@"
         rm -f $workdir/wd0.img
         echo "passed"
     ) >$logfile 2>&1 &

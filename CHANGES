@@ -1,3 +1,7 @@
+New command line option --image-format for selecting the guest disk
+image format.  Supported values are "dense" (the default) and
+"sparse".
+
 Reset the install timeout whenever a new set extraction or other
 command is started by sysinst, and reduce the timeout to 1 hour.
 This allows hangs in the install phase to be detected more quickly.

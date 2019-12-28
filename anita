@@ -66,6 +66,8 @@ def main(argv = None):
                       type="string", metavar="PATH_TO_DTB", default=dtb_path)
     parser.add_option("--xen-type", help='select the Xen guest type: \"pv\" or \"hvm\"',
                       type="string", metavar="TYPE", default='pv')
+    parser.add_option("--image-format", help='select the guest disk image format: \"dense\" or \"sparse\"',
+                      type="string", metavar='FORMAT', default='dense')
 
     (options, args) = parser.parse_args()
 
@@ -104,7 +106,8 @@ def main(argv = None):
         no_install = options.no_install,
         tests = options.tests,
         dtb = options.dtb,
-        xen_type = options.xen_type
+        xen_type = options.xen_type,
+        image_format = options.image_format
         )
 
     def maybe_run_command(a):
