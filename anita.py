@@ -2168,6 +2168,9 @@ class Anita(object):
         if install:
             self.install()
 
+        # Start counting CD drives from 0 again after the install
+        self.n_cdrom = 0
+
         if self.dist.arch() in ['hpcmips', 'landisk']:
             vmm_args += [os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                  "binary", "kernel", "netbsd-GENERIC.gz"))]
