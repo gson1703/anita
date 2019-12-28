@@ -43,8 +43,8 @@ def main(argv = None):
                       help="install the distribution SETS (e.g., base,games)",
                       metavar="SETS")
     parser.add_option("--test-timeout",
-                      help="allow TIMEOUT seconds for the ATF tests", metavar="TIMEOUT",
-                      type="int", default=86400)
+                      help="allow TIMEOUT seconds for each ATF test", metavar="TIMEOUT",
+                      type="int", default=7200)
     parser.add_option("--run-timeout",
                       help="allow TIMEOUT seconds for command run using the --run option", metavar="TIMEOUT",
                       type="int", default=3600)

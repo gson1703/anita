@@ -1767,7 +1767,7 @@ class Anita(object):
         loop = 0
         while True:
             loop = loop + 1
-            if loop == 40:
+            if loop == 100:
                 raise RuntimeError("loop detected")
             child.expect(
                          # Group 1
@@ -1834,7 +1834,9 @@ class Anita(object):
                          # Group 35 (formerly 25)
                          r"(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
                          # Group 36
-                         r"(Do you want to re-edit the disklabel partitions)",
+                         r"(Do you want to re-edit the disklabel partitions)|" +
+                         # Group 37 (to reset timeout while set extraction is making progress)
+                         r'(Command: )',
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -2070,6 +2072,8 @@ class Anita(object):
                 child.send("\n")
             elif child.match.group(36):
                 raise RuntimeError('setting up partitions did not work first time')
+            elif child.match.group(37):
+                pass
             else:
                 raise AssertionError
 
@@ -2200,7 +2204,7 @@ class Anita(object):
         self.child.interact()
 
     # Run the NetBSD ATF test suite on the guest
-    def run_tests(self, timeout = 86400):
+    def run_tests(self, timeout = 7200):
         mkdir_p(self.workdir)
         results_by_net = (self.vmm == 'noemu')
 
@@ -2306,7 +2310,7 @@ class Anita(object):
             "ps -glaxww | sed 's/^/ps-post-test /'; " +
             "vmstat -s; " +
             "sh -c 'exit `cat /tmp/tests/test.status`'",
-            timeout)
+            timeout, [r'\d test cases'])
 
         # Halt the VM before reading the scratch disk, to
         # ensure that it has been flushed.  This matters
@@ -2340,9 +2344,9 @@ class Anita(object):
         self.is_logged_in = True
 
     # Run a shell command and return its exit status
-    def shell_cmd(self, cmd, timeout = -1):
+    def shell_cmd(self, cmd, timeout = -1, keepalive_patterns = None):
         self.login()
-        return shell_cmd(self.child, cmd, timeout)
+        return shell_cmd(self.child, cmd, timeout, keepalive_patterns)
 
     # Halt the VM
     def halt(self):
@@ -2394,9 +2398,22 @@ def quote_prompt(s):
     midpoint = len(s) // 2
     return "".join("'%s'" % part for part in (s[0:midpoint], s[midpoint:]))
 
+# Expect any of "patterns" with timeout "timeout", resetting the timeout
+# whenever one of "keepalive_patterns" occurs.
+
+def expect_with_keepalive(child, patterns, timeout, keepalive_patterns):
+    if keepalive_patterns is None:
+        keepalive_patterns = []
+    all_patterns = patterns + keepalive_patterns
+    while True:
+        i = child.expect(all_patterns, timeout)
+        if i < len(patterns):
+            break
+    return i
+
 # Calling this directly is deprecated, use Anita.shell_cmd()
 
-def shell_cmd(child, cmd, timeout = -1):
+def shell_cmd(child, cmd, timeout = -1, keepalive_patterns = None):
     child.send("exec /bin/sh\n")
     child.expect("# ")
     prompt = gen_shell_prompt()
@@ -2406,7 +2423,7 @@ def shell_cmd(child, cmd, timeout = -1):
     child.send(cmd + "\n")
     # Catch EOF to log the signalstatus, to help debug qemu crashes
     try:
-        child.expect(prompt_re, timeout)
+        expect_with_keepalive(child, [prompt_re], timeout, keepalive_patterns)
     except pexpect.EOF:
         print("pexpect reported EOF - VMM exited unexpectedly")
         child.close()

@@ -1,5 +1,15 @@
-Fix sparc64 CD install broken in 2.1, by adding an index=2 argument to
-the virtual CD drive.
+Reset the install timeout whenever a new set extraction or other
+command is started by sysinst, and reduce the timeout to 1 hour.
+This allows hangs in the install phase to be detected more quickly.
+
+Reset the test timeout whenever a new test program is started by ATF,
+and reduce the default timeout to 2 hours.  If you are passing a
+non-default test timeout with the --test-timeout option, it can also
+be reduced.  This allows hangs duruing test runs to be detected more
+quickly.
+
+Fix the sparc64 CD install which was broken in 2.1, by adding an
+index=2 attribute to the virtual CD drive.
 
 Make NetBSD-current/macppc boot by passing "-prom-env qemu_boot_hack=y"
 to qemu-system-ppc.  From Joerg Sonnenberger.
