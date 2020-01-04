@@ -9,7 +9,7 @@ This allows hangs in the install phase to be detected more quickly.
 Reset the test timeout whenever a new test program is started by ATF,
 and reduce the default timeout to 2 hours.  If you are passing a
 non-default test timeout with the --test-timeout option, it can also
-be reduced.  This allows hangs duruing test runs to be detected more
+be reduced.  This allows hangs during test runs to be detected more
 quickly.
 
 Fix the sparc64 CD install which was broken in 2.1, by adding an
