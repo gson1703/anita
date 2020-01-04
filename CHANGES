@@ -1,3 +1,6 @@
+Clean up some b'' quoting around strings that appeared in the log
+output under python3.
+
 New command line option --image-format for selecting the guest disk
 image format.  Supported values are "dense" (the default) and
 "sparse".

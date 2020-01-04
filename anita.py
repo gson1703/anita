@@ -1156,16 +1156,15 @@ class Anita(object):
         try:
             # Identify the exact qemu version in pkgsrc if applicable,
             # ignoring exceptions that may be raised if qemu was not
-            # installed from pkgsrc
-            qemu_path = subprocess.check_output(['which', self.qemu]).rstrip()
-            print("qemu path:", qemu_path)
-            sys.stdout.flush()
-            qemu_package = subprocess.check_output(['pkg_info', '-Fe', qemu_path]).rstrip()
-            print("qemu package:", qemu_package)
-            sys.stdout.flush()
-            glib2_package = subprocess.check_output(['pkg_info', '-e', 'glib2']).rstrip()
-            print("glib2 package:", glib2_package)
-            sys.stdout.flush()
+            # installed from pkgsrc.
+            def f(label, command):
+                output = subprocess.check_output(command).rstrip()
+                print(label + ":", output.decode('ASCII', 'ignore'))
+                sys.stdout.flush()
+                return output
+            qemu_path = f('qemu path', ['which', self.qemu])
+            f('qemu package', ['pkg_info', '-Fe', qemu_path])
+            f('glib2 package', ['pkg_info', '-e', 'glib2'])
         except:
             pass
         qemu_args = [
