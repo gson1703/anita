@@ -1,4 +1,4 @@
-Clean up some b'' quoting around strings that appeared in the log
+Clean up some b'' quoting that appeared around strings in the log
 output under python3.
 
 New command line option --image-format for selecting the guest disk
