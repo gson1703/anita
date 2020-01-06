@@ -1,3 +1,6 @@
+
+- 2.2 released -
+
 Clean up some b'' quoting that appeared around strings in the log
 output under python3.
 
