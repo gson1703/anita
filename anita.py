@@ -38,6 +38,8 @@ if sys.version_info[0] >= 3:
 
 __version__='2.2'
 
+arm_virt = False
+
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
 # by number, not by the recommended method of getting them by URL.
@@ -88,6 +90,7 @@ arch_props = {
         },
         'image_name': 'armv7.img.gz',
         'kernel_name': ['netbsd-VEXPRESS_A15.ub.gz', 'netbsd-GENERIC.ub.gz'],
+        'reverse_virtio_drives': True, # XXX
         'scratch_disk': None,
         'memory_size': '128M',
         'disk_size': '2G',
@@ -592,8 +595,6 @@ class Version(object):
             "installation/cdrom")
     def boot_from_default(self):
         return arch_props[self.arch()].get('boot_from_default')
-    def scratch_disk(self):
-        return arch_props[self.arch()].get('scratch_disk')
 
     def xen_kernel(self):
         arch = self.arch()
@@ -1070,12 +1071,20 @@ class Anita(object):
         elif self.dist.arch() == 'macppc':
             return ["-M", "mac99", "-prom-env", "qemu_boot_hack=y"]
         elif self.dist.arch() == 'evbarm-earmv7hf':
-            return [
-                '-M', 'vexpress-a15',
-                '-kernel', self.actual_kernel(),
-                '-append', 'root=ld0a',
-                '-dtb', self.dtb
-            ]
+            if arm_virt:
+                return [
+                    '-M', 'virt',
+                    '-cpu', 'cortex-a15',
+                    '-kernel', self.actual_kernel(),
+                    '-append', 'root=ld4a',
+                ]
+            else:
+                return [
+                    '-M', 'vexpress-a15',
+                    '-kernel', self.actual_kernel(),
+                    '-append', 'root=ld0a',
+                    '-dtb', self.dtb
+                ]
         elif self.dist.arch() == 'evbarm-aarch64':
             return [
                 '-M', 'virt',
@@ -1207,7 +1216,11 @@ class Anita(object):
         ]
         dev_args = []
         if self.dist.arch() == 'evbarm-earmv7hf':
-            drive_attrs += [('if', 'sd')]
+            if arm_virt:
+                drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
+                dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
+            else:
+                drive_attrs += [('if', 'sd')]
         elif self.dist.arch() == 'evbarm-aarch64':
             drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
             dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
@@ -2245,8 +2258,10 @@ class Anita(object):
         scratch_disk_path = os.path.join(self.workdir, "tests-results.img")
         if vmm_is_xen(self.vmm):
             scratch_disk = 'xbd1d'
+        elif self.arch == 'evbarm-earmv7hf' and arm_virt:
+            scratch_disk = 'ld5a'
         else:
-            scratch_disk = self.dist.scratch_disk()
+            scratch_disk = self.get_arch_prop('scratch_disk')
 
         scratch_disk_args = []
         if scratch_disk:
