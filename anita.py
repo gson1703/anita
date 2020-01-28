@@ -90,7 +90,6 @@ arch_props = {
         },
         'image_name': 'armv7.img.gz',
         'kernel_name': ['netbsd-VEXPRESS_A15.ub.gz', 'netbsd-GENERIC.ub.gz'],
-        'reverse_virtio_drives': True, # XXX
         'scratch_disk': None,
         'memory_size': '128M',
         'disk_size': '2G',
@@ -101,7 +100,6 @@ arch_props = {
         },
         'image_name': 'arm64.img.gz',
         'kernel_name': ['netbsd-GENERIC64.img.gz'],
-        'reverse_virtio_drives': True,
         'scratch_disk': 'ld5c',
         'memory_size': '512M',
         'disk_size': '2G',
@@ -1063,36 +1061,38 @@ class Anita(object):
 
     def arch_vmm_args(self):
         if self.dist.arch() == 'pmax':
-            return ["-e3max"]
+            a = ["-e3max"]
         elif self.dist.arch() == 'landisk':
-            return ["-Elandisk"]
+            a = ["-Elandisk"]
         elif self.dist.arch() == 'hpcmips':
-            return ["-emobilepro880"]
+            a = ["-emobilepro880"]
         elif self.dist.arch() == 'macppc':
-            return ["-M", "mac99", "-prom-env", "qemu_boot_hack=y"]
+            a = ["-M", "mac99", "-prom-env", "qemu_boot_hack=y"]
         elif self.dist.arch() == 'evbarm-earmv7hf':
             if arm_virt:
-                return [
+                a = [
                     '-M', 'virt',
                     '-cpu', 'cortex-a15',
-                    '-kernel', self.actual_kernel(),
                     '-append', 'root=ld4a',
                 ]
             else:
-                return [
+                a = [
                     '-M', 'vexpress-a15',
-                    '-kernel', self.actual_kernel(),
                     '-append', 'root=ld0a',
                     '-dtb', self.dtb
                 ]
         elif self.dist.arch() == 'evbarm-aarch64':
-            return [
+            a = [
                 '-M', 'virt',
                 '-cpu', 'cortex-a57',
-                '-kernel', self.actual_kernel(),
                 '-append', 'root=ld4a'
             ]
-        return []
+        else:
+            a = []
+        # When booting an image, we need to pass a kernel
+        if self.get_arch_prop('image_name'):
+            a += ['-kernel', self.actual_kernel()]
+        return a
 
     def slog(self, message):
         slog_info(self.structured_log_f, message)
@@ -1182,11 +1182,13 @@ class Anita(object):
                 "-nographic"
             ] + vmm_args + self.extra_vmm_args + self.arch_vmm_args()
         # Deal with virtio device ordering issues
-        if self.dist.arch() in arch_props and arch_props[self.dist.arch()].get('reverse_virtio_drives'):
+        arch = self.dist.arch()
+        if arch == 'evbarm-aarch64' or arch == 'evbarm-earmv7hf' and arm_virt:
             print("reversing virtio devices")
             reverse_virtio_drives(qemu_args)
         else:
-            print("not reversing virtio devices")
+            #print("not reversing virtio devices")
+            pass
         # Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, qemu_args)
         self.configure_child(child)
