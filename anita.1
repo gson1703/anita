@@ -1,4 +1,4 @@
-.Dd Nov 17, 2019
+.Dd Feb 2, 2020
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -19,6 +19,8 @@
 .Op Fl -structured-log-file Ar file
 .Op Fl -tests Ar kyua | atf
 .Op Fl -dtb Ar dtb
+.Op Fl -image_format Ar format
+.Op Fl -machine Ar machine
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -32,8 +34,7 @@ installed system, and running the NetBSD test suite.
 .Pp
 The NetBSD ports currently supported as targets (i.e., as the
 system to install and run under emulation) are i386, amd64,
-sparc, sparc64, evbarm-earmv7hf (using the qemu vexpress-a15
-system emulation), evbarm-aarch64, pmax, hpcmips, vax, hppa,
+sparc, sparc64, evbarm-earmv7hf, evbarm-aarch64, pmax, hpcmips, vax, hppa,
 and macppc.
 The host (the system running
 .Nm )
@@ -321,7 +322,12 @@ option, in seconds.  The default is 3600 seconds (one hour).
 .It Fl -test-timeout Ar timeout
 Set a timeout for the tests run in the
 .Cm test
-mode, in seconds.  The default is 86400 seconds (24 hours).
+mode, in seconds.  Starting with
+.Nm
+version 2.2, the timer is reset at the beginning of each ATF test
+program, so the timeout only needs to be greater than the duration
+of the longest test program rather than the full test run.
+The default is 3600 seconds (one hour).
 .It Fl -persist
 Store any changes to the contents of the system disk persistently,
 such that they may affect future
@@ -372,14 +378,34 @@ unstructured logging.
 The test framework to use for running tests. The default is
 .Cm atf .
 .It Fl -dtb
-The location of the Device Tree Blob file, needed when
-emulating ARM systems.  The default is the location of the file
+The location of the Device Tree Blob file, needed with the
+.Ar evbarm-earmv7hf
+port when using the default
+.Ar vexpress-a15
+machine type.  The default is the location of the file
 .Pa vexpress-v2p-ca15-tc1.dtb
 in the
 .Pa dtb-arm-vexpress
 package assuming both it and
 .Nm
 itself have been installed via pkgsrc.
+.It Fl -image-format Ar format
+The disk image format to use for the virtual machine's system disk.
+Supported values are
+.Ar dense ,
+a raw disk image that has been fully preallocated by writing zeros,
+and
+.Ar sparse ,
+a raw disk image with holes (when supported by the underlying file
+system).  The default is
+.Ar dense .
+.It Fl -machine Ar machine
+The machine type to emulate.  This may be used with the
+evbarm-earmv7hf port to select the
+.Ar virt
+qemu machine type instead of the default of
+.Ar vexpress-a15 .
+Not consistently supported for other ports and VMMs.
 .El
 .Sh DEBUGGING NETBSD USING ANITA
 .Nm

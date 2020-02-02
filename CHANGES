@@ -1,3 +1,6 @@
+Support the "virt" machine type for evbarm-eamv7hf as an alternative
+to the default of vexpress-a15.  To enable, specify use the command
+line option --machine virt.
 
 - 2.2 released -
 
