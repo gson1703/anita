@@ -2260,7 +2260,7 @@ class Anita(object):
         scratch_disk_path = os.path.join(self.workdir, "tests-results.img")
         if vmm_is_xen(self.vmm):
             scratch_disk = 'xbd1d'
-        elif self.arch == 'evbarm-earmv7hf' and arm_virt:
+        elif self.dist.arch() == 'evbarm-earmv7hf' and arm_virt:
             scratch_disk = 'ld5a'
         else:
             scratch_disk = self.get_arch_prop('scratch_disk')
