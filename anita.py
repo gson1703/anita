@@ -38,8 +38,6 @@ if sys.version_info[0] >= 3:
 
 __version__='2.2'
 
-arm_virt = False
-
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
 # by number, not by the recommended method of getting them by URL.
@@ -87,6 +85,7 @@ arch_props = {
     'evbarm-earmv7hf': {
         'qemu': {
             'executable': 'qemu-system-arm',
+            'machine_default': 'vexpress-a15',
         },
         'image_name': 'armv7.img.gz',
         'kernel_name': ['netbsd-VEXPRESS_A15.ub.gz', 'netbsd-GENERIC.ub.gz'],
@@ -97,6 +96,7 @@ arch_props = {
     'evbarm-aarch64': {
         'qemu': {
             'executable': 'qemu-system-aarch64',
+            'machine_default': 'virt',
         },
         'image_name': 'arm64.img.gz',
         'kernel_name': ['netbsd-GENERIC64.img.gz'],
@@ -134,6 +134,7 @@ arch_props = {
     'macppc': {
         'qemu': {
             'executable': 'qemu-system-ppc',
+            'machine_default': 'mac99',
         },
         'memory_size': '256M',
         'scratch_disk': None,
@@ -958,7 +959,8 @@ class Anita(object):
     def __init__(self, dist, workdir = None, vmm = None, vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
         structured_log = None, structured_log_file = None, no_install = False,
-        tests = 'atf', dtb = '', xen_type = 'pv', image_format = 'dense'):
+        tests = 'atf', dtb = '', xen_type = 'pv', image_format = 'dense',
+        machine = None):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -1041,6 +1043,7 @@ class Anita(object):
         self.dtb = dtb
         self.xen_type = xen_type
         self.image_format = image_format
+        self.machine = machine or self.get_arch_vmm_prop('machine_default')
 
         self.is_logged_in = False
         self.halted = False
@@ -1067,23 +1070,22 @@ class Anita(object):
         elif self.dist.arch() == 'hpcmips':
             a = ["-emobilepro880"]
         elif self.dist.arch() == 'macppc':
-            a = ["-M", "mac99", "-prom-env", "qemu_boot_hack=y"]
+            a = ["-M", self.machine, "-prom-env", "qemu_boot_hack=y"]
         elif self.dist.arch() == 'evbarm-earmv7hf':
-            if arm_virt:
-                a = [
-                    '-M', 'virt',
+            a = ['-M', self.machine],
+            if self.machine == 'virt':
+                a += [
                     '-cpu', 'cortex-a15',
                     '-append', 'root=ld4a',
                 ]
             else:
-                a = [
-                    '-M', 'vexpress-a15',
+                a += [
                     '-append', 'root=ld0a',
                     '-dtb', self.dtb
                 ]
         elif self.dist.arch() == 'evbarm-aarch64':
             a = [
-                '-M', 'virt',
+                '-M', self.machine,
                 '-cpu', 'cortex-a57',
                 '-append', 'root=ld4a'
             ]
@@ -1183,7 +1185,8 @@ class Anita(object):
             ] + vmm_args + self.extra_vmm_args + self.arch_vmm_args()
         # Deal with virtio device ordering issues
         arch = self.dist.arch()
-        if arch == 'evbarm-aarch64' or arch == 'evbarm-earmv7hf' and arm_virt:
+        if arch == 'evbarm-aarch64' or \
+           arch == 'evbarm-earmv7hf' and self.machine == 'virt':
             print("reversing virtio devices")
             reverse_virtio_drives(qemu_args)
         else:
@@ -1218,7 +1221,7 @@ class Anita(object):
         ]
         dev_args = []
         if self.dist.arch() == 'evbarm-earmv7hf':
-            if arm_virt:
+            if self.machine == 'virt':
                 drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
                 dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
             else:
@@ -1325,6 +1328,12 @@ class Anita(object):
 
     def get_arch_prop(self, key):
         return arch_props[self.dist.arch()].get(key)
+
+    def get_arch_vmm_prop(self, key):
+        vmm_props = arch_props[self.dist.arch()].get(self.vmm)
+        if vmm_props is None:
+            return None
+        return vmm_props.get(key)
 
     def _install(self):
         # Download or build the install ISO
@@ -2260,7 +2269,7 @@ class Anita(object):
         scratch_disk_path = os.path.join(self.workdir, "tests-results.img")
         if vmm_is_xen(self.vmm):
             scratch_disk = 'xbd1d'
-        elif self.dist.arch() == 'evbarm-earmv7hf' and arm_virt:
+        elif self.dist.arch() == 'evbarm-earmv7hf' and self.machine == 'virt':
             scratch_disk = 'ld5a'
         else:
             scratch_disk = self.get_arch_prop('scratch_disk')

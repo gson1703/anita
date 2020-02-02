@@ -68,6 +68,9 @@ def main(argv = None):
                       type="string", metavar="TYPE", default='pv')
     parser.add_option("--image-format", help='select the guest disk image format: \"dense\" or \"sparse\"',
                       type="string", metavar='FORMAT', default='dense')
+    parser.add_option("--machine", help='select the emulated machine type, e.g., " \
+                      "\"vexpress-a15\" or \"virt\"',
+                      type="string", metavar='MACHINE')
 
     (options, args) = parser.parse_args()
 
@@ -107,7 +110,8 @@ def main(argv = None):
         tests = options.tests,
         dtb = options.dtb,
         xen_type = options.xen_type,
-        image_format = options.image_format
+        image_format = options.image_format,
+        machine = options.machine
         )
 
     def maybe_run_command(a):
