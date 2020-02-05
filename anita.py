@@ -36,7 +36,7 @@ if sys.version_info[0] >= 3:
     import functools
     print = functools.partial(print, flush = True)
 
-__version__='2.2'
+__version__='2.2a'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -1072,7 +1072,7 @@ class Anita(object):
         elif self.dist.arch() == 'macppc':
             a = ["-M", self.machine, "-prom-env", "qemu_boot_hack=y"]
         elif self.dist.arch() == 'evbarm-earmv7hf':
-            a = ['-M', self.machine],
+            a = ['-M', self.machine]
             if self.machine == 'virt':
                 a += [
                     '-cpu', 'cortex-a15',
@@ -2270,7 +2270,7 @@ class Anita(object):
         if vmm_is_xen(self.vmm):
             scratch_disk = 'xbd1d'
         elif self.dist.arch() == 'evbarm-earmv7hf' and self.machine == 'virt':
-            scratch_disk = 'ld5a'
+            scratch_disk = 'ld5c'
         else:
             scratch_disk = self.get_arch_prop('scratch_disk')
 
