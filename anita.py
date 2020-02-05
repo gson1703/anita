@@ -36,7 +36,7 @@ if sys.version_info[0] >= 3:
     import functools
     print = functools.partial(print, flush = True)
 
-__version__='2.2a'
+__version__='2.2b'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -202,7 +202,16 @@ def gunzip(src, dst):
 # manually cut and paste logged command into a shell.
 
 def quote_shell_command(v):
-    return " \\\n    ".join([sh_quote(w) for w in v])
+    s = ''
+    for i in range(len(v)):
+        if i > 0:
+            # Try to keep options and their arguments on the same line
+            if v[i - 1].startswith('-') and not v[i].startswith('-'):
+                s += ' '
+            else:
+                s += ' \\\n    '
+        s += sh_quote(v[i])
+    return s
 
 # Run a shell command safely and with error checking
 
