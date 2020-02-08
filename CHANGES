@@ -2,8 +2,8 @@ When logging shell commands, avoid line breaks between options and
 their arguments.
 
 Support the "virt" machine type for evbarm-eamv7hf as an alternative
-to the default of vexpress-a15.  To enable, specify use the command
-line option --machine virt.
+to the default of vexpress-a15.  To enable, use the command line
+option --machine virt.
 
 - 2.2 released -
 
