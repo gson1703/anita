@@ -1084,7 +1084,6 @@ class Anita(object):
             a = ['-M', self.machine]
             if self.machine == 'virt':
                 a += [
-                    '-cpu', 'cortex-a15',
                     '-append', 'root=ld4a',
                 ]
             else:
