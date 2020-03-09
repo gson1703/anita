@@ -67,7 +67,7 @@ arch_props = {
             'executable': 'qemu-system-x86_64',
         },
         'scratch_disk': 'wd1d',
-        'memory_size': '128M',
+        'memory_size': '256M',
     },
     'sparc': {
         'qemu': {

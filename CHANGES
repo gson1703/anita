@@ -1,3 +1,7 @@
+Increase default memory size for amd64 from 128M to 256M, as the
+installer no longer runs reliably in 128M without running out of
+memory.
+
 Keep logging the console output for a few seconds after shutdown to
 catch the autoconf detach messages and possible panics on detach.
 
