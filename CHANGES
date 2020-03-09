@@ -1,3 +1,6 @@
+Keep logging the console output for a few seconds after shutdown to
+catch the autoconf detach messages and possible panics on detach.
+
 When logging shell commands, avoid line breaks between options and
 their arguments.
 

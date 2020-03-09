@@ -2156,7 +2156,10 @@ class Anita(object):
             else:
                 # group 4 or 5: halted
                 break
-
+        # Keep logging for a few seconds more so that we gather
+        # the autoconf detach messages or a possible panic on
+        # detach.
+        gather_input(child, 5)
         child.close()
         # Make sure all refs go away
         child = None
