@@ -71,6 +71,8 @@ def main(argv = None):
     parser.add_option("--machine", help='select the emulated machine type, e.g., " \
                       "\"vexpress-a15\" or \"virt\"',
                       type="string", metavar='MACHINE')
+    parser.add_option("--network-config", help='load network configuration from FILE',
+                      type="string", metavar='FILE')
 
     (options, args) = parser.parse_args()
 
@@ -111,7 +113,8 @@ def main(argv = None):
         dtb = options.dtb,
         xen_type = options.xen_type,
         image_format = options.image_format,
-        machine = options.machine
+        machine = options.machine,
+        network_config = options.network_config
         )
 
     def maybe_run_command(a):

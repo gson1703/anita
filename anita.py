@@ -969,7 +969,7 @@ class Anita(object):
         disk_size = None, memory_size = None, persist = False, boot_from = None,
         structured_log = None, structured_log_file = None, no_install = False,
         tests = 'atf', dtb = '', xen_type = 'pv', image_format = 'dense',
-        machine = None):
+        machine = None, network_config = None):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -1060,6 +1060,15 @@ class Anita(object):
 
         # Number of CD-ROM devices
         self.n_cdrom = 0
+
+        # Read netboot configuration file, if any
+        self.net_config = {}
+        if network_config:
+            f = open(network_config, "r")
+            for line in f:
+                l, r = line.rstrip().split("=")
+                self.net_config[l] = r
+            f.close()
 
     # Get the name of the actual uncompressed kernel file, out of
     # potentially multiple alternative kernels.  Used with images.
@@ -1758,15 +1767,21 @@ class Anita(object):
             def choose_dns_server():
                 child.expect("([a-z]): other")
                 child.send(child.match.group(1) + b"\n")
-                child.send("10.0.1.1\n")
+                child.send((self.net_config['dnsserveraddr'] or "10.0.1.1") + "\n")
 
             expect_any(child,
-                r"Your host name", "anita-test\n",
-                r"Your DNS domain", "netbsd.org\n",
-                r"Your IPv4 (number)|(address)", "10.169.0.2\n",
-                r"IPv4 Netmask", "255.255.255.0\n",
-                r"IPv4 gateway", "10.169.0.1\n",
-                r"IPv4 name server", "10.0.1.1\n",
+                r"Your host name",
+                       "anita-test\n",
+                r"Your DNS domain",
+                       "netbsd.org\n",
+                r"Your IPv4 (number)|(address)",
+                       (self.net_config['slave_addr'] or "10.169.0.2") + "\n",
+                r"IPv4 Netmask",
+                       (self.net_config['netmask'] or "255.255.255.0") + "\n",
+                r"IPv4 gateway",
+                       (self.net_config['gateway_addr'] or "10.0.1.1") + "\n",
+                r"IPv4 name server",
+                       (self.net_config['dnsserveraddr'] or "10.0.1.1") + "\n",
                 r"Perform IPv6 autoconfiguration", choose_no,
                 r"Select (IPv6 )?DNS server", choose_dns_server,
                 r"Are they OK", choose_yes)
@@ -1988,7 +2003,8 @@ class Anita(object):
                 # (The following are the http site)
                 # \027 is control-w, which clears the field
                 child.send("a\n") # IP address
-                child.send("\02710.169.0.1\n")
+                child.send("\027" +
+                       (self.net_config['serveraddr'] or "10.169.0.1") + "\n")
                 child.send("b\n\027\n") # Directory = empty string
                 if not self.network_configured:
                     child.send("j\n") # Configure network
@@ -2346,7 +2362,8 @@ class Anita(object):
             save_test_results_cmd = (
                 "{ cd /tmp && " +
                 "tar cf tests-results.img tests && " +
-                "(echo blksize 8192; echo put tests-results.img) | tftp 10.169.0.1; }; "
+                "(echo blksize 8192; echo put tests-results.img) | tftp %s; }; " % \
+                (self.net_config['serveraddr'] or "10.169.0.1")
             )
         elif scratch_disk:
             save_test_results_cmd = (
