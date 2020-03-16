@@ -1,4 +1,4 @@
-Increase default memory size for amd64 from 128M to 256M, as the
+Increase default memory size for amd64 from 128M to 192M, as the
 installer no longer runs reliably in 128M without running out of
 memory.
 
