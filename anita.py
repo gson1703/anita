@@ -1775,7 +1775,7 @@ class Anita(object):
                 r"Your DNS domain",
                        "netbsd.org\n",
                 r"Your IPv4 (number)|(address)",
-                       (self.net_config['slave_addr'] or "10.169.0.2") + "\n",
+                       (self.net_config['client_addr'] or "10.169.0.2") + "\n",
                 r"IPv4 Netmask",
                        (self.net_config['netmask'] or "255.255.255.0") + "\n",
                 r"IPv4 gateway",
