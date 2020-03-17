@@ -1767,7 +1767,7 @@ class Anita(object):
             def choose_dns_server():
                 child.expect("([a-z]): other")
                 child.send(child.match.group(1) + b"\n")
-                child.send((self.net_config['dnsserveraddr'] or "10.0.1.1") + "\n")
+                child.send((self.net_config.get('dnsserveraddr') or "10.0.1.1") + "\n")
 
             expect_any(child,
                 r"Your host name",
@@ -1775,13 +1775,13 @@ class Anita(object):
                 r"Your DNS domain",
                        "netbsd.org\n",
                 r"Your IPv4 (number)|(address)",
-                       (self.net_config['client_addr'] or "10.169.0.2") + "\n",
+                       (self.net_config.get('client_addr') or "10.169.0.2") + "\n",
                 r"IPv4 Netmask",
-                       (self.net_config['netmask'] or "255.255.255.0") + "\n",
+                       (self.net_config.get('netmask') or "255.255.255.0") + "\n",
                 r"IPv4 gateway",
-                       (self.net_config['gateway_addr'] or "10.0.1.1") + "\n",
+                       (self.net_config.get('gateway_addr') or "10.0.1.1") + "\n",
                 r"IPv4 name server",
-                       (self.net_config['dnsserveraddr'] or "10.0.1.1") + "\n",
+                       (self.net_config.get('dnsserveraddr') or "10.0.1.1") + "\n",
                 r"Perform IPv6 autoconfiguration", choose_no,
                 r"Select (IPv6 )?DNS server", choose_dns_server,
                 r"Are they OK", choose_yes)
@@ -2004,7 +2004,7 @@ class Anita(object):
                 # \027 is control-w, which clears the field
                 child.send("a\n") # IP address
                 child.send("\027" +
-                       (self.net_config['serveraddr'] or "10.169.0.1") + "\n")
+                       (self.net_config.get('serveraddr') or "10.169.0.1") + "\n")
                 child.send("b\n\027\n") # Directory = empty string
                 if not self.network_configured:
                     child.send("j\n") # Configure network
@@ -2363,7 +2363,7 @@ class Anita(object):
                 "{ cd /tmp && " +
                 "tar cf tests-results.img tests && " +
                 "(echo blksize 8192; echo put tests-results.img) | tftp %s; }; " % \
-                (self.net_config['serveraddr'] or "10.169.0.1")
+                (self.net_config.get('serveraddr') or "10.169.0.1")
             )
         elif scratch_disk:
             save_test_results_cmd = (
