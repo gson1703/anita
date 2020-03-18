@@ -1779,7 +1779,7 @@ class Anita(object):
                 r"IPv4 Netmask",
                        (self.net_config.get('netmask') or "255.255.255.0") + "\n",
                 r"IPv4 gateway",
-                       (self.net_config.get('gateway_addr') or "10.0.1.1") + "\n",
+                       (self.net_config.get('gateway_addr') or "10.169.0.1") + "\n",
                 r"IPv4 name server",
                        (self.net_config.get('dnsserveraddr') or "10.0.1.1") + "\n",
                 r"Perform IPv6 autoconfiguration", choose_no,
