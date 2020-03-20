@@ -1,3 +1,6 @@
+
+- 2.3 released -
+
 Deal with curses sometimes optimizing away the final "s" in "Debug
 symbols", causing the debug set to not be installed.
 
