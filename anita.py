@@ -553,7 +553,9 @@ class Version(object):
           ['sharesrc', 'Share sourc(es)?', 0, 1],
           ['gnusrc', 'GNU sources', 0, 1],
           ['xsrc', 'X11 sources', 0, 1],
-          ['debug', '(debug sets)|(Debug symbols)', 0, 1],
+          # The final "s" in "Debug symbols" can also fall victim
+          # to curses optimization.
+          ['debug', '(debug sets)|(Debug symbols?)', 0, 1],
           ['xdebug', '(debug X11 sets)|(X11 debug symbols)', 0, 1],
       ]]
     ])

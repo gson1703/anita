@@ -1,3 +1,6 @@
+Deal with curses sometimes optimizing away the final "s" in "Debug
+symbols", causing the debug set to not be installed.
+
 Increase default memory size for amd64 from 128M to 192M, as the
 installer no longer runs reliably in 128M without exhausting memory.
 
