@@ -2179,6 +2179,7 @@ class Anita(object):
         # detach.
         gather_input(child, 5)
         child.close()
+        self.slog('done')
         # Make sure all refs go away
         child = None
         self.child = None
