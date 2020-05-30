@@ -2264,7 +2264,22 @@ class Anita(object):
     # Like start_boot(), but wait for a login prompt.
     def boot(self, vmm_args = None):
         self.start_boot(vmm_args)
-        self.child.expect("login:")
+        while True:
+            r = self.child.expect([r'\033\[c', r'\033\[5n', r'login:'])
+            if r == 0:
+                # The guest is trying to identify the terminal.
+                # Dell servers do this.  Respond like an xterm.
+                self.child.send('\033[?1;2c')
+            elif r == 1:
+                # The guest sent "request terminal status".  HP servers
+                # do this.  Respond with "terminal ready".
+                self.child.send('\033[0n')
+            elif r == 2:
+                # Login prompt
+                break
+            else:
+                assert(0)
+
         # Can't close child here because we still need it if called from
         # interact()
         return self.child
