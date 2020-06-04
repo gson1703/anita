@@ -1106,7 +1106,6 @@ class Anita(object):
             a = [
                 '-M', self.machine,
                 '-cpu', 'cortex-a57',
-                '-append', 'root=ld4a'
             ]
         else:
             a = []
@@ -1180,6 +1179,14 @@ class Anita(object):
         self.configure_child(child)
         return child
 
+    # Return true iff the disk image partitioning scheme is GPT
+    def image_is_gpt(self):
+        f = open(self.wd0_path(), 'rb')
+        f.seek(512, 0)
+        data = f.read(8)
+        f.close()
+        return data == b'EFI PART'
+
     def start_qemu(self, vmm_args, snapshot_system_disk):
         # Log the qemu version to stdout
         subprocess.call([self.qemu, '--version'])
@@ -1211,6 +1218,15 @@ class Anita(object):
         else:
             #print("not reversing virtio devices")
             pass
+        # Deal with evbarm-aarch64 using a different root device with
+        # MBR vs GPT
+        if arch == 'evbarm-aarch64':
+            if self.image_is_gpt():
+                rootdev = 'NAME=netbsd-root'
+            else:
+                rootdev = 'ld4a'
+            qemu_args += [ '-append', 'root=' + rootdev ]
+
         # Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, qemu_args)
         self.configure_child(child)
