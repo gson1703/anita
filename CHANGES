@@ -1,3 +1,6 @@
+
+- 2.4 released -
+
 Deal with the root device name of evbarm-aarch64 changing as a result
 of the the switch to GPT at source date 2020.05.24.18.44.46.
 
