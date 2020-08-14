@@ -2495,10 +2495,6 @@ def login(child):
     # a hostname
     child.expect("# ")
 
-def net_setup(child):
-    child.send("dhclient ne2\n")
-    child.expect("bound to.*\n# ")
-
 # Generate a root shell prompt string that is less likely to appear in
 # the console output by accident than the default of "# ".  Must end with "# ".
 
