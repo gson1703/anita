@@ -2316,7 +2316,7 @@ class Anita(object):
         self.child.interact()
 
     # Run the NetBSD ATF test suite on the guest
-    def run_tests(self, timeout = 7200):
+    def run_tests(self, timeout = 3600):
         mkdir_p(self.workdir)
         results_by_net = (self.vmm == 'noemu')
 
@@ -2425,7 +2425,7 @@ class Anita(object):
             "ps -glaxww | sed 's/^/ps-post-test /'; " +
             "vmstat -s; " +
             "sh -c 'exit `cat /tmp/tests/test.status`'",
-            timeout, [r'\d test cases'])
+            timeout, [r'\d test cases', r'\[\d+\.\d+s\]'])
 
         # Halt the VM before reading the scratch disk, to
         # ensure that it has been flushed.  This matters

@@ -1,4 +1,7 @@
 
+Reset the test timeout once per test case, not just once per test
+program, and reduce the default timeout to 1 hour.
+
 - 2.4 released -
 
 Deal with the root device name of evbarm-aarch64 changing as a result
