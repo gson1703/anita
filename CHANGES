@@ -1,4 +1,6 @@
 
+- 2.5 released -
+
 Reset the test timeout once per test case, not just once per test
 program, and reduce the default timeout to 1 hour.
 
