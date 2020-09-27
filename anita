@@ -142,6 +142,9 @@ def main(argv = None):
         a.boot()
         status = maybe_run_command(a)
         a.console_interaction()
+    elif mode == 'interact-early':
+        a.start_boot()
+        a.console_interaction()
     elif mode == 'test':
         status = a.run_tests(timeout = options.test_timeout)
     elif mode == 'print-workdir':

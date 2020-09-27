@@ -1,4 +1,6 @@
 
+New mode "interact-early".
+
 - 2.5 released -
 
 Reset the test timeout once per test case, not just once per test
