@@ -32,11 +32,10 @@ you can fully automate the process of downloading a NetBSD
 distribution, installing it in a virtual machine, booting the
 installed system, and running the NetBSD test suite.
 .Pp
-The NetBSD ports currently supported as targets (i.e., as the
-system to install and run under emulation) are i386, amd64,
-sparc, sparc64, evbarm-earmv7hf, evbarm-aarch64, pmax, hpcmips, vax, hppa,
-and macppc.
-The host (the system running
+The NetBSD ports currently supported as targets (i.e., as the system
+to install and run under emulation) are i386, amd64, sparc, sparc64,
+evbarm-earmv7hf, evbarm-aarch64, pmax, hpcmips, vax, hppa, macppc, and
+alpha.  The host (the system running
 .Nm )
 can be any NetBSD port or even a different Unix-like system such
 as Linux, FreeBSD, or macOS.
@@ -49,9 +48,8 @@ To install NetBSD 8.1/i386 from the master NetBSD FTP site, enter
 .Pp
 .Dl anita install http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.1/i386/
 .Pp
-Installing NetBSD/sparc, sparc64, vax, or hppa works a bit differently
-from i386 and amd64: it uses an ISO image instead of a directory
-containing boot floppies and sets:
+Installing NetBSD/sparc, sparc64, vax, or hppa works a bit differently:
+they use an ISO image instead of a directory containing boot floppies and sets:
 .Pp
 .Dl anita install http://ftp.netbsd.org/pub/NetBSD/iso/8.1/NetBSD-8.1-sparc.iso
 .Pp
@@ -346,11 +344,19 @@ runs, instead of the default behavior where only the
 .Ar install
 mode can modify the disk contents and all other modes work with
 an ephemeral snapshot copy of the freshly installed system.
-.It Fl -boot-from Ar cdrom | floppy
-For architectures that support booting from either CD-ROM or floppies,
-specify which one to use.  The default is
+.It Fl -boot-from Ar cdrom | floppy | kernel
+For architectures that support booting from more than one type of
+media (typically CD-ROM or floppies), specify which one to use.
+Most architectures only support one type of boot media, and
+specifying an unsupported typ will cause the boot to fail.  Due
+to limitations of the emulators or their emulated firmware, some
+architectures cannot be booted from install media at all, and
+instead boot by passing a kernel directly to the emulator.
+The default is
 .Ar floppy
-for the i386 target, and
+for i386,
+.Ar kernel
+for alpha, and
 .Ar cdrom
 for all other targets.
 .It Fl -structured-log
