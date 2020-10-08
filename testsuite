@@ -43,14 +43,6 @@ runtest() {
     ) >$logfile 2>&1 &
 }
 
-# Test a local hpcmips build, if available
-# This does only an install because the boot stage doesn't work yet.
-hpcmips_build=$(pwd)/test-data/local-builds/2017.07.01.06.14.51/hpcmips/
-if test -d $hpcmips_build
-then
-    runtest install $hpcmips_build
-fi
-
 # Test a local ARM build, if available
 arm_build=$(pwd)/test-data/local-builds/2017.06.20.13.51.54/evbarm-earmv7hf/
 if test -d $arm_build
@@ -96,6 +88,22 @@ runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.0/amd64/
 #runtest boot http://ftp.netbsd.org/pub/NetBSD/iso/7.2/NetBSD-7.2-sparc.iso
 
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.0/macppc/
+
+runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/pmax/
+
+runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/hpcmips/
+
+runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/images/NetBSD-9.0-vax.iso
+
+# 9.0 fails with assertion "(val & LASI_IRQ_BITS) == val", needs -current?
+# runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/images/NetBSD-9.0-hppa.iso
+
+# 9.0 hangs at "CTB: PRINTERPORT", need -current
+#runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/alpha/
+
+# sparc64 is broken with PR 54310, PR 54810
+
+# evbarm-aarch64 lacks release images (there are dailies)
 
 # Test selecting and installing the games set
 url=http://ftp.netbsd.org/pub/NetBSD/NetBSD-archive/iso/5.0.2/sparccd-5.0.2.iso
