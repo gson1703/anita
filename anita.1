@@ -1,4 +1,4 @@
-.Dd Feb 2, 2020
+.Dd Oct 8, 2020
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -563,8 +563,7 @@ As of qemu 5.1.0, booting NetBSD/sparc does not work:
 .Pp
 When
 .Nm
-is run on a Linux host using a version of qemu that enables the
-"kvm" kernel-mode virtualization by default, and is used to
+is run on a Linux host using qemu-kvm 0.12.3, and is used to
 boot a version of NetBSD-current newer than 2009-11-04
 14:39:17, the emulated NetBSD system hangs during boot; see
 PR 44069 for details.  This issue can be worked
@@ -576,6 +575,8 @@ to disable kvm.  The alternative
 .Ar -no-kvm-irqchip
 performs better but doesn't quite work: the system installs and
 boots, but the test suite occasionally fails to complete; see PR 44176.
+.Pp
+As of 2020, the above issue has been fixed.
 .Pp
 .Sh BUGS IN PYTHON
 .Pp
