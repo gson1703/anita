@@ -157,20 +157,23 @@ Install NetBSD if not already installed.
 Install NetBSD if not already installed, then boot the
 installed system to the login prompt.
 .It Ar interact
-Install NetBSD if not already installed, boot it to the login
-prompt and then connect the serial console to the terminal for
+Install NetBSD if not already installed, boot it,
+and then connect the serial console to the terminal for
 interactive use.  The
 .Cm qemu
 escape character control-a is in effect; for example, you can use
 control-a x to exit, control-a c to enter the
 .Cm qemu
 monitor, or control-a b to send a break (useful for entering DDB).
-.It Ar interact-early
-Like
-.Ar interact ,
-but does not wait for a login prompt.  Instead, the interactive
-session starts immediately as the system starts booting, so that
-you can interact with the boot process itself.
+Interacting with the boot blocks and other aspects of the boot process
+is possible unless the
+.Fl -run
+option has been specified.  With
+.Fl -run ,
+the interactive session only starts once the
+.Fl -run
+command has been successfully run.
+.Pp
 .It Ar test
 Install NetBSD if not already installed, then boot it and
 run the test suite from

@@ -117,12 +117,6 @@ def main(argv = None):
         network_config = options.network_config
         )
 
-    def maybe_run_command(a):
-        if options.run:
-            return a.shell_cmd(options.run, options.run_timeout)
-        else:
-            return 0
-
     status = 0
     mode = args[0]
 
@@ -136,14 +130,19 @@ def main(argv = None):
         a.install()
     elif mode == 'boot':
         a.boot()
-        status = maybe_run_command(a)
+        if options.run:
+            status = a.shell_cmd(options.run, options.run_timeout)
         a.halt()
     elif mode == 'interact':
-        a.boot()
-        status = maybe_run_command(a)
-        a.console_interaction()
-    elif mode == 'interact-early':
-        a.start_boot()
+        if options.run:
+            a.boot()
+            status = a.shell_cmd(options.run, options.run_timeout)
+            if status != 0:
+                a.halt()
+                return status
+        else:
+            # Allow interaction with boot process
+            a.start_boot()
         a.console_interaction()
     elif mode == 'test':
         status = a.run_tests(timeout = options.test_timeout)

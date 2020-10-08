@@ -1,5 +1,6 @@
 
-New mode "interact-early".
+The "interact" mode now supports interaction with the boot process,
+except when the --run option is used.
 
 - 2.5 released -
 
