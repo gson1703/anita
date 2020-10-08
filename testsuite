@@ -92,7 +92,8 @@ runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.0/amd64/
 # being printed during set extraction with qemu 2.9.0.
 #runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.1.3/images/NetBSD-6.1.3-sparc.iso
 
-runtest boot http://ftp.netbsd.org/pub/NetBSD/iso/7.2/NetBSD-7.2-sparc.iso
+# disabled while qemu sparc emulation is broken
+#runtest boot http://ftp.netbsd.org/pub/NetBSD/iso/7.2/NetBSD-7.2-sparc.iso
 
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.0/macppc/
 

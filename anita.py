@@ -139,6 +139,12 @@ arch_props = {
         'memory_size': '256M',
         'scratch_disk': None,
     },
+    'alpha': {
+        'qemu': {
+            'executable': 'qemu-system-alpha',
+        },
+        'boot_from_default': 'kernel',
+    },
 }
 
 # Filename extensions used for the installation sets in different
@@ -196,7 +202,9 @@ def ln_f(src, dst):
 
 # Uncompress a file
 def gunzip(src, dst):
-    open(dst, "wb").write(gzip.open(src).read())
+    with gzip.open(src, 'rb') as srcf:
+        with open(dst, 'wb') as dstf:
+            shutil.copyfileobj(srcf, dstf)
 
 # Quote a shell command.  This is intended to make it possible to
 # manually cut and paste logged command into a shell.
@@ -676,10 +684,13 @@ class Version(object):
 
         if self.arch() == 'hpcmips':
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
-        if self.arch() in ['hpcmips', 'landisk', 'macppc']:
+        if self.arch() in ['hpcmips', 'landisk', 'macppc', 'alpha']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
-        if self.arch() == 'macppc':
+        if self.arch() in ['macppc']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-INSTALL.gz"])
+        if self.arch() in ['alpha']:
+            # Consistency would be nice
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "instkernel", "netbsd.gz"])
         if self.arch() in ['i386', 'amd64']:
             # This is used when netbooting only
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "misc", "pxeboot_ia32.bin"])
@@ -701,7 +712,7 @@ class Version(object):
                 ["installation", "cdrom", bootcd],
                 True)
 
-        # These are used with noemu only
+        # For noemu
         download_if_missing_3(self.dist_url(),
             self.download_local_arch_dir(),
             ["installation", "misc", "pxeboot_ia32.bin"],
@@ -1107,6 +1118,8 @@ class Anita(object):
                 '-M', self.machine,
                 '-cpu', 'cortex-a57',
             ]
+        elif self.dist.arch() == 'alpha':
+            a = [ '-append', 'root=/dev/wd0a' ]
         else:
             a = []
         # When booting an image, we need to pass a kernel
@@ -1408,12 +1421,8 @@ class Anita(object):
             if not os.path.exists(gzkernel_fn):
                 continue
             kernel_name_nogz = kernel_name[:-3]
-            gzkernel = open(gzkernel_fn, 'r')
-            kernel_fn = os.path.join(self.workdir, kernel_name_nogz)
-            kernel = open(kernel_fn, 'w')
-            subprocess.call('gunzip', stdin = gzkernel, stdout = kernel)
-            kernel.close()
-            gzkernel.close()
+            gunip(gzkernel_fn, kernel_fn)
+
         # Boot the system to let it resize the image.
         self.start_boot(install = False, snapshot_system_disk = False)
         # The system will resize the image and then reboot.
@@ -1461,7 +1470,7 @@ class Anita(object):
 
             # Set up VM arguments based on the chosen boot media
             if self.boot_from == 'cdrom':
-                if self.dist.arch() == 'macppc':
+                if self.dist.arch() in ['macppc']:
                     # Boot from the CD we just built, with the sets.
                     # The drive must have index 2.
                     cd_path = self.dist.install_sets_iso_path()
@@ -1514,9 +1523,7 @@ class Anita(object):
                 # Unzip the install kernel into the tftp directory
                 zipped_kernel = os.path.join(self.dist.download_local_arch_dir(),
                                              'binary/kernel/netbsd-INSTALL.gz')
-                with gzip.open(zipped_kernel, 'rb') as srcf:
-                    with open(inst_kernel, 'wb') as dstf:
-                        shutil.copyfileobj(srcf, dstf)
+                gunzip(zipped_kernel, inst_kernel)
 
                 vmm_args = ['-boot', 'n',
                             '-nic',
@@ -1524,6 +1531,17 @@ class Anita(object):
                             qemu_format_attrs([('id', 'um0'),
                                                ('tftp', tftpdir),
                                                ('bootfile', pxeboot_com_fn)])]
+            elif self.boot_from == 'kernel':
+                # alpha
+                cd_path = self.dist.install_sets_iso_path()
+                vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path)
+                inst_kernel = os.path.join(self.workdir, 'netbsd_install')
+                gunzip(os.path.join(self.dist.download_local_arch_dir(),
+                                    'installation', 'instkernel', 'netbsd.gz'),
+                       inst_kernel)
+                vmm_args += ['-kernel', inst_kernel]
+            else:
+                raise RuntimeError("unsupported boot-from value %s" % boot_from)
 
             # If we don't have a CD with sets already, use the next
             # available CD drive
@@ -2249,6 +2267,13 @@ class Anita(object):
             args, dummy = self.qemu_add_cdrom(self.dist.runtime_boot_iso_path(), [('index', '2')])
             vmm_args += args
             vmm_args += ["-prom-env", "boot-device=cd:,netbsd-GENERIC"]
+        if self.dist.arch() == 'alpha':
+            generic_kernel = os.path.join(self.workdir, 'netbsd_generic')
+            gunzip(os.path.join(self.dist.download_local_arch_dir(),
+                                "binary", "kernel", "netbsd-GENERIC.gz"),
+                   generic_kernel)
+            vmm_args += ['-kernel', generic_kernel]
+
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
