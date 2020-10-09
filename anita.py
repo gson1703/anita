@@ -1421,7 +1421,7 @@ class Anita(object):
             if not os.path.exists(gzkernel_fn):
                 continue
             kernel_name_nogz = kernel_name[:-3]
-            gunzip(gzkernel_fn, kernel_fn)
+            gunzip(gzkernel_fn, kernel_name_nogz)
 
         # Boot the system to let it resize the image.
         self.start_boot(install = False, snapshot_system_disk = False)
