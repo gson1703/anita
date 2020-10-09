@@ -21,7 +21,7 @@ do
     shift
 done
 
-set -x -e
+set -e
 
 logdir=log/testsuite.log.`date +%Y%m%d-%H%M%S`
 echo "logging to $logdir"
@@ -43,13 +43,31 @@ runtest() {
     ) >$logfile 2>&1 &
 }
 
-# Test a local ARM build, if available
-arm_build=$(pwd)/test-data/local-builds/2017.06.20.13.51.54/evbarm-earmv7hf/
-if test -d $arm_build
-then
-    # Does not work reliably in current qemu
-    : runtest boot $arm_build
-fi
+# Test local builds, if available
+
+for b in \
+    2017.06.20.13.51.54/evbarm-earmv7hf \
+    2020.09.25.19.24.56/evbarm-aarch64 \
+    2020.10.07.19.06.50/alpha
+do
+    local_build=$(pwd)/test-data/local-builds/$b/
+    if test -d $local_build
+    then
+        runtest boot $local_build
+    fi
+done
+
+# Ditto for ISOs
+
+for b in \
+     2020.10.07.19.06.50/images/NetBSD-9.99.73-hppa.iso
+do
+    local_iso=$(pwd)/test-data/local-builds/$b
+    if test -d $local_iso
+    then
+        runtest boot $local_iso
+    fi
+done
 
 # Test an installation with debug symbols and partial source
 # With 32M of memory, we hit the "stalled" problem (PR 47030)
@@ -158,6 +176,7 @@ do
         :
     else
         pass=false
+        echo "failed: $f"
    fi
 done
 
