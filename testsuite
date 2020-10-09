@@ -53,7 +53,13 @@ do
     local_build=$(pwd)/test-data/local-builds/$b/
     if test -d $local_build
     then
-        runtest boot $local_build
+        case $b in
+            *evbarm-earmv7hf*) dtb="--dtb /usr/pkg/share/dtb/arm/vexpress-v2p-ca15-tc1.dtb" ;;
+            *) dtb=""
+        esac
+        runtest boot $local_build $dtb
+    else
+        echo "no $local_build"
     fi
 done
 
@@ -63,9 +69,11 @@ for b in \
      2020.10.07.19.06.50/images/NetBSD-9.99.73-hppa.iso
 do
     local_iso=$(pwd)/test-data/local-builds/$b
-    if test -d $local_iso
+    if test -f $local_iso
     then
         runtest boot $local_iso
+    else
+        echo "no $local_iso"
     fi
 done
 
