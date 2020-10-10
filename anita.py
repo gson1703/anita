@@ -1407,13 +1407,14 @@ class Anita(object):
 
     def _install_from_image(self):
         image_name = self.get_arch_prop('image_name')
-        # Unzip the image
         gzimage_fn = os.path.join(self.workdir,
             'download', self.dist.arch(),
             'binary', 'gzimg', image_name)
+        print("Decompressing image...", end=' ')
         gzimage = open(gzimage_fn, 'r')
         subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc', shell = True, stdin = gzimage)
         gzimage.close()
+        print("done.")
         # Unzip the kernel, whatever its name
         for kernel_name in self.get_arch_prop('kernel_name'):
             gzkernel_fn = os.path.join(self.workdir,
