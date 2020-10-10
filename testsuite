@@ -6,6 +6,9 @@
 
 python=python2.7
 
+# Start background jobs this many seconds apart
+spacing=20
+
 while [ $# -gt 0 ]
 do
     case $1 in
@@ -29,6 +32,7 @@ echo "logging to $logdir"
 mkdir -p $logdir
 
 runtest() {
+    echo "$@"
     mode=$1
     shift
     workdir=`$python ./anita print-workdir "$@"`
@@ -41,6 +45,7 @@ runtest() {
         rm -f $workdir/wd0.img
         echo "passed"
     ) >$logfile 2>&1 &
+    sleep $spacing
 }
 
 # Test local builds, if available
@@ -174,6 +179,7 @@ rm -f $workdir/wd0.img
 echo "passed"
 ) >$logfile 2>&1 &
 
+echo "waiting for tests to finish"
 wait
 
 pass=true
@@ -187,5 +193,10 @@ do
         echo "failed: $f"
    fi
 done
+
+if $pass
+then
+echo "passed"
+fi
 
 $pass
