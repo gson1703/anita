@@ -1,6 +1,8 @@
 
-Prepare for upcoming sysinst changes to support interactive input
-of entropy.
+- 2.6 released -
+
+Support upcoming sysinst changes to support interactive input of
+entropy.
 
 Add support for NetBSD/alpha targets.
 
