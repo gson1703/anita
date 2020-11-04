@@ -1,4 +1,9 @@
 
+Prepare for upcoming sysinst changes to support interactive input
+of entropy.
+
+Add support for NetBSD/alpha targets.
+
 The "interact" mode now supports interaction with the boot process,
 except when the --run option is used.
 
