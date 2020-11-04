@@ -49,11 +49,11 @@ runtest() {
 }
 
 # Test local builds, if available
+# disabled: 2020.10.07.19.06.50/alpha
 
 for b in \
     2017.06.20.13.51.54/evbarm-earmv7hf \
-    2020.09.25.19.24.56/evbarm-aarch64 \
-    2020.10.07.19.06.50/alpha
+    2020.09.25.19.24.56/evbarm-aarch64
 do
     local_build=$(pwd)/test-data/local-builds/$b/
     if test -d $local_build
