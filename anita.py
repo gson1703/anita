@@ -956,6 +956,16 @@ class Logger(object):
     def __getattr__(self, name):
         return getattr(self.fd, name)
 
+# Logger veneer that hides the data sent, for things like passwords and entropy
+
+class CensorLogger(object):
+    def __init__(self, fd):
+        self.fd = fd
+    def write(self, data):
+        self.fd.write("*" * len(data))
+    def __getattr__(self, name):
+        return getattr(self.fd, name)
+
 # http://stackoverflow.com/questions/616645/how-do-i-duplicate-sys-stdout-to-a-log-file-in-python
 class multifile(object):
     def __init__(self, files):
@@ -1383,6 +1393,23 @@ class Anita(object):
             return None
         return vmm_props.get(key)
 
+    def provide_entropy(self, child):
+        child.expect("([a-z]): Manual input")
+        child.send(child.match.group(1) + b"\n")
+        child.expect("Terminate (the )?input with an empty line.")
+        nbytes = 32 # 256 bits
+        f = open("/dev/random", "rb")
+        data = f.read(nbytes)
+        f.close()
+        assert(len(data) == nbytes)
+        text = data.hex()
+        # Temporarily disable logging of data to keep the seed secret
+        old_logfile_send = child.logfile_send
+        child.logfile_send = CensorLogger(old_logfile_send)
+        child.send(text)
+        child.logfile_send = old_logfile_send
+        child.send('\n\n')
+
     def _install(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
@@ -1686,17 +1713,25 @@ class Anita(object):
             else:
                 raise AssertionError
 
-        # Depending on the number of disks attached, we get either
+        # We may or may not get an entropy prompt here.  Then,
+        # dpending on the number of disks attached, we get either
         # "found only one disk" followed by "Hit enter to continue",
         # or "On which disk do you want to install".
-        child.expect("(Hit enter to continue)|" +
-            "(On which disk do you want to install)")
-        if child.match.group(1):
-            child.send("\n")
-        elif child.match.group(2):
-            child.send("a\n")
-        else:
-            raise AssertionError
+
+        while True:
+            child.expect("(not enough entropy)|"
+                         "(Hit enter to continue)|"
+                         "(On which disk do you want to install)")
+            if child.match.group(1):
+                self.provide_entropy(child)
+            elif child.match.group(2):
+                child.send("\n")
+                break
+            elif child.match.group(3):
+                child.send("a\n")
+                break
+            else:
+                raise AssertionError
 
         def choose_no():
             child.expect("([a-z]): No")
@@ -1945,7 +1980,10 @@ class Anita(object):
                          # Group 36
                          r"(Do you want to re-edit the disklabel partitions)|" +
                          # Group 37 (to reset timeout while set extraction is making progress)
-                         r'(Command: )',
+                         r'(Command: )|' +
+                         # Group 38
+                         # Currently done earlier, but it won't hurt to recongize it here, too
+                         r'(not enough entropy)',
                          10800)
 
             if child.match.groups() == prevmatch:
@@ -2184,6 +2222,9 @@ class Anita(object):
                 raise RuntimeError('setting up partitions did not work first time')
             elif child.match.group(37):
                 pass
+            elif child.match.group(38):
+                # not enough entropy
+                self.provide_entropy(child)
             else:
                 raise AssertionError
 
