@@ -1,5 +1,5 @@
 
-Fix bug in 2.6 that cause  the provision of entropy to the installer
+Fix bug in 2.6 that caused the provision of entropy to the installer
 to fail when running under Python 2.
 
 - 2.6 released -
