@@ -987,6 +987,15 @@ class BytesWriter(object):
     def __getattr__(self, name):
         return getattr(self.fd, name)
 
+# Convert binary data to a hexadecimal string
+
+if sys.version_info[0] >= 3:
+    def bytes2hex(s):
+        return data.hex()
+else:
+    def bytes2hex(s):
+        return s.encode('hex')
+
 class Anita(object):
     def __init__(self, dist, workdir = None, vmm = None, vmm_args = None,
         disk_size = None, memory_size = None, persist = False, boot_from = None,
@@ -1402,7 +1411,7 @@ class Anita(object):
         data = f.read(nbytes)
         f.close()
         assert(len(data) == nbytes)
-        text = data.hex()
+        text = bytes2hex(data)
         # Temporarily disable logging of data to keep the seed secret
         old_logfile_send = child.logfile_send
         child.logfile_send = CensorLogger(old_logfile_send)
