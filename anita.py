@@ -1275,7 +1275,9 @@ class Anita(object):
                 devtype = 'xvd'
             dev = devtype + chr(ord('a') + devno)
         s = "disk=file:%s,%s,%s" % (path, dev, "rw"[writable])
-        if cdrom:
+        # Omit the ,cdrom part in the PV case because NetBSD/Xen ignores cdrom
+        # devices since xenbus_probe.c 1.51.
+        if cdrom and self.xen_type == 'hvm':
             s += ",cdrom"
         return s
 
