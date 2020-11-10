@@ -991,7 +991,7 @@ class BytesWriter(object):
 
 if sys.version_info[0] >= 3:
     def bytes2hex(s):
-        return data.hex()
+        return s.hex()
 else:
     def bytes2hex(s):
         return s.encode('hex')
