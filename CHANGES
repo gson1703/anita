@@ -1,4 +1,11 @@
 
+Fix bug in 2.7 that caused the provision of entropy to the installer
+to fail when running under Python 3.
+
+Omit ",cdrom" when passing a CD-ROM device to a Xen PV domain because
+doing so will cause NetBSD/Xen to ignore device since xenbus_probe.c
+1.51.
+
 - 2.7 released -
 
 Fix bug in 2.6 that caused the provision of entropy to the installer
