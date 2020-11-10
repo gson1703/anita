@@ -1407,7 +1407,9 @@ class Anita(object):
     def provide_entropy(self, child):
         child.expect("([a-z]): Manual input")
         child.send(child.match.group(1) + b"\n")
-        child.expect("Terminate (the )?input with an empty line.")
+        r = child.expect([r'Terminate (the )?input with an empty line.',
+                          r'single line'])
+        multiline = (r == 0)
         nbytes = 32 # 256 bits
         f = open("/dev/random", "rb")
         data = f.read(nbytes)
@@ -1420,6 +1422,8 @@ class Anita(object):
         child.send(text)
         child.logfile_send = old_logfile_send
         child.send('\n\n')
+        if multiline:
+            child.send('\n')
 
     def _install(self):
         # Download or build the install ISO
