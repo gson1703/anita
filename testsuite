@@ -69,9 +69,11 @@ do
 done
 
 # Ditto for ISOs
+# The sparc ISO is to test supplying entropy at install time
 
 for b in \
-     2020.10.07.19.06.50/images/NetBSD-9.99.73-hppa.iso
+    2020.10.07.19.06.50/images/NetBSD-9.99.73-hppa.iso \
+    2020.11.11.07.34.55/release/images/NetBSD-9.99.75-sparc.iso
 do
     local_iso=$(pwd)/test-data/local-builds/$b
     if test -f $local_iso
