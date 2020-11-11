@@ -1,3 +1,6 @@
+
+- 2.8 released -
+
 Preemeptively support sysinst requesting entropy as a single line.
 
 Fix bug in 2.7 that caused the provision of entropy to the installer
