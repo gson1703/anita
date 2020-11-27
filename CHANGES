@@ -1,4 +1,8 @@
 
+Support coypu's proposed sysinst entropy patch.
+
+Remove extra newline in reponse to entropy prompt.
+
 - 2.8 released -
 
 Preemeptively support sysinst requesting entropy as a single line.
