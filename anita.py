@@ -1429,7 +1429,7 @@ class Anita(object):
         child.logfile_send = CensorLogger(old_logfile_send)
         child.send(text)
         child.logfile_send = old_logfile_send
-        child.send('\n\n')
+        child.send('\n')
         if multiline:
             child.send('\n')
 
