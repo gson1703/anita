@@ -1405,11 +1405,19 @@ class Anita(object):
         return vmm_props.get(key)
 
     def provide_entropy(self, child):
-        child.expect("([a-z]): Manual input")
-        child.send(child.match.group(1) + b"\n")
-        r = child.expect([r'Terminate (the )?input with an empty line.',
-                          r'single line'])
-        multiline = (r == 0)
+        while True:
+            # It would be good to match the "1:" prompt to detect
+            # multi-line mode, but there's an ANSI control sequence
+            # between the "1" and the ":".
+            r = child.expect([r'([a-z]): Manual input',
+                              r'Terminate (the )?input with an empty line.|'
+                                  r'Supply input to be used as a random seed',
+                              r'single line'])
+            if r == 0:
+                child.send(child.match.group(1) + b"\n")
+            else:
+                break
+        multiline = (r == 1)
         nbytes = 32 # 256 bits
         f = open("/dev/random", "rb")
         data = f.read(nbytes)
@@ -1722,8 +1730,8 @@ class Anita(object):
             if child.match.group(1) or child.match.group(2):
                 child.send("\n")
             elif child.match.group(3):
-                child.expect("b: Yes")
-                child.send("b\n")
+                child.expect("([a-z]): Yes")
+                child.send(child.match.group(1) + b"\n")
                 break
             else:
                 raise AssertionError
@@ -1734,15 +1742,15 @@ class Anita(object):
         # or "On which disk do you want to install".
 
         while True:
-            child.expect("(not enough entropy)|"
-                         "(Hit enter to continue)|"
-                         "(On which disk do you want to install)")
-            if child.match.group(1):
+            r = child.expect([r'not enough entropy|if a small random seed',
+                              r'Hit enter to continue',
+                              r'On which disk do you want to install'])
+            if r == 0:
                 self.provide_entropy(child)
-            elif child.match.group(2):
+            elif r == 1:
                 child.send("\n")
                 break
-            elif child.match.group(3):
+            elif r == 2:
                 child.send("a\n")
                 break
             else:
