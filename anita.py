@@ -962,7 +962,7 @@ class CensorLogger(object):
     def __init__(self, fd):
         self.fd = fd
     def write(self, data):
-        self.fd.write("*" * len(data))
+        self.fd.write(b'*' * len(data))
     def __getattr__(self, name):
         return getattr(self.fd, name)
 
@@ -1426,9 +1426,15 @@ class Anita(object):
         text = bytes2hex(data)
         # Temporarily disable logging of data to keep the seed secret
         old_logfile_send = child.logfile_send
-        child.logfile_send = CensorLogger(old_logfile_send)
-        child.send(text)
-        child.logfile_send = old_logfile_send
+        old_logfile_read = child.logfile_read
+        try:
+            child.logfile_send = CensorLogger(old_logfile_send)
+            child.logfile_read = CensorLogger(old_logfile_read)
+            child.send(text)
+            gather_input(child, 1)
+        finally:
+            child.logfile_send = old_logfile_send
+            child.logfile_read = old_logfile_read
         child.send('\n')
         if multiline:
             child.send('\n')
