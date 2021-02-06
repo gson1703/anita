@@ -1,4 +1,8 @@
 
+Fix failure to log in after reboot when running "anita test" on a
+self-resizing image without running a separate "anita install" first.
+From Joerg Sonnenberger.
+
 Support coypu's proposed sysinst entropy patch.
 
 Remove extra newline in reponse to entropy prompt.

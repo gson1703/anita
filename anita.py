@@ -2580,6 +2580,7 @@ class Anita(object):
             # This is unexpected but mostly harmless
             print("timeout waiting for halt confirmation:", e)
         self.halted = True
+        self.is_logged_in = False
 
 # Calling this directly is deprecated, use Anita.login()
 
