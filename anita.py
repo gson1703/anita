@@ -2282,8 +2282,11 @@ class Anita(object):
                 break
         # Keep logging for a few seconds more so that we gather
         # the autoconf detach messages or a possible panic on
-        # detach.
-        gather_input(child, 5)
+        # detach.  If we get EOF during the wait, ignore it.
+        try:
+            gather_input(child, 5)
+        except pexpect.EOF:
+            pass
         child.close()
         self.slog('done')
         # Make sure all refs go away
