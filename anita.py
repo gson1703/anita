@@ -2280,17 +2280,21 @@ class Anita(object):
             else:
                 # group 4 or 5: halted
                 break
+        self.halted = True
+        self.is_logged_in = False
+        self.post_halt_cleanup()
+
+    def post_halt_cleanup(self):
         # Keep logging for a few seconds more so that we gather
         # the autoconf detach messages or a possible panic on
         # detach.  If we get EOF during the wait, ignore it.
         try:
-            gather_input(child, 5)
+            gather_input(self.child, 5)
         except pexpect.EOF:
             pass
-        child.close()
+        self.child.close()
         self.slog('done')
         # Make sure all refs go away
-        child = None
         self.child = None
         self.dist.cleanup()
 
@@ -2584,6 +2588,7 @@ class Anita(object):
             print("timeout waiting for halt confirmation:", e)
         self.halted = True
         self.is_logged_in = False
+        self.post_halt_cleanup()
 
 # Calling this directly is deprecated, use Anita.login()
 
