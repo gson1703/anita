@@ -1102,6 +1102,25 @@ class Anita(object):
                 self.net_config[l] = r
             f.close()
 
+        self.child = None
+        self.cleanup_child_func = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *stuff):
+        self.cleanup_child()
+        return False
+
+    def cleanup(self):
+        self.cleanup_child()
+
+    def cleanup_child(self):
+        if self.cleanup_child_func:
+            self.cleanup_child_func()
+            self.cleanup_child_func = None
+        self.child = None
+
     # Get the name of the actual uncompressed kernel file, out of
     # potentially multiple alternative kernels.  Used with images.
     def actual_kernel(self):
@@ -1262,6 +1281,7 @@ class Anita(object):
         # Start the actual qemu child process
         child = self.pexpect_spawn(self.qemu, qemu_args)
         self.configure_child(child)
+
         return child
 
     def xen_disk_arg(self, path, devno = 0, cdrom = False):
@@ -1373,15 +1393,11 @@ class Anita(object):
 
         child = self.pexpect_spawn(args[0], args[1:])
         self.configure_child(child)
-        # This is ugly; we reach into the child object and set an
-        # additional attribute.  The name of the attribute,
-        # "garbage_collector" below, is arbitrary, but must not
-        # conflict with any existing attribute of the child
-        # object.  Its purpose is only to hold a reference to the
-        # DomUKiller object, such that when the child object is
-        # destroyed, the destructor of the DomUKiller object
-        # is also invoked.
-        child.garbage_collector = DomUKiller(frontend, name)
+
+        def cleanup_domu():
+            spawn(self.frontend, [self.frontend, "destroy", self.name])
+        self.cleanup_child_func = cleanup_domu
+
         return child
 
     def start_noemu(self, vmm_args):
@@ -2292,11 +2308,10 @@ class Anita(object):
             gather_input(self.child, 5)
         except pexpect.EOF:
             pass
-        self.child.close()
         self.slog('done')
-        # Make sure all refs go away
-        self.child = None
+        self.child.close()
         self.dist.cleanup()
+        self.cleanup_child()
 
     # Install NetBSD if not installed already
 

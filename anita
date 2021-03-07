@@ -98,7 +98,7 @@ def main(argv = None):
         if not os.path.exists(options.dtb):
             raise IOError("The Device Tree Blob %s does not exist." % options.dtb)
 
-    a = anita.Anita(dist,
+    with anita.Anita(dist,
         workdir = options.workdir,
         vmm = options.vmm,
         vmm_args = vmm_args,
@@ -115,42 +115,42 @@ def main(argv = None):
         image_format = options.image_format,
         machine = options.machine,
         network_config = options.network_config
-        )
+        ) as a:
 
-    status = 0
-    mode = args[0]
+        status = 0
+        mode = args[0]
 
-    if mode != 'print-workdir':
-        print("This is anita version", anita.__version__)
-        print("Using pexpect version", pexpect.__version__)
-        print(anita.quote_shell_command(sys.argv))
-        sys.stdout.flush()
+        if mode != 'print-workdir':
+            print("This is anita version", anita.__version__)
+            print("Using pexpect version", pexpect.__version__)
+            print(anita.quote_shell_command(sys.argv))
+            sys.stdout.flush()
 
-    if mode == 'install':
-        a.install()
-    elif mode == 'boot':
-        a.boot()
-        if options.run:
-            status = a.shell_cmd(options.run, options.run_timeout)
-        a.halt()
-    elif mode == 'interact':
-        if options.run:
+        if mode == 'install':
+            a.install()
+        elif mode == 'boot':
             a.boot()
-            status = a.shell_cmd(options.run, options.run_timeout)
-            if status != 0:
-                a.halt()
-                return status
+            if options.run:
+                status = a.shell_cmd(options.run, options.run_timeout)
+            a.halt()
+        elif mode == 'interact':
+            if options.run:
+                a.boot()
+                status = a.shell_cmd(options.run, options.run_timeout)
+                if status != 0:
+                    a.halt()
+                    return status
+            else:
+                # Allow interaction with boot process
+                a.start_boot()
+            a.console_interaction()
+        elif mode == 'test':
+            status = a.run_tests(timeout = options.test_timeout)
+        elif mode == 'print-workdir':
+            print(a.workdir)
         else:
-            # Allow interaction with boot process
-            a.start_boot()
-        a.console_interaction()
-    elif mode == 'test':
-        status = a.run_tests(timeout = options.test_timeout)
-    elif mode == 'print-workdir':
-        print(a.workdir)
-    else:
-        raise Usage("unknown mode: " + mode)
-    return status
+            raise Usage("unknown mode: " + mode)
+        return status
 
 if __name__ == "__main__":
     try:

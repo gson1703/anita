@@ -1,4 +1,8 @@
 
+Fix failure to destroy the Xen DomU used by the installation stage
+before trying to create the one for the boot stage when running
+under Python 3.
+
 Fix failure to log in after reboot when running "anita test" on a
 self-resizing image without running a separate "anita install" first.
 From Joerg Sonnenberger.
