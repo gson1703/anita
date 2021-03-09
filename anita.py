@@ -918,17 +918,6 @@ def distribution(distarg, **kwargs):
 
 #############################################################################
 
-# Helper class for killing the DomU when the last reference to the
-# child process is dropped
-
-class DomUKiller(object):
-    def __init__(self, frontend, name):
-        self.name = name
-        self.frontend = frontend
-    def __del__(self):
-        print("destroying domU", self.name)
-        spawn(self.frontend, [self.frontend, "destroy", self.name])
-
 def vmm_is_xen(vmm):
     return vmm == 'xm' or vmm == 'xl'
 
@@ -1395,7 +1384,7 @@ class Anita(object):
         self.configure_child(child)
 
         def cleanup_domu():
-            spawn(self.frontend, [self.frontend, "destroy", self.name])
+            spawn(self.vmm, [self.vmm, "destroy", self.name])
         self.cleanup_child_func = cleanup_domu
 
         return child
