@@ -1384,7 +1384,7 @@ class Anita(object):
         self.configure_child(child)
 
         def cleanup_domu():
-            spawn(self.vmm, [self.vmm, "destroy", self.name])
+            spawn(self.vmm, [self.vmm, "destroy", name])
         self.cleanup_child_func = cleanup_domu
 
         return child
