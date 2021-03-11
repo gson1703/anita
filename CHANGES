@@ -1,3 +1,7 @@
+In addition to the plain-text ATF test report printed to the console
+as the tests progress, also store a clean copy without other console
+output in test.txt and export it to the host.  Suggested by
+Greg Troxel.
 
 Fix failure to destroy the Xen DomU used by the installation stage
 before trying to create the one for the boot stage when running

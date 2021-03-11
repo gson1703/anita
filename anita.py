@@ -2499,7 +2499,8 @@ class Anita(object):
             test_cmd = (
                 "{ atf-run; echo $? >/tmp/tests/test.status; } | " +
                 "tee /tmp/tests/test.tps | " +
-                "atf-report -o ticker:- -o xml:/tmp/tests/test.xml; " +
+                "atf-report -o ticker:- -o ticker:/tmp/tests/test.txt " +
+                "-o xml:/tmp/tests/test.xml; " +
                 "(cd /tmp && for f in %s; do cp $f tests/; done;); " % ' '.join(atf_aux_files))
         else:
             raise RuntimeError('unknown testing framework %s' % self.test)
