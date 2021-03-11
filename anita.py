@@ -1197,6 +1197,7 @@ class Anita(object):
         if ptyproc:
             ptyproc.delayafterclose = child.delayafterclose
             ptyproc.delayafterterminate = child.delayafterterminate
+        self.halted = False
         self.child = child
 
     def start_simh(self, vmm_args = []):
