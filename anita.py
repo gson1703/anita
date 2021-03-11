@@ -2318,6 +2318,10 @@ class Anita(object):
             try:
                 self._install()
             except:
+                # "xl destroy" gets confused if the disk image
+                # has been removed, so run it before removing
+                # the disk image rather than after.
+                self.cleanup_child()
                 if os.path.exists(self.wd0_path()):
                     os.unlink(self.wd0_path())
                 raise
