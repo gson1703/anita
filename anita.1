@@ -78,6 +78,11 @@ To run the NetBSD test suite on the installed system, use
 .Pp
 .Dl anita test http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.1/i386/
 .Pp
+If you have a recent NetBSD host and a qemu version that supports
+NVMM (the NetBSD Virtual Machine Monitor), you can use it to run the
+tests several times faster than using qemu's built-in emulation:
+.Pp
+.Dl anita --vmm-args="-accel nvmm" test http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.1/i386/
 .Pp
 To install a snapshot, use something like the following (adjusting
 the URL to point to a current snapshot):
