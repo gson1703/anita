@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl -workdir Ar work_directory
-.Op Fl -vmm Ar qemu | xm | xl | gxemul | simh
+.Op Fl -vmm Ar qemu | xl | xm | gxemul | simh
 .Op Fl -vmm-args Ar vmm_arguments
 .Op Fl -disk-size Ar size
 .Op Fl -run Ar command
@@ -229,7 +229,7 @@ The following command line options are supported:
 .It Fl -workdir Ar directory
 The work directory.  The default is an automatically generated
 name under ".".
-.It Fl -vmm Ar qemu | xm | xl | gxemul | simh
+.It Fl -vmm Ar qemu | xl | xm | gxemul | simh
 Specify the virtual machine monitor.
 The default virtual machine monitor is qemu.
 If the target system architecture is not supported by qemu,
@@ -244,15 +244,15 @@ If
 is running in a Xen dom0 and the target system architecture
 is i386 or amd64, it is also possible to
 specify
-.Cm xm
+.Cm xl
 or
-.Cm xl ,
+.Cm xm ,
 which will make
 .Nm
-install the target system in a Xen domU using the
-.Cm xm
-or
+install the target system in a Xen domU using the current
 .Cm xl
+or the historic
+.Cm xm
 interface, respectively.  This requires
 running
 .Nm
