@@ -491,10 +491,14 @@ or newer.
 .Pp
 Some floating point tests fail under qemu but not on real hardware,
 presuambly due to bugs qemu's floating point emulation.
+In particular, floating point exceptinons are broken when using
+the default TCG acceleration, as reported in
 .Pp
-Running multithreaded programs (such as the NetBSD test suite) on
-an emulated i386 or amd64 system requires qemu patches that are in
-pkgsrc beginning with qemu 0.12.3nb3. They were finally integrated
+.Dl https://gitlab.com/qemu-project/qemu/-/issues/215
+.Pp
+Running multithreaded programs (such as the NetBSD test suite) on an
+emulated i386 or amd64 system used to require qemu patches that were
+in pkgsrc beginning with qemu 0.12.3nb3. They were finally integrated
 into qemu on 2011-12-11.  See PR 42158 and
 .Pp
 .Dl https://bugs.launchpad.net/bugs/569760
