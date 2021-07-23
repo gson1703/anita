@@ -2,6 +2,12 @@ Actually reduce the default test timeout to 1 hour as documented in
 version 2.5 when anita is invoked as a program rather than as a
 library.
 
+Log a message to the structured log file on timeout so that the time
+when the timeout occurred can be determined from the message timestamp.
+
+Define a scratch disk for alpha (wd1c) so that ATF test results can
+be exported to the host.
+
 In addition to the plain-text ATF test report printed to the console
 as the tests progress, also store a clean copy without other console
 output in test.txt and export it to the host.  Suggested by
