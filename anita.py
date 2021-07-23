@@ -1099,6 +1099,7 @@ class Anita(object):
         return self
 
     def __exit__(self, *stuff):
+        self.slog("exit")
         self.cleanup_child()
         return False
 
