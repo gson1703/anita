@@ -144,6 +144,7 @@ arch_props = {
             'executable': 'qemu-system-alpha',
         },
         'boot_from_default': 'kernel',
+        'scratch_disk': 'wd1c',
     },
 }
 
