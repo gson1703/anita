@@ -2430,7 +2430,9 @@ class Anita(object):
         self.slog('entering console interaction')
         self.child.interact()
 
-    # Run the NetBSD ATF test suite on the guest
+    # Run the NetBSD ATF test suite on the guest.  Note that the
+    # default timeout is separately defined here (for library callers)
+    # and in the "anita" script (for command-line callers).
     def run_tests(self, timeout = 3600):
         mkdir_p(self.workdir)
         results_by_net = (self.vmm == 'noemu')

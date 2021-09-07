@@ -1,3 +1,7 @@
+Actually reduce the default test timeout to 1 hour as documented in
+version 2.5 when anita is invoked as a program rather than as a
+library.
+
 In addition to the plain-text ATF test report printed to the console
 as the tests progress, also store a clean copy without other console
 output in test.txt and export it to the host.  Suggested by
