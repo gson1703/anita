@@ -110,7 +110,7 @@ runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
 runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-7.2/amd64/
 
 # Test newest version
-runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.1/amd64/
+runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.2/amd64/
 
 # Test recent version
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.2/amd64/
