@@ -1,3 +1,6 @@
+
+Support the new "gpufw" set.
+
 Actually reduce the default test timeout to 1 hour as documented in
 version 2.5 when anita is invoked as a program rather than as a
 library.

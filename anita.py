@@ -535,6 +535,7 @@ class Version(object):
       [ 'etc', '(System)|(System configuration files)|(Configuration files) \(/etc\)', 1, 0 ],
       [ 'comp', 'Compiler [Tt]ools', 1, 0 ],
       [ 'games', 'Games', 0, 0 ],
+      [ 'gpufw', 'Graphics driver firmware', 1, 1 ],
       [ 'man', '(Online )?Manual [Pp]ages', 0, 0 ],
       [ 'misc', 'Miscellaneous', 1, 0 ],
       [ 'rescue', 'Recovery [Tt]ools', 1, 1 ],
