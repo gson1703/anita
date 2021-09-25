@@ -1,4 +1,6 @@
 
+- 2.9 released -
+
 Support the new "gpufw" set.
 
 Actually reduce the default test timeout to 1 hour as documented in
