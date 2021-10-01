@@ -1867,20 +1867,15 @@ class Anita(object):
                     break
 
         def configure_network():
-            child.expect("Network media type")
-            child.send("\n")
-            child.expect("Perform (DHCP )?autoconfiguration")
-            child.expect("([a-z]): No")
-            child.send(child.match.group(1) + b"\n")
-
-            def choose_a():
-                child.send("a\n")
             def choose_dns_server():
                 child.expect("([a-z]): other")
                 child.send(child.match.group(1) + b"\n")
                 child.send((self.net_config.get('dnsserveraddr') or "10.0.1.1") + "\n")
 
             expect_any(child,
+                r"Network media type", "\n",
+                r"Perform (DHCP )?autoconfiguration", choose_no,
+                r"Hit enter to continue", "\n",
                 r"Your host name",
                        "anita-test\n",
                 r"Your DNS domain",
