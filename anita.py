@@ -1477,7 +1477,8 @@ class Anita(object):
             'binary', 'gzimg', image_name)
         print("Decompressing image...", end=' ')
         gzimage = open(gzimage_fn, 'r')
-        subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc', shell = True, stdin = gzimage)
+        subprocess.call('gunzip | dd of=' + self.wd0_path() + ' conv=notrunc',
+                        shell = True, stdin = gzimage)
         gzimage.close()
         print("done.")
         # Unzip the kernel, whatever its name
