@@ -137,7 +137,7 @@ arch_props = {
             'machine_default': 'mac99',
         },
         'memory_size': '256M',
-        'scratch_disk': None,
+        'scratch_disk': 'wd1c',
     },
     'alpha': {
         'qemu': {
