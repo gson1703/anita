@@ -1,3 +1,5 @@
+Define a scratch disk for macppc (wd1c) so that ATF test results can
+be exported to the host.
 
 - 2.9 released -
 
