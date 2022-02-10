@@ -1,3 +1,6 @@
+When choosing to overwrite a non-NetBSD partition, handle yes/no
+choices presented in either order.
+
 Define a scratch disk for macppc (wd1c) so that ATF test results can
 be exported to the host.
 

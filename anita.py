@@ -2243,8 +2243,7 @@ class Anita(object):
                 child.send("x\n")
             elif child.match.group(34):
                 # Your disk currently has a non-NetBSD partition
-                child.expect("a: Yes")
-                child.send("\n")
+                choose_yes()
             elif child.match.group(35):
                 # We need to enter these values in cases where sysinst could not
                 # determine disk geometry. Currently, this happens for NetBSD/hpcmips
