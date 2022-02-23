@@ -68,8 +68,8 @@ def main(argv = None):
                       type="string", metavar="TYPE", default='pv')
     parser.add_option("--image-format", help='select the guest disk image format: \"dense\" or \"sparse\"',
                       type="string", metavar='FORMAT', default='dense')
-    parser.add_option("--machine", help='select the emulated machine type, e.g., " \
-                      "\"vexpress-a15\" or \"virt\"',
+    parser.add_option("--machine", help='select the emulated machine type, e.g., ' \
+                      '\"vexpress-a15\" or \"virt\"',
                       type="string", metavar='MACHINE')
     parser.add_option("--network-config", help='load network configuration from FILE',
                       type="string", metavar='FILE')

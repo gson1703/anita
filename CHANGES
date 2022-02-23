@@ -1,3 +1,5 @@
+Fixed stray quotes in the anita --help output.
+
 When choosing to overwrite a non-NetBSD partition, handle yes/no
 choices presented in either order.
 
