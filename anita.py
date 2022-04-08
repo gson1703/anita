@@ -2269,27 +2269,27 @@ class Anita(object):
 
         x_sent = False
         while True:
-            child.expect("(Hit enter to continue)|"
-                         "(x: Exit Install System)|"
-                         "(#)|"
-                         "(halting machine)|"
-                         "(halted by root)|"
-                         "(Would you like to setup system entropy now)")
-            if child.match.group(1):
+            r = child.expect([r'Hit enter to continue',
+                              r'x: Exit Install System',
+                              r'#',
+                              r'halting machine',
+                              r'halted by root',
+                              r'Would you like to setup system entropy now'])
+            if r == 0:
                 child.send("\n")
-            elif child.match.group(2):
+            elif r == 1:
                 # Back in menu
                 # Menu may get redrawn, so only send this once
                 if not x_sent:
                     child.send("x\n")
                     x_sent = True
-            elif child.match.group(3):
+            elif r == 2:
                 # Root shell prompt
                 child.send("halt\n")
-            elif child.match.group(4) or child.match.group(5):
+            elif r == 3 or r == 4:
                 # halted
                 break
-            elif child.match.group(6):
+            elif r == 5:
                 # Would you like to set up system entropy now?
                 choose_yes();
                 self.provide_entropy(child)
