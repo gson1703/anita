@@ -1947,90 +1947,102 @@ class Anita(object):
             loop = loop + 1
             if loop == 100:
                 raise RuntimeError("loop detected")
-            child.expect(
-                         # Group 1
-                         r"(a: Progress bar)|" +
-                         # Group 2
-                         r"(Select medium|Install from)|" +
-                         # Group 3
-                         r"(Enter the CDROM device)|" +
-                         # Group 4
-                         r"(unused-group-should-not-match)|" +
-                         # Group 5
-                         r"(Hit enter to continue)|" +
-                         # Group 6
-                         r"(b: Use serial port com0)|" +
-                         # Group 7
-                         r"(Please choose the timezone)|" +
-                         # Group 8
-                         r"(essential things)|" +
-                         # Group 9
-                         r"(Configure the additional items)|" +
-                         # Group 10
-                         r"(Multiple CDs found)|" +
-                         # Group 11
-                         r"(The following are the http site)|" +
-                         # Group 12
-                         r"(Is the network information you entered accurate)|" +
-                         # Group 13-14 (old-style / new-style)
-                         r"(I have found the following network interfaces)|(Which network device would you like to use)|" +
-                         # Group 15
-                         r"(No allows you to continue anyway)|" +
-                         # Group 16
-                         r"(Can't connect to)|" +
-                         # Group 17
-                         r"(/sbin/newfs)|" +
-                         # Group 18
-                         r"(Do you want to install the NetBSD bootcode)|" +
-                         # Group 19
-                         r"(Do you want to update the bootcode in the Master Boot Record to the latest)|" +
-                         # Group 20-21
-                         r"(([a-z]): Custom installation)|" +
-                         # Group 22
-                         r"(a: This is the correct geometry)|" +
-                         # Group 23
-                         r"(a: Use one of these disks)|" +
-                         # Group 24-25
-                         r"(([a-z]): Set sizes of NetBSD partitions)|" +
-                         # Group 26
-                         r"(a partitioning scheme)|" +
-                         # Group 27-28
-                         r"(([a-z]): Use the entire disk)|" +
-                         # Group 29
-                         r'(Do you want to install the NetBSD bootcode)|' +
-                         # Group 30
-                         r'(Do you want to update the bootcode)|' +
-                         # Group 31
-                         r"(Please enter a name for your NetBSD disk)|" +
-                         # Group 32
-                         # Matching "This is your last chance" will not work
-                         r"(ready to install NetBSD on your hard disk)|" +
-                         # Group 33
-                         r"(We now have your (?:BSD.|GPT.)?(?:disklabel )?partitions)|" +
-                         # Group 34 (formerly 28)
-                         r'(Your disk currently has a non-NetBSD partition)|' +
-                         # Group 35 (formerly 25)
-                         r"(Sysinst could not automatically determine the BIOS geometry of the disk)|" +
-                         # Group 36
-                         r"(Do you want to re-edit the disklabel partitions)|" +
-                         # Group 37 (to reset timeout while set extraction is making progress)
-                         r'(Command: )|' +
-                         # Group 38
-                         # Currently done earlier, but it won't hurt to recongize it here, too
-                         r'(not enough entropy)',
-                         10800)
+            r = child.expect([
+                # 0 (unused, never matches)
+                r"(?!)",
+                # 1
+                r"a: Progress bar",
+                # 2
+                r"Select medium|Install from",
+                # 3
+                r"Enter the CDROM device",
+                # 4
+                r"unused-group-should-not-match",
+                # 5
+                r"Hit enter to continue",
+                # 6
+                r"b: Use serial port com0",
+                # 7
+                r"Please choose the timezone",
+                # 8
+                r"essential things",
+                # 9
+                r"Configure the additional items",
+                # 10
+                r"Multiple CDs found",
+                # 11
+                r"The following are the http site",
+                # 12
+                r"Is the network information you entered accurate",
+                # 13 (old-style)
+                r"I have found the following network interface",
+                # 14 (new-style)
+                r"Which network device would you like to use",
+                # 15
+                r"No allows you to continue anyway",
+                # 16
+                r"Can't connect to",
+                # 17
+                r"/sbin/newfs",
+                # 18
+                r"Do you want to install the NetBSD bootcode",
+                # 19
+                r"Do you want to update the bootcode in the Master Boot Record to the latest",
+                # 20
+                r"([a-z]): Custom installation",
+                # 21 (unused, never matches)
+                r"(?!)",
+                # 22
+                r"a: This is the correct geometry",
+                # 23
+                r"a: Use one of these disks",
+                # 24
+                r"([a-z]): Set sizes of NetBSD partitions",
+                # 25 (unused, never matches)
+                r"(?!)",
+                # 26
+                r"a partitioning scheme",
+                # 27
+                r"([a-z]): Use the entire disk",
+                # 28 (unused, never matches)
+                r"(?!)",
+                # 29
+                r'Do you want to install the NetBSD bootcode',
+                # 30
+                r'Do you want to update the bootcode',
+                # 31
+                r"Please enter a name for your NetBSD disk",
+                # 32
+                # Matching "This is your last chance" will not work
+                r"ready to install NetBSD on your hard disk",
+                # 33
+                r"We now have your (?:BSD.|GPT.)?(?:disklabel )?partitions",
+                # 34 (formerly 28)
+                r'Your disk currently has a non-NetBSD partition',
+                # 35 (formerly 25)
+                r"Sysinst could not automatically determine the BIOS geometry of the disk",
+                # 36
+                r"Do you want to re-edit the disklabel partitions",
+                # 37 (to reset timeout while set extraction is making progress)
+                r'Command: ',
+                # 38
+                # Currently done earlier, but it won't hurt to recongize it here, too
+                r'not enough entropy'],
+                10800)
 
-            if child.match.groups() == prevmatch:
+            if child.match.group(0) == prevmatch:
                 self.slog('ignoring repeat match')
                 continue
-            prevmatch = child.match.groups()
-            if child.match.group(1):
+            prevmatch = child.match.group(0)
+            if r == 0:
+                 raise AssertionError
+            elif r == 1:
                 # (a: Progress bar)
                 child.send("\n")
-            elif child.match.group(2):
+            elif r == 2:
                 # (Install from)
                 choose_install_media()
-            elif child.match.group(3):
+            elif r == 3:
                 # "(Enter the CDROM device)"
                 if sets_cd_device != 'cd0a':
                     child.send(b"a\n" + sets_cd_device.encode('ASCII') + b"\n")
@@ -2038,17 +2050,17 @@ class Anita(object):
                 # you type "x".  Handle both cases.
                 child.expect(r"([cx]): Continue")
                 child.send(child.match.group(1) + b"\n")
-            elif child.match.group(5):
+            elif r == 5:
                 # (Hit enter to continue)
                 if seen_essential_things >= 2:
                     # This must be a redraw
                     pass
                 else:
                     child.send("\n")
-            elif child.match.group(6):
+            elif r == 6:
                 # (b: Use serial port com0)
                 child.send("bx\n")
-            elif child.match.group(7):
+            elif r == 7:
                 # (Please choose the timezone)
                 # "Press 'x' followed by RETURN to quit the timezone selection"
                 child.send("x\n")
@@ -2095,20 +2107,20 @@ class Anita(object):
                     else:
                         raise AssertionError
                 break
-            elif child.match.group(8):
+            elif r == 8:
                 # (essential things)
                 seen_essential_things += 1
-            elif child.match.group(9):
+            elif r == 9:
                 # (Configure the additional items)
                 child.expect("x: Finished configuring")
                 child.send("x\n")
                 break
-            elif child.match.group(10):
+            elif r == 10:
                 # (Multiple CDs found)
                 # This happens if we have a boot CD and a CD with sets;
                 # we need to choose the latter.
                 child.send("b\n")
-            elif child.match.group(11):
+            elif r == 11:
                 gather_input(child, 1)
                 # (The following are the http site)
                 # \027 is control-w, which clears the field
@@ -2139,23 +2151,23 @@ class Anita(object):
                     pass
                 else:
                     assert(0)
-            elif child.match.group(12):
+            elif r == 12:
                 # "Is the network information you entered accurate"
                 child.expect("([a-z]): Yes")
                 child.send(child.match.group(1) + b"\n")
-            elif child.match.group(13):
+            elif r == 13:
                  # "(I have found the following network interfaces)"
                 choose_interface_oldstyle()
                 configure_network()
-            elif child.match.group(14):
+            elif r == 14:
                 # "(Which network device would you like to use)"
                 choose_interface_newstyle()
                 configure_network()
-            elif child.match.group(15):
+            elif r == 15:
                 choose_no()
                 child.expect("No aborts the install process")
                 choose_yes()
-            elif child.match.group(16):
+            elif r == 16:
                 self.slog("network problems detected")
                 child.send("\003") # control-c
                 gather_input(child, 666)
@@ -2165,35 +2177,37 @@ class Anita(object):
                 # would run netstat here but it's not on the install media
                 gather_input(child, 30)
                 sys.exit(1)
-            elif child.match.group(17):
+            elif r == 17:
                 self.slog("matched newfs to defeat repeat match detection")
-            elif child.match.group(18):
+            elif r == 18:
                 # "Do you want to install the NetBSD bootcode"
                 choose_yes()
-            elif child.match.group(19):
+            elif r == 19:
                 # "Do you want to update the bootcode in the Master Boot Record to the latest"
                 choose_yes()
-            elif child.match.group(20):
+            elif r == 20:
                 # Custom installation is choice "d" in 6.0,
                 # but choice "c" or "b" in older versions
                 # We could use "Minimal", but it doesn't exist in
                 # older versions.
-                child.send(child.match.group(21) + b"\n")
+                child.send(child.match.group(1) + b"\n")
                 # Enable/disable sets.
                 choose_sets(self.dist.sets)
+            elif r == 21:
+                raise AssertionError
             # On non-Xen i386/amd64 we first get group 22 or 23,
             # then group 24; on sparc and Xen, we just get group 24.
-            elif child.match.group(22):
+            elif r == 22:
                 # "This is the correct geometry"
                 child.send("\n")
-            elif child.match.group(23):
+            elif r == 23:
                 # "a: Use one of these disks"
                 child.send("a\n")
                 child.expect("Choose disk")
                 child.send("0\n")
-            elif child.match.group(24):
+            elif r == 24:
                 # "(([a-z]): Set sizes of NetBSD partitions)"
-                child.send(child.match.group(25) + b"\n")
+                child.send(child.match.group(1) + b"\n")
                 # In 2.1, no letter label like "x: " is printed before
                 # "Accept partition sizes", hence the kludge of sending
                 # multiple cursor-down sequences.
@@ -2214,48 +2228,52 @@ class Anita(object):
                     # Use the default ANSI cursor-down escape sequence
                     cursor_down = b"\033[B"
                 child.send(cursor_down * 8 + b"\n")
-            elif child.match.group(26):
+            elif r == 25:
+                raise AssertionError
+            elif r == 26:
                 # "a partitioning scheme"
                 #child.expect("([a-z]): Master Boot Record")
                 #child.send(child.match.group(1) + "\n")
                 # Sparc asks the question but does not have MBR as an option,
                 # only disklabel.  Just use the first choice, whatever that is.
                 child.send("a\n")
-            elif child.match.group(27):
+            elif r == 27:
                 # "([a-z]): use the entire disk"
-                child.send(child.match.group(28) + b"\n")
-            elif child.match.group(29) or child.match.group(30):
+                child.send(child.match.group(1) + b"\n")
+            elif r == 28:
+                raise AssertionError
+            elif r == 29 or r == 30:
                 # Install or replace bootcode
                 child.expect("a: Yes")
                 child.send("\n")
-            elif child.match.group(31):
+            elif r == 31:
                 # "Please enter a name for your NetBSD disk"
                 child.send("\n")
-            elif child.match.group(32):
+            elif r == 32:
                 # "ready to install NetBSD on your hard disk"
                 child.expect("Shall we continue")
                 child.expect("b: Yes")
                 child.send("b\n")
                 # newfs is run at this point
-            elif child.match.group(33):
+            elif r == 33:
                 # "We now have your BSD disklabel partitions"
                 child.expect("x: Partition sizes ok")
                 child.send("x\n")
-            elif child.match.group(34):
+            elif r == 34:
                 # Your disk currently has a non-NetBSD partition
                 choose_yes()
-            elif child.match.group(35):
+            elif r == 35:
                 # We need to enter these values in cases where sysinst could not
                 # determine disk geometry. Currently, this happens for NetBSD/hpcmips
                 child.expect("sectors")
                 child.send("\n")
                 child.expect("heads")
                 child.send("\n")
-            elif child.match.group(36):
+            elif r == 36:
                 raise RuntimeError('setting up partitions did not work first time')
-            elif child.match.group(37):
+            elif r == 37:
                 pass
-            elif child.match.group(38):
+            elif r == 38:
                 # not enough entropy
                 self.provide_entropy(child)
             else:
