@@ -2026,8 +2026,9 @@ class Anita(object):
                 # 37 (to reset timeout while set extraction is making progress)
                 r'Command: ',
                 # 38
-                # Currently done earlier, but it won't hurt to recongize it here, too
-                r'not enough entropy'],
+                r'not enough entropy',
+                # 39
+                r'Changing local password for root'],
                 10800)
 
             if child.match.group(0) == prevmatch:
@@ -2276,6 +2277,9 @@ class Anita(object):
             elif r == 38:
                 # not enough entropy
                 self.provide_entropy(child)
+            elif r == 39:
+                # Changing local password for root
+                child.send("\n")
             else:
                 raise AssertionError
 
