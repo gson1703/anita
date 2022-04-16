@@ -694,8 +694,10 @@ class Version(object):
             # Consistency would be nice
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "instkernel", "netbsd.gz"])
         if self.arch() in ['i386', 'amd64']:
-            # This is used when netbooting only
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "misc", "pxeboot_ia32.bin"])
+            # This is used when netbooting only, and marked optional
+            # so that we can still install NetBSD 4.0 where it doesn't
+            # exist yet.
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "misc", "pxeboot_ia32.bin"], True)
 
         i = 0
         # Depending on the NetBSD version, there may be two or more
