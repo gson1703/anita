@@ -1420,10 +1420,10 @@ class Anita(object):
             # It would be good to match the "1:" prompt to detect
             # multi-line mode, but there's an ANSI control sequence
             # between the "1" and the ":".
-            r = child.expect([r'([a-z]): Manual input',
+            r = child.expect([r'([a-z]): Manual(ly)? input',
                               r'Terminate (the )?input with an empty line.|'
                                   r'Supply input to be used as a random seed',
-                              r'single line'])
+                              r'(single)|(one) line'])
             if r == 0:
                 child.send(child.match.group(1) + b"\n")
             else:
