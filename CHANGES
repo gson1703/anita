@@ -1,4 +1,10 @@
-Fixed stray quotes in the anita --help output.
+
+- 2.10 released -
+
+Support the new sysinst root password and entropy configuration user
+interface introduced on source date 2022.04.21.17.30.15.
+
+Fix stray quotes in the anita --help output.
 
 When choosing to overwrite a non-NetBSD partition, handle yes/no
 choices presented in either order.
