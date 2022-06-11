@@ -616,7 +616,9 @@ class Version(object):
     def boot_from_default(self):
         return arch_props[self.arch()].get('boot_from_default')
 
-    def xen_kernel(self):
+    def xen_kernel(self, type):
+        if type == 'pvh':
+            return 'netbsd-GENERIC.gz'
         arch = self.arch()
         if arch == 'i386':
             return 'netbsd-XEN3PAE_DOMU.gz'
@@ -625,7 +627,9 @@ class Version(object):
         else:
             return None
 
-    def xen_install_kernel(self):
+    def xen_install_kernel(self, type):
+        if type == 'pvh':
+            return 'netbsd-INSTALL.gz'
         arch = self.arch()
         if arch == 'i386':
             return 'netbsd-INSTALL_XEN3PAE_DOMU.gz'
@@ -1349,12 +1353,22 @@ class Anita(object):
     def xen_args(self, install):
         if self.xen_type == 'pv':
             if install:
-                k = self.dist.xen_install_kernel()
+                k = self.dist.xen_install_kernel(type = 'pv')
             else:
-                k = self.dist.xen_kernel()
+                k = self.dist.xen_kernel(type = 'pv')
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                 "binary", "kernel", k)))]
+        elif self.xen_type == 'pvh':
+            if install:
+                k = self.dist.xen_install_kernel('pvh')
+            else:
+                k = self.dist.xen_kernel('pvh')
+            return [self.xen_string_arg('kernel',
+                os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                            "binary", "kernel", k))),
+                self.xen_string_arg('type', 'pvh'),
+            ]
         else:
             return  [
                 self.xen_string_arg('type', 'hvm'),
@@ -1507,9 +1521,9 @@ class Anita(object):
         arch = self.dist.arch()
 
         if vmm_is_xen(self.vmm):
-            if self.xen_type == 'pv':
+            if self.xen_type == 'pv' or self.xen_type == 'pvh':
                 # Download XEN kernels
-                xenkernels = [k for k in [self.dist.xen_kernel(), self.dist.xen_install_kernel()] if k]
+                xenkernels = [k for k in [self.dist.xen_kernel(type = self.xen_type), self.dist.xen_install_kernel(type = self.xen_type)] if k]
                 for kernel in xenkernels:
                     download_if_missing_3(self.dist.dist_url(),
                             self.dist.download_local_arch_dir(),
@@ -1517,14 +1531,14 @@ class Anita(object):
                             True)
             vmm_args = []
             vmm_args += self.xen_args(install = True)
-            if self.xen_type == 'pv':
+            if self.xen_type == 'pv' or self.xen_type == 'pvh':
                 vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.install_sets_iso_path()), 1, cdrom = True)]
                 sets_cd_device = 'xbd1d'
             else:
                 # HVM, similar the qemu boot_from == 'cdrom' case below
                 boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
-                vmm_args += [self.xen_disk_arg(os.path.abspath(boot_cd_path), 1, cdrom = True)]
-                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.install_sets_iso_path()), 2, cdrom = True)]
+                vmm_args += [self.xen_disk_arg(os.path.abspath(boot_cd_path), 2, cdrom = True)]
+                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.install_sets_iso_path()), 3, cdrom = True)]
                 sets_cd_device = 'cd1a'
             child = self.start_xen_domu(vmm_args)
         elif self.vmm == 'qemu':
