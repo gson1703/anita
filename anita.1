@@ -1,4 +1,4 @@
-.Dd Oct 8, 2020
+.Dd Jul 7, 2022
 .Dt ANITA 1
 .Os
 .Sh NAME
@@ -21,6 +21,7 @@
 .Op Fl -dtb Ar dtb
 .Op Fl -image_format Ar format
 .Op Fl -machine Ar machine
+.Op Fl -partitioning-scheme Ar scheme
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -431,6 +432,12 @@ evbarm-earmv7hf port to select the
 qemu machine type instead of the default of
 .Ar vexpress-a15 .
 Not consistently supported for other ports and VMMs.
+.It Fl -partitioning-scheme Ar scheme
+Use the given partitioning scheme instead of the port's default one.
+Currently only supported for the i386 and amd64 ports, where a scheme
+of
+.Ar MBR
+can be selected instead of the default of GPT.
 .El
 .Sh DEBUGGING NETBSD USING ANITA
 .Nm

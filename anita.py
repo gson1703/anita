@@ -998,7 +998,7 @@ class Anita(object):
         disk_size = None, memory_size = None, persist = False, boot_from = None,
         structured_log = None, structured_log_file = None, no_install = False,
         tests = 'atf', dtb = '', xen_type = 'pv', image_format = 'dense',
-        machine = None, network_config = None):
+        machine = None, network_config = None, partitioning_scheme = None):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -1082,6 +1082,7 @@ class Anita(object):
         self.xen_type = xen_type
         self.image_format = image_format
         self.machine = machine or self.get_arch_vmm_prop('machine_default')
+        self.partitioning_scheme = partitioning_scheme
 
         self.is_logged_in = False
         self.halted = False
@@ -2249,11 +2250,13 @@ class Anita(object):
                 raise AssertionError
             elif r == 26:
                 # "a partitioning scheme"
-                #child.expect("([a-z]): Master Boot Record")
-                #child.send(child.match.group(1) + "\n")
-                # Sparc asks the question but does not have MBR as an option,
-                # only disklabel.  Just use the first choice, whatever that is.
-                child.send("a\n")
+                if self.partitioning_scheme == 'MBR':
+                    child.expect("([a-z]): Master Boot Record")
+                    child.send(child.match.group(1) + b"\n")
+                else:
+                    # Sparc asks the question but does not have MBR as an option,
+                    # only disklabel.  Just use the first choice, whatever that is.
+                    child.send("a\n")
             elif r == 27:
                 # "([a-z]): use the entire disk"
                 child.send(child.match.group(1) + b"\n")

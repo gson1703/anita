@@ -1,3 +1,5 @@
+New command line --partitioning-scheme, for testing i386 and amd64
+with MBR partitioning rather than the default GPT partitioning.
 
 - 2.10 released -
 

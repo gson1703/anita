@@ -73,6 +73,8 @@ def main(argv = None):
                       type="string", metavar='MACHINE')
     parser.add_option("--network-config", help='load network configuration from FILE',
                       type="string", metavar='FILE')
+    parser.add_option("--partitioning-scheme", help='prefer partitioning scheme SCHEME',
+                      type="string", metavar='SCHEME')
 
     (options, args) = parser.parse_args()
 
@@ -114,7 +116,8 @@ def main(argv = None):
         xen_type = options.xen_type,
         image_format = options.image_format,
         machine = options.machine,
-        network_config = options.network_config
+        network_config = options.network_config,
+        partitioning_scheme = options.partitioning_scheme
         ) as a:
 
         status = 0
