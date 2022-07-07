@@ -22,6 +22,7 @@
 .Op Fl -image-format Ar format
 .Op Fl -machine Ar machine
 .Op Fl -partitioning-scheme Ar scheme
+.Op Fl -xen-type Ar pv | hvm | pvh
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -415,6 +416,14 @@ in the
 package assuming both it and
 .Nm
 itself have been installed via pkgsrc.
+.It Fl -xen-type Ar type
+Select the type of virtualization to use with Xen.  This can be
+.Ar pv ,
+.Ar hvm ,
+or
+.Ar pvh .
+The default is
+.Ar pv .
 .It Fl -image-format Ar format
 The disk image format to use for the virtual machine's system disk.
 Supported values are

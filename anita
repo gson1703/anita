@@ -64,7 +64,7 @@ def main(argv = None):
                       type="string", default="atf")
     parser.add_option("--dtb", help='use the Device Tree Blob (.dtb) PATH_TO_DTB',
                       type="string", metavar="PATH_TO_DTB", default=dtb_path)
-    parser.add_option("--xen-type", help='select the Xen guest type: \"pv\", \"pvh\" or \"hvm\"',
+    parser.add_option("--xen-type", help='select the Xen guest type: \"pv\", \"hvm\", or \"pvh\"',
                       type="string", metavar="TYPE", default='pv')
     parser.add_option("--image-format", help='select the guest disk image format: \"dense\" or \"sparse\"',
                       type="string", metavar='FORMAT', default='dense')

@@ -1,3 +1,6 @@
+Support Xen PVH virtualization, enabled by "--xen-type pvh".
+From Manuel Bouyer.
+
 New command line --partitioning-scheme, for testing i386 and amd64
 with MBR partitioning rather than the default GPT partitioning.
 
