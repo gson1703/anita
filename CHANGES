@@ -1,3 +1,6 @@
+
+New command line --no-entropy.
+
 Support Xen PVH virtualization, enabled by "--xen-type pvh".
 From Manuel Bouyer.
 

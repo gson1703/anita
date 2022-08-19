@@ -75,6 +75,8 @@ def main(argv = None):
                       type="string", metavar='FILE')
     parser.add_option("--partitioning-scheme", help='prefer partitioning scheme SCHEME',
                       type="string", metavar='SCHEME')
+    parser.add_option("--no-entropy", help='do not seed the installed system with entropy',
+                      action="store_true")
 
     (options, args) = parser.parse_args()
 
@@ -117,7 +119,8 @@ def main(argv = None):
         image_format = options.image_format,
         machine = options.machine,
         network_config = options.network_config,
-        partitioning_scheme = options.partitioning_scheme
+        partitioning_scheme = options.partitioning_scheme,
+        no_entropy = options.no_entropy
         ) as a:
 
         status = 0

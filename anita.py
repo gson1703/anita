@@ -998,7 +998,8 @@ class Anita(object):
         disk_size = None, memory_size = None, persist = False, boot_from = None,
         structured_log = None, structured_log_file = None, no_install = False,
         tests = 'atf', dtb = '', xen_type = 'pv', image_format = 'dense',
-        machine = None, network_config = None, partitioning_scheme = None):
+        machine = None, network_config = None, partitioning_scheme = None,
+        no_entropy = False):
         self.dist = dist
         if workdir:
             self.workdir = workdir
@@ -1083,6 +1084,7 @@ class Anita(object):
         self.image_format = image_format
         self.machine = machine or self.get_arch_vmm_prop('machine_default')
         self.partitioning_scheme = partitioning_scheme
+        self.no_entropy = no_entropy
 
         self.is_logged_in = False
         self.halted = False
@@ -1431,6 +1433,11 @@ class Anita(object):
         return vmm_props.get(key)
 
     def provide_entropy(self, child):
+        if self.no_entropy:
+            child.expect(r'([a-z]): Not now')
+            child.send(child.match.group(1) + b"\n")
+            return
+
         while True:
             # It would be good to match the "1:" prompt to detect
             # multi-line mode, but there's an ANSI control sequence

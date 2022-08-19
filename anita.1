@@ -23,6 +23,7 @@
 .Op Fl -machine Ar machine
 .Op Fl -partitioning-scheme Ar scheme
 .Op Fl -xen-type Ar pv | hvm | pvh
+.Op Fl -no-entropy
 .Ar mode
 .Ar URL
 .Sh DESCRIPTION
@@ -447,6 +448,13 @@ Currently only supported for the i386 and amd64 ports, where a scheme
 of
 .Ar MBR
 can be selected instead of the default of GPT.
+.It Fl -no-entropy
+If sysinst prompts the user to enter entropy and offers an option not
+to enter it, select that option.  This is intended for testing the
+behavior of said option and the resulting installation, and only works
+with certain versions of NetBSD that offer such an option.  The
+default is to supply the guest being installed with entropy from the
+host.
 .El
 .Sh DEBUGGING NETBSD USING ANITA
 .Nm
