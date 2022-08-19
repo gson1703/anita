@@ -44,7 +44,7 @@ def main(argv = None):
                       metavar="SETS")
     parser.add_option("--test-timeout",
                       help="allow TIMEOUT seconds for each ATF test", metavar="TIMEOUT",
-                      type="int", default=3600)
+                      type="int", default=10800)
     parser.add_option("--run-timeout",
                       help="allow TIMEOUT seconds for command run using the --run option", metavar="TIMEOUT",
                       type="int", default=3600)

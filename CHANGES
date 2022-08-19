@@ -1,4 +1,9 @@
 
+Increase the default of the --test-timeout option to 3 hours, as the
+timeout of the crypto/libcrypto/t_libcrypto:bn test case in the NetBSD
+ATF test suite has now been increased to 2 hours, and anita must use a
+longer timeout than any individual test case.
+
 New command line --no-entropy.
 
 Support Xen PVH virtualization, enabled by "--xen-type pvh".
