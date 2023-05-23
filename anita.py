@@ -1518,7 +1518,7 @@ class Anita(object):
         # Boot the system to let it resize the image.
         self.start_boot(install = False, snapshot_system_disk = False)
         # The system will resize the image and then reboot.
-        # Waith for the login prompt and shut down cleanly.
+        # Wait for the login prompt and shut down cleanly.
         self.child.expect("login:")
         self.halt()
 
