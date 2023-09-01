@@ -74,6 +74,7 @@ arch_props = {
             'executable': 'qemu-system-sparc',
         },
         'scratch_disk': 'sd1c',
+        'memory_size': '64M',
     },
     'sparc64': {
         'qemu': {
