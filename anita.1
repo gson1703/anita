@@ -88,10 +88,10 @@ tests several times faster than using qemu's built-in emulation:
 .Dl anita --vmm-args="-accel nvmm" test http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.1/i386/
 .Pp
 To install a snapshot, use something like the following (adjusting
-the URL to point to a current snapshot):
+the version number in the sparc URL as needed):
 .Pp
-.Dl anita install http://nyftp.netbsd.org/pub/NetBSD-daily/HEAD/201001280000Z/i386/
-.Dl anita install http://nyftp.netbsd.org/pub/NetBSD-daily/HEAD/201008070000Z/iso/sparccd.iso
+.Dl anita install http://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/i386/
+.Dl anita install http://nyftp.netbsd.org/pub/NetBSD-daily/HEAD/latest/images/NetBSD-10.99.7-sparc.iso
 .Pp
 If you have built a NetBSD release locally using
 .Ic "build.sh -R" ,
