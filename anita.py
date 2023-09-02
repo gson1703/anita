@@ -2306,6 +2306,7 @@ class Anita(object):
                 self.provide_entropy(child)
             elif r == 39:
                 # Changing local password for root
+                child.expect("sword:")
                 child.send("\n")
             else:
                 raise AssertionError
