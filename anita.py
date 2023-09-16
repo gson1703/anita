@@ -147,6 +147,17 @@ arch_props = {
         'boot_from_default': 'kernel',
         'scratch_disk': 'wd1c',
     },
+    'riscv-riscv64': {
+        'qemu': {
+            'executable': 'qemu-system-riscv64',
+            'machine_default': 'virt',
+        },
+        'image_name': 'riscv64.img.gz',
+        'kernel_name': ['netbsd-GENERIC64.gz'],
+        'memory_size': '256M',
+        'boot_from_default': 'kernel',
+        'scratch_disk': 'dk2',
+    },
 }
 
 # Filename extensions used for the installation sets in different
@@ -1160,6 +1171,11 @@ class Anita(object):
             ]
         elif self.dist.arch() == 'alpha':
             a = [ '-append', 'root=/dev/wd0a' ]
+        elif self.dist.arch() == 'riscv-riscv64':
+            a = [
+                '-M', self.machine,
+                '-append', 'root=dk1',
+            ]
         else:
             a = []
         # When booting an image, we need to pass a kernel
@@ -1318,7 +1334,8 @@ class Anita(object):
                 dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
             else:
                 drive_attrs += [('if', 'sd')]
-        elif self.dist.arch() == 'evbarm-aarch64':
+        elif self.dist.arch() == 'evbarm-aarch64' or \
+             self.dist.arch() == 'riscv-riscv64':
             drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
             dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
         else:

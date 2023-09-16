@@ -1,3 +1,4 @@
+Add initial support for riscv-riscv64.
 
 Increase the default of the --test-timeout option to 3 hours, as the
 timeout of the crypto/libcrypto/t_libcrypto:bn test case in the NetBSD
