@@ -61,6 +61,7 @@ arch_props = {
         },
         'scratch_disk': 'wd1d',
         'boot_from_default': 'floppy',
+        'memory_size': '64M',
     },
     'amd64': {
         'qemu': {
