@@ -1,3 +1,7 @@
+On macOS, use the -joliet option to "hdiutil makehybrid" as the -iso
+option fails to create a Rock Ridge file system even though the
+hdiutil manpage says it will.  From Benny Siegert.
+
 Add initial support for riscv-riscv64.
 
 Increase the default of the --test-timeout option to 3 hours, as the
