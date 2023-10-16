@@ -779,6 +779,8 @@ class Version(object):
                     makefs = ["genisoimage", "-r", "-o"]
                 else:
                     makefs = mkisofs
+        # hdiutil will fail if the iso already exists, so remove it first.
+        rm_f(image)
         spawn(makefs[0], makefs + [image, dir])
 
     # Create the install sets ISO image
