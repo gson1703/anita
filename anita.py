@@ -770,7 +770,7 @@ class Version(object):
             elif os.uname()[0] == 'FreeBSD':
                 makefs = mkisofs
             elif os.uname()[0] == 'Darwin':
-                makefs = ["hdiutil", "makehybrid", "-iso", "-o"]
+                makefs = ["hdiutil", "makehybrid", "-iso", "-joliet", "-o"]
             else:
                 # Linux distributions differ.  Ubuntu has genisoimage
                 # and mkisofs (as an alias of genisoimage); CentOS has
