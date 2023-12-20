@@ -1113,7 +1113,12 @@ class Anita(object):
         if network_config:
             f = open(network_config, "r")
             for line in f:
-                l, r = line.rstrip().split("=")
+                s = line.rstrip()
+                if s == '':
+                    continue
+                if s[0] == '#':
+                    continue
+                l, r = s.split("=")
                 self.net_config[l] = r
             f.close()
 
