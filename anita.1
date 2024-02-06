@@ -301,8 +301,9 @@ The size of the virtual RAM.  The size is given in
 bytes, or a suffix of k, M, or G can be used as with
 the
 .Fl -disk-size
-option.  The default is 32M.  Note that since sysinst sizes the
-swap partition based on the amount of RAM, if you run
+option.  The default is architecture dependent.  Note that since
+sysinst sizes the swap partition based on the amount of RAM, if you
+run
 .Cm anita install
 with a large
 .Fl -memory-size ,
