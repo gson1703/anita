@@ -36,7 +36,7 @@ if sys.version_info[0] >= 3:
     import functools
     print = functools.partial(print, flush = True)
 
-__version__='2.10'
+__version__='2.11'
 
 # Your preferred NetBSD FTP mirror site.
 # This is used only by the obsolete code for getting releases
@@ -1557,7 +1557,9 @@ class Anita(object):
         if vmm_is_xen(self.vmm):
             if self.xen_type == 'pv' or self.xen_type == 'pvh':
                 # Download XEN kernels
-                xenkernels = [k for k in [self.dist.xen_kernel(type = self.xen_type), self.dist.xen_install_kernel(type = self.xen_type)] if k]
+                xenkernels = [k for k in [
+                    self.dist.xen_kernel(type = self.xen_type),
+                    self.dist.xen_install_kernel(type = self.xen_type)] if k]
                 for kernel in xenkernels:
                     download_if_missing_3(self.dist.dist_url(),
                             self.dist.download_local_arch_dir(),
@@ -1566,13 +1568,17 @@ class Anita(object):
             vmm_args = []
             vmm_args += self.xen_args(install = True)
             if self.xen_type == 'pv' or self.xen_type == 'pvh':
-                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.install_sets_iso_path()), 1, cdrom = True)]
+                vmm_args += [self.xen_disk_arg(os.path.abspath(
+                    self.dist.install_sets_iso_path()), 1, cdrom = True)]
                 sets_cd_device = 'xbd1d'
             else:
                 # HVM, similar the qemu boot_from == 'cdrom' case below
-                boot_cd_path = os.path.join(self.dist.boot_iso_dir(), self.dist.boot_isos()[0])
-                vmm_args += [self.xen_disk_arg(os.path.abspath(boot_cd_path), 2, cdrom = True)]
-                vmm_args += [self.xen_disk_arg(os.path.abspath(self.dist.install_sets_iso_path()), 3, cdrom = True)]
+                boot_cd_path = os.path.join(self.dist.boot_iso_dir(),
+                                            self.dist.boot_isos()[0])
+                vmm_args += [self.xen_disk_arg(os.path.abspath(
+                    boot_cd_path), 2, cdrom = True)]
+                vmm_args += [self.xen_disk_arg(os.path.abspath(
+                    self.dist.install_sets_iso_path()), 3, cdrom = True)]
                 sets_cd_device = 'cd1a'
             child = self.start_xen_domu(vmm_args)
         elif self.vmm == 'qemu':

@@ -1,3 +1,5 @@
+- 2.11 released -
+
 Increase the default memory size for sparc to 64M.
 
 On macOS, use the -joliet option to "hdiutil makehybrid" as the -iso
