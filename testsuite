@@ -110,9 +110,10 @@ runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.0/amd64/
 runtest "--boot-from cdrom boot" http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-7.2/amd64/
 
 # Test newest version
-runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.2/amd64/
+runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-10.0/amd64/
 
-# Test recent version
+# Test recent versions
+runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.3/amd64/
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-8.2/amd64/
 
 # This panics with qemu 2.0.0, and fails due to the message
