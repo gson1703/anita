@@ -1,3 +1,7 @@
+
+When installing a NetBSD version that has the new "manhtml" set, don't
+mistake it for the "man" set.
+
 - 2.11 released -
 
 Increase the default memory size for sparc to 64M.

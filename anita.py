@@ -549,7 +549,9 @@ class Version(object):
       [ 'comp', 'Compiler [Tt]ools', 1, 0 ],
       [ 'games', 'Games', 0, 0 ],
       [ 'gpufw', 'Graphics driver firmware', 1, 1 ],
-      [ 'man', '(Online )?Manual [Pp]ages', 0, 0 ],
+      # Must match at least two trailing spaces so we don't accidentally
+      # match "Manual pages (HTML)"
+      [ 'man', '(Online )?Manual [Pp]ages  ', 0, 0 ],
       [ 'misc', 'Miscellaneous', 1, 0 ],
       [ 'rescue', 'Recovery [Tt]ools', 1, 1 ],
       [ 'tests', 'Test programs', 1, 1 ],
