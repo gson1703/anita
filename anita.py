@@ -545,13 +545,15 @@ class Version(object):
       [ 'kern-GENERIC.NOACPI', 'Kernel \(GENERIC\.NOACPI\)', 0, 1 ],
       [ 'modules', 'Kernel [Mm]odules', 1, 1 ],
       [ 'base', 'Base', 1, 0 ],
+      [ 'base32', 'Base 32-bit compatibility libraries', 0, 1 ],
       [ 'etc', '(System)|(System configuration files)|(Configuration files) \(/etc\)', 1, 0 ],
       [ 'comp', 'Compiler [Tt]ools', 1, 0 ],
       [ 'games', 'Games', 0, 0 ],
       [ 'gpufw', 'Graphics driver firmware', 1, 1 ],
-      # Must match at least two trailing spaces so we don't accidentally
-      # match "Manual pages (HTML)"
-      [ 'man', '(Online )?Manual [Pp]ages  ', 0, 0 ],
+      # Must match the end of the label here so we don't accidentally
+      # match "Manual pages (HTML)".
+      [ 'man', '(Online )?Manual [Pp]ages$', 0, 0 ],
+      [ 'manhtml', 'Manual pages \(HTML\)}', 0, 1 ],
       [ 'misc', 'Miscellaneous', 1, 0 ],
       [ 'rescue', 'Recovery [Tt]ools', 1, 1 ],
       [ 'tests', 'Test programs', 1, 1 ],
@@ -580,7 +582,8 @@ class Version(object):
           ['xsrc', 'X11 sources', 0, 1],
           # The final "s" in "Debug symbols" can also fall victim
           # to curses optimization.
-          ['debug', '(debug sets)|(Debug symbols?)', 0, 1],
+          ['debug', '(debug sets)|(Debug symbols?)$', 0, 1],
+          ['debug32', 'Debug symbols \(32-bit\)', 0, 1 ],
           ['xdebug', '(debug X11 sets)|(X11 debug symbols)', 0, 1],
       ]]
     ])
@@ -1868,6 +1871,7 @@ class Anita(object):
                     if len(sets_this_screen) != 0:
                         break
                 else:
+                    #self.slog(label)
                     for set in set_list:
                         if re.match(set['label'], label) and label not in labels_seen:
                             sets_this_screen.append({
