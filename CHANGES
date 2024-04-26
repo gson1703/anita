@@ -2,6 +2,8 @@
 Fix incorrect scratch disk device name for riscv-riscv64 causing the
 export of test result data to the host to fail.
 
+Support the new manhtml, base32, and debug32 sets.
+
 When installing a NetBSD version that has the new "manhtml" set, don't
 mistake it for the "man" set.
 
