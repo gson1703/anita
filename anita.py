@@ -157,7 +157,7 @@ arch_props = {
         'kernel_name': ['netbsd-GENERIC64.gz'],
         'memory_size': '256M',
         'boot_from_default': 'kernel',
-        'scratch_disk': 'dk2',
+        'scratch_disk': 'ld5c',
     },
 }
 
