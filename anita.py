@@ -547,7 +547,7 @@ class Version(object):
       # Must match the end of the label here so we don't accidentally
       # match "Base 32-bit compatibility libraries".
       [ 'base', 'Base$', 1, 0 ],
-      [ 'base32', 'Base 32-bit compatibility libraries', 0, 1 ],
+      [ 'base32', 'Base 32-bit compatibility libraries', 1, 1 ],
       [ 'etc', '(System)|(System configuration files)|(Configuration files) \(/etc\)', 1, 0 ],
       [ 'comp', 'Compiler [Tt]ools', 1, 0 ],
       [ 'games', 'Games', 0, 0 ],
