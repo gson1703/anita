@@ -1,4 +1,6 @@
 
+- 2.12 released -
+
 Fix incorrect scratch disk device name for riscv-riscv64 causing the
 export of test result data to the host to fail.
 
