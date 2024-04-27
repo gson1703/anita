@@ -1,3 +1,5 @@
+When installing a NetBSD version that has the new "base32" set, don't
+mistake it for the "base" set.
 
 - 2.12 released -
 
