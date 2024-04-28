@@ -1,4 +1,6 @@
 
+- 2.13 releaed -
+
 Install the base32 set by default (when present).
 
 When installing a NetBSD version that has the new "base32" set, don't
