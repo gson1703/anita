@@ -1395,6 +1395,17 @@ class Anita(object):
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                 "binary", "kernel", k)))]
+        if self.xen_type == 'pvshim':
+            if install:
+                k = self.dist.xen_install_kernel(type = 'pv')
+            else:
+                k = self.dist.xen_kernel(type = 'pv')
+            return [self.xen_string_arg('kernel',
+                os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
+                                "binary", "kernel", k))),
+                self.xen_string_arg('type', 'pvh'),
+                'pvshim=1'
+	    ]
         elif self.xen_type == 'pvh':
             if install:
                 k = self.dist.xen_install_kernel('pvh')
@@ -1562,7 +1573,7 @@ class Anita(object):
         arch = self.dist.arch()
 
         if vmm_is_xen(self.vmm):
-            if self.xen_type == 'pv' or self.xen_type == 'pvh':
+            if self.xen_type == 'pv' or self.xen_type == 'pvshim' or self.xen_type == 'pvh':
                 # Download XEN kernels
                 xenkernels = [k for k in [
                     self.dist.xen_kernel(type = self.xen_type),
@@ -1574,7 +1585,7 @@ class Anita(object):
                             True)
             vmm_args = []
             vmm_args += self.xen_args(install = True)
-            if self.xen_type == 'pv' or self.xen_type == 'pvh':
+            if self.xen_type == 'pv' or self.xen_type == 'pvshim' or self.xen_type == 'pvh':
                 vmm_args += [self.xen_disk_arg(os.path.abspath(
                     self.dist.install_sets_iso_path()), 1, cdrom = True)]
                 sets_cd_device = 'xbd1d'

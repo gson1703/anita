@@ -1,4 +1,6 @@
 
+Support Xen pvshim.  From Manuel Bouyer.
+
 - 2.13 releaed -
 
 Install the base32 set by default (when present).
