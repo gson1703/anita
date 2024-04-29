@@ -658,6 +658,12 @@ class Version(object):
         else:
             return None
 
+    def xen_kernel(self, type, install):
+        if install:
+            return xen_install_kernel(self, type)
+        else:
+            return xen_boot_kernel(self, type)
+
     # The list of boot floppies we should try downloading;
     # not all may actually exist.  amd64 currently has five,
     # i386 has three, and older versions may have fewer.
@@ -1388,18 +1394,12 @@ class Anita(object):
 
     def xen_args(self, install):
         if self.xen_type == 'pv':
-            if install:
-                k = self.dist.xen_install_kernel(type = 'pv')
-            else:
-                k = self.dist.xen_boot_kernel(type = 'pv')
+            k = self.dist.xen_kernel('pv', install)
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                 "binary", "kernel", k)))]
         if self.xen_type == 'pvshim':
-            if install:
-                k = self.dist.xen_install_kernel(type = 'pv')
-            else:
-                k = self.dist.xen_boot_kernel(type = 'pv')
+            k = self.dist.xen_kernel('pv', install)
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                 "binary", "kernel", k))),
@@ -1407,10 +1407,7 @@ class Anita(object):
                 'pvshim=1'
 	    ]
         elif self.xen_type == 'pvh':
-            if install:
-                k = self.dist.xen_install_kernel('pvh')
-            else:
-                k = self.dist.xen_boot_kernel('pvh')
+            k = self.dist.xen_kernel('pvh', install)
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                             "binary", "kernel", k))),
