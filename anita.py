@@ -1416,11 +1416,13 @@ class Anita(object):
                             "binary", "kernel", k))),
                 self.xen_string_arg('type', 'pvh'),
             ]
-        else:
+        elif self.xen_type == 'hvm':
             return  [
                 self.xen_string_arg('type', 'hvm'),
                 self.xen_string_arg('serial', 'pty'),
             ]
+        else:
+            raise RuntimeError('unknown xen type %s' % self.xen_type)
 
     def start_xen_domu(self, vmm_args):
         frontend = self.vmm
@@ -1589,8 +1591,8 @@ class Anita(object):
                 vmm_args += [self.xen_disk_arg(os.path.abspath(
                     self.dist.install_sets_iso_path()), 1, cdrom = True)]
                 sets_cd_device = 'xbd1d'
-            else:
-                # HVM, similar the qemu boot_from == 'cdrom' case below
+            elif self.xen_type == 'hvm':
+                # Similar the qemu boot_from == 'cdrom' case below
                 boot_cd_path = os.path.join(self.dist.boot_iso_dir(),
                                             self.dist.boot_isos()[0])
                 vmm_args += [self.xen_disk_arg(os.path.abspath(
@@ -1598,6 +1600,8 @@ class Anita(object):
                 vmm_args += [self.xen_disk_arg(os.path.abspath(
                     self.dist.install_sets_iso_path()), 3, cdrom = True)]
                 sets_cd_device = 'cd1a'
+            else:
+                raise RuntimeError('unknown xen type %s' % self.xen_type)
             child = self.start_xen_domu(vmm_args)
         elif self.vmm == 'qemu':
             # Determine what kind of media to boot from.
