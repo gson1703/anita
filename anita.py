@@ -660,9 +660,9 @@ class Version(object):
 
     def xen_kernel(self, type, install):
         if install:
-            return xen_install_kernel(self, type)
+            return self.xen_install_kernel(type)
         else:
-            return xen_boot_kernel(self, type)
+            return self.xen_boot_kernel(type)
 
     # The list of boot floppies we should try downloading;
     # not all may actually exist.  amd64 currently has five,
