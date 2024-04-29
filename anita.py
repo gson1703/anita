@@ -636,7 +636,7 @@ class Version(object):
     def boot_from_default(self):
         return arch_props[self.arch()].get('boot_from_default')
 
-    def xen_kernel(self, type):
+    def xen_boot_kernel(self, type):
         if type == 'pvh':
             return 'netbsd-GENERIC.gz'
         arch = self.arch()
@@ -1391,7 +1391,7 @@ class Anita(object):
             if install:
                 k = self.dist.xen_install_kernel(type = 'pv')
             else:
-                k = self.dist.xen_kernel(type = 'pv')
+                k = self.dist.xen_boot_kernel(type = 'pv')
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                 "binary", "kernel", k)))]
@@ -1399,7 +1399,7 @@ class Anita(object):
             if install:
                 k = self.dist.xen_install_kernel(type = 'pv')
             else:
-                k = self.dist.xen_kernel(type = 'pv')
+                k = self.dist.xen_boot_kernel(type = 'pv')
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                                 "binary", "kernel", k))),
@@ -1410,7 +1410,7 @@ class Anita(object):
             if install:
                 k = self.dist.xen_install_kernel('pvh')
             else:
-                k = self.dist.xen_kernel('pvh')
+                k = self.dist.xen_boot_kernel('pvh')
             return [self.xen_string_arg('kernel',
                 os.path.abspath(os.path.join(self.dist.download_local_arch_dir(),
                             "binary", "kernel", k))),
@@ -1578,7 +1578,7 @@ class Anita(object):
             if self.xen_type == 'pv' or self.xen_type == 'pvshim' or self.xen_type == 'pvh':
                 # Download XEN kernels
                 xenkernels = [k for k in [
-                    self.dist.xen_kernel(type = self.xen_type),
+                    self.dist.xen_boot_kernel(type = self.xen_type),
                     self.dist.xen_install_kernel(type = self.xen_type)] if k]
                 for kernel in xenkernels:
                     download_if_missing_3(self.dist.dist_url(),
