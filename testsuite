@@ -131,7 +131,7 @@ runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/pmax/
 
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/hpcmips/
 
-if /usr/bin/which simh-vax
+if /usr/bin/which simh-vax >/dev/null
 then
     runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/images/NetBSD-9.0-vax.iso
 else
