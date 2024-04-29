@@ -22,7 +22,7 @@
 .Op Fl -image-format Ar format
 .Op Fl -machine Ar machine
 .Op Fl -partitioning-scheme Ar scheme
-.Op Fl -xen-type Ar pv | hvm | pvh
+.Op Fl -xen-type Ar pv | pvshim | hvm | pvh
 .Op Fl -no-entropy
 .Ar mode
 .Ar URL
@@ -422,6 +422,7 @@ itself have been installed via pkgsrc.
 .It Fl -xen-type Ar type
 Select the type of virtualization to use with Xen.  This can be
 .Ar pv ,
+.Ar pvshim ,
 .Ar hvm ,
 or
 .Ar pvh .
