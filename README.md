@@ -1,2 +1,2 @@
-For more information, see the anita home page at http://www.gson.org/netbsd/anita/.
+For more information, see the anita home page at https://www.gson.org/netbsd/anita/.
 
