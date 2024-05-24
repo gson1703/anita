@@ -125,7 +125,7 @@ arch_props = {
     'vax': {
         'simh': {
         },
-        'scratch_disk': None,
+        'scratch_disk': 'ra1c',
     },
     'hppa': {
         'qemu': {

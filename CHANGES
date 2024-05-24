@@ -1,4 +1,7 @@
 
+Define a scratch disk for vax so that ATF test results can be exported
+to the host.
+
 Support Xen pvshim.  From Manuel Bouyer.
 
 - 2.13 releaed -
