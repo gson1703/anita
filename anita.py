@@ -910,11 +910,17 @@ class ISO(Version):
         if m is None:
             raise RuntimeError("cannot guess architecture from ISO name '%s'"
                 % self.m_iso_basename)
+        arch = None
         if m.group(1) is not None:
-            self.m_arch = m.group(1)
+            arch = m.group(1)
         if m.group(2) is not None:
-            self.m_arch = m.group(2)
-        check_arch_supported(self.m_arch, 'iso')
+            arch = m.group(2)
+        if arch is None:
+            raise RuntimeError("cannot guess architecture from ISO name '%s'"
+                % self.m_iso_basename)
+        arch = re.sub(r'-dvd$', '', arch)
+        check_arch_supported(arch, 'iso')
+        self.m_arch = arch
     def install_sets_iso_path(self):
         if self.m_iso_path is not None:
             return self.m_iso_path
