@@ -38,13 +38,14 @@ if sys.version_info[0] >= 3:
 
 __version__='2.13'
 
-# Your preferred NetBSD FTP mirror site.
-# This is used only by the obsolete code for getting releases
+# Your preferred NetBSD FTP mirror site, and the archive site used for
+# obtaining older releases.
+#
+# These are used only by the obsolete code for getting releases
 # by number, not by the recommended method of getting them by URL.
-# See http://www.netbsd.org/mirrors/#ftp for the complete list.
 
-netbsd_mirror_url = "ftp://ftp.netbsd.org/pub/NetBSD/"
-#netbsd_mirror_url = "ftp://ftp.fi.NetBSD.org/pub/NetBSD/"
+netbsd_mirror_url = "https://ftp.netbsd.org/pub/NetBSD/"
+netbsd_archive_url = "https://archive.netbsd.org/pub/NetBSD-archive/"
 
 # The supported architectures, and their properties.
 
@@ -855,7 +856,12 @@ class Release(NumberedVersion):
         NumberedVersion.__init__(self, ver, **kwargs)
         pass
     def mi_url(self):
-        return netbsd_mirror_url + "NetBSD-" + self.ver + "/"
+        major_ver = int(self.ver.split('.')[0])
+        if major_ver >= 9:
+            url = netbsd_mirror_url
+        else:
+            url = netbsd_archive_url
+        return url + "NetBSD-" + self.ver + "/"
     def dist_url(self):
         return self.mi_url() + self.arch() + "/"
 

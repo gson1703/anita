@@ -1,4 +1,7 @@
 
+In the deprecated anita.Release method, use https, and use
+archive.netbsd.org for releases older than 9.0.
+
 Define a scratch disk for vax so that ATF test results can be exported
 to the host.
 
