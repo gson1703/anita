@@ -5,8 +5,8 @@ archive.netbsd.org for releases older than 9.0.
 Ignoring a suffix of "-dvd" when deducing the architecture name from
 the URL of an install ISO, to work around the issue of PR 58357.
 
-Define a scratch disk for vax so that ATF test results can be exported
-to the host.
+Define a scratch disk for vax guests so that they can export ATF test
+results to the host.
 
 Support Xen pvshim.  From Manuel Bouyer.
 
