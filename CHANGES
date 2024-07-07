@@ -10,7 +10,7 @@ results to the host.
 
 Support Xen pvshim.  From Manuel Bouyer.
 
-- 2.13 releaed -
+- 2.13 released -
 
 Install the base32 set by default (when present).
 
