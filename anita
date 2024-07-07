@@ -60,16 +60,16 @@ def main(argv = None):
                       help="in boot/test/interact mode, assume system is already installed", default=False)
     parser.add_option("--version", action="store_true",
                       help="print the anita version number and exit")
-    parser.add_option("--tests", help='select the tests to run in test mode: \"atf\" or \"kyua\"',
+    parser.add_option("--tests", help='select the tests to run in test mode: "atf" or "kyua"',
                       type="string", default="atf")
     parser.add_option("--dtb", help='use the Device Tree Blob (.dtb) PATH_TO_DTB',
                       type="string", metavar="PATH_TO_DTB", default=dtb_path)
-    parser.add_option("--xen-type", help='select the Xen guest type: \"pv\", "pvshim\", \"hvm\", or \"pvh\"',
+    parser.add_option("--xen-type", help='select the Xen guest type: "pv", "pvshim", "hvm", or "pvh"',
                       type="string", metavar="TYPE", default='pv')
-    parser.add_option("--image-format", help='select the guest disk image format: \"dense\" or \"sparse\"',
+    parser.add_option("--image-format", help='select the guest disk image format: "dense" or "sparse"',
                       type="string", metavar='FORMAT', default='dense')
     parser.add_option("--machine", help='select the emulated machine type, e.g., ' \
-                      '\"vexpress-a15\" or \"virt\"',
+                      '"vexpress-a15" or "virt"',
                       type="string", metavar='MACHINE')
     parser.add_option("--network-config", help='load network configuration from FILE',
                       type="string", metavar='FILE')
