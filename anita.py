@@ -542,35 +542,35 @@ class Version(object):
     #
 
     sets = make_set_dict_list([
-      [ 'kern-GENERIC', 'Kernel (GENERIC)', 1, 0 ],
-      [ 'kern-GENERIC.NOACPI', 'Kernel \(GENERIC\.NOACPI\)', 0, 1 ],
-      [ 'modules', 'Kernel [Mm]odules', 1, 1 ],
+      [ 'kern-GENERIC', r'Kernel (GENERIC)', 1, 0 ],
+      [ 'kern-GENERIC.NOACPI', r'Kernel \(GENERIC\.NOACPI\)', 0, 1 ],
+      [ 'modules', r'Kernel [Mm]odules', 1, 1 ],
       # Must match the end of the label here so we don't accidentally
       # match "Base 32-bit compatibility libraries".
-      [ 'base', 'Base$', 1, 0 ],
-      [ 'base32', 'Base 32-bit compatibility libraries', 1, 1 ],
-      [ 'etc', '(System)|(System configuration files)|(Configuration files) \(/etc\)', 1, 0 ],
-      [ 'comp', 'Compiler [Tt]ools', 1, 0 ],
-      [ 'games', 'Games', 0, 0 ],
-      [ 'gpufw', 'Graphics driver firmware', 1, 1 ],
+      [ 'base', r'Base$', 1, 0 ],
+      [ 'base32', r'Base 32-bit compatibility libraries', 1, 1 ],
+      [ 'etc', r'(System)|(System configuration files)|(Configuration files) \(/etc\)', 1, 0 ],
+      [ 'comp', r'Compiler [Tt]ools', 1, 0 ],
+      [ 'games', r'Games', 0, 0 ],
+      [ 'gpufw', r'Graphics driver firmware', 1, 1 ],
       # Must match the end of the label here so we don't accidentally
       # match "Manual pages (HTML)".
-      [ 'man', '(Online )?Manual [Pp]ages$', 0, 0 ],
-      [ 'manhtml', 'Manual pages \(HTML\)}', 0, 1 ],
-      [ 'misc', 'Miscellaneous', 1, 0 ],
-      [ 'rescue', 'Recovery [Tt]ools', 1, 1 ],
-      [ 'tests', 'Test programs', 1, 1 ],
-      [ 'text', 'Text [Pp]rocessing [Tt]ools', 0, 0 ],
-      [ '_x11', 'X11 sets', 0, [
-          ['xbase',   'X11 base and clients', 0, 1 ],
-          ['xcomp',   'X11 programming', 0, 1 ],
-          ['xetc',    'X11 configuration', 0, 1 ],
-          ['xfont',   'X11 fonts', 0, 1 ],
-          ['xserver', 'X11 servers', 0, 1 ],
+      [ 'man', r'(Online )?Manual [Pp]ages$', 0, 0 ],
+      [ 'manhtml', r'Manual pages \(HTML\)}', 0, 1 ],
+      [ 'misc', r'Miscellaneous', 1, 0 ],
+      [ 'rescue', r'Recovery [Tt]ools', 1, 1 ],
+      [ 'tests', r'Test programs', 1, 1 ],
+      [ 'text', r'Text [Pp]rocessing [Tt]ools', 0, 0 ],
+      [ '_x11', r'X11 sets', 0, [
+          ['xbase',   r'X11 base and clients', 0, 1 ],
+          ['xcomp',   r'X11 programming', 0, 1 ],
+          ['xetc',    r'X11 configuration', 0, 1 ],
+          ['xfont',   r'X11 fonts', 0, 1 ],
+          ['xserver', r'X11 servers', 0, 1 ],
       ]],
-      [ '_src', 'Source (and debug )?sets', 0, [
-          ['syssrc', 'Kernel sources', 0, 1],
-          ['src', 'Base sources', 0, 1],
+      [ '_src', r'Source (and debug )?sets', 0, [
+          ['syssrc', r'Kernel sources', 0, 1],
+          ['src', r'Base sources', 0, 1],
           # The optionsal "es"? is because the source sets are
           # displayed in a pop-up box atop the main distribution
           # set list, and as of source date 2019.09.12.06.19.47,
@@ -580,14 +580,14 @@ class Version(object):
           # Curses, eager to to optimize, will reuse that
           # existing "es" instead of outputting it anew, causing
           # the pattern not to match if it includes the "es".
-          ['sharesrc', 'Share sourc(es)?', 0, 1],
-          ['gnusrc', 'GNU sources', 0, 1],
-          ['xsrc', 'X11 sources', 0, 1],
+          ['sharesrc', r'Share sourc(es)?', 0, 1],
+          ['gnusrc', r'GNU sources', 0, 1],
+          ['xsrc', r'X11 sources', 0, 1],
           # The final "s" in "Debug symbols" can also fall victim
           # to curses optimization.
-          ['debug', '(debug sets)|(Debug symbols?)$', 0, 1],
-          ['debug32', 'Debug symbols \(32-bit\)', 0, 1 ],
-          ['xdebug', '(debug X11 sets)|(X11 debug symbols)', 0, 1],
+          ['debug', r'(debug sets)|(Debug symbols?)$', 0, 1],
+          ['debug32', r'Debug symbols \(32-bit\)', 0, 1 ],
+          ['xdebug', r'(debug X11 sets)|(X11 debug symbols)', 0, 1],
       ]]
     ])
 
@@ -1742,7 +1742,7 @@ class Anita(object):
             # CD-ROM, but not when booted from floppies.  Sigh.
             child.expect(
                 # Group 1-2
-                "(insert disk (\d+), and press return...)|" +
+                r"(insert disk (\d+), and press return...)|" +
                 # Group 3
                 # Match either the English or the German text.
                 # This is a kludge to deal with kernel messages
@@ -1751,15 +1751,15 @@ class Anita(object):
                 # other, but are unlikely to appear in the middle of
                 # both.  The installation is done in English no
                 # matter which one we happen to match.
-                "(Installation messages in English|Installation auf Deutsch)|" +
+                r"(Installation messages in English|Installation auf Deutsch)|" +
                 # Group 4
-                "(Terminal type)|" +
+                r"(Terminal type)|" +
                 # Group 5
-                "(Installation medium to load the additional utilities from: )|"
+                r"(Installation medium to load the additional utilities from: )|"
                 # Group 6
-                "(1. Install NetBSD)|" +
+                r"(1. Install NetBSD)|" +
                 # Group 7
-                "(\\(I\\)nstall, \\(S\\)hell or \\(H\\)alt)"
+                r"(\(I\)nstall, \(S\)hell or \(H\)alt)"
                 )
             if child.match.group(1):
                 # We got the "insert disk" prompt
@@ -1891,7 +1891,7 @@ class Anita(object):
                 # Alternatively, match the special letter "x: " which
                 # is not followed by an installation status.
                 child.expect(
-                    "(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s*\x1b\[\d+;\d+H\x00*))(Yes|No|All|None))|(x: )")
+                    r"(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s*\x1b\[\d+;\d+H\x00*))(Yes|No|All|None))|(x: )")
                 (letter, label, yesno, exit) = child.match.groups()
                 if exit:
                     if len(sets_this_screen) != 0:
@@ -2492,11 +2492,11 @@ class Anita(object):
                 child.expect('root device.*:')
                 for c in "wd0a\r\n":
                     child.send(c)
-                child.expect("dump device \(default wd0b\):")
+                child.expect(r"dump device \(default wd0b\):")
                 child.send("\r\n")
-                child.expect("file system \(default generic\):")
+                child.expect(r"file system \(default generic\):")
                 child.send("\r\n")
-                child.expect("init path \(default /sbin/init\):")
+                child.expect(r"init path \(default /sbin/init\):")
                 child.send("\r\n")
         elif vmm_is_xen(self.vmm):
             vmm_args += self.xen_args(install = False)
@@ -2785,7 +2785,7 @@ def shell_cmd(child, cmd, timeout = -1, keepalive_patterns = None):
     except:
         raise
     child.send("echo exit_status=$?=\n")
-    child.expect("exit_status=(\d+)=")
+    child.expect(r"exit_status=(\d+)=")
     r = int(child.match.group(1))
     child.expect(prompt_re, timeout)
     return r
