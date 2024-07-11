@@ -596,7 +596,7 @@ class Version(object):
     def __init__(self, sets = None):
         self.tempfiles = []
         if sets is not None:
-            if not any([re.match('kern-', s) for s in sets]):
+            if not any([re.match(r'kern-', s) for s in sets]):
                 raise RuntimeError("no kernel set specified")
             # Create a Python set containing the names of the NetBSD sets we
             # want for O(1) lookup.  Yes, the multiple meansings of the word
@@ -840,7 +840,7 @@ class NumberedVersion(Version):
         self.ver = ver
     # The file name of the install ISO (sans directory)
     def install_sets_iso_name(self):
-        if re.match("^[3-9]", self.ver) is not None:
+        if re.match(r"^[3-9]", self.ver) is not None:
             return "i386cd-" + self.ver + ".iso"
         else:
             return "i386cd.iso"
@@ -1899,7 +1899,7 @@ class Anita(object):
                 else:
                     #self.slog(label)
                     for set in set_list:
-                        if re.match(set['label'], label) and label not in labels_seen:
+                        if re.match(set[r'label'], label) and label not in labels_seen:
                             sets_this_screen.append({
                                 'set': set,
                                 'letter': letter,
