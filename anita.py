@@ -1574,7 +1574,7 @@ class Anita(object):
         self.start_boot(install = False, snapshot_system_disk = False)
         # The system will resize the image and then reboot.
         # Wait for the login prompt and shut down cleanly.
-        self.child.expect("login:")
+        self.child.expect(r"login:")
         self.halt()
 
     def _install_using_sysinst(self):
@@ -1706,7 +1706,7 @@ class Anita(object):
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
-            child.expect('(PXE [Bb]oot)|(BIOS [Bb]oot)')
+            child.expect(r'(PXE [Bb]oot)|(BIOS [Bb]oot)')
             if child.match.group(2):
                 raise RuntimeError("got BIOS bootloader instead of PXE")
         elif self.vmm == 'gxemul':
@@ -1726,7 +1726,7 @@ class Anita(object):
         elif self.vmm == 'simh':
             sets_cd_device = 'cd0a'
             child = self.start_simh()
-            child.expect(">>>")
+            child.expect(r">>>")
             child.send("boot dua3\r\n")
         else:
             raise RuntimeError('unknown vmm %s' % self.vmm)
@@ -1770,7 +1770,7 @@ class Anita(object):
                 child.send("\001c")
                 # We used to wait for a (qemu) prompt here, but qemu 0.9.1
                 # no longer prints it
-                # child.expect('\(qemu\)')
+                # child.expect(r'\(qemu\)')
                 if not floppy0_name:
                     # Between qemu 0.9.0 and 0.9.1, the name of the floppy
                     # device accepted by the "change" command changed from
@@ -1800,17 +1800,17 @@ class Anita(object):
                 # "Installation medium to load the additional utilities from"
                 # (SPARC)
                 child.send("cdrom\n")
-                child.expect("CD-ROM device to use")
+                child.expect(r"CD-ROM device to use")
                 child.send("\n")
-                child.expect("Path to instfs.tgz")
+                child.expect(r"Path to instfs.tgz")
                 child.send("\n")
-                child.expect("Terminal type")
+                child.expect(r"Terminal type")
                 # The default is "sun", but anita is more likely to run
                 # in an xterm or some other ansi-like terminal than on
                 # a sun console.
                 child.send("xterm\n")
                 term = "xterm"
-                child.expect("nstall/Upgrade")
+                child.expect(r"nstall/Upgrade")
                 child.send("I\n")
             elif child.match.group(6):
                 # "1. Install NetBSD"
@@ -1828,12 +1828,12 @@ class Anita(object):
 
         # i386 and amd64 ask for keyboard type here; sparc doesn't
         while True:
-            child.expect("(Keyboard type)|(a: Install NetBSD to hard disk)|" +
+            child.expect(r"(Keyboard type)|(a: Install NetBSD to hard disk)|" +
                 "(Shall we continue)")
             if child.match.group(1) or child.match.group(2):
                 child.send("\n")
             elif child.match.group(3):
-                child.expect("([a-z]): Yes")
+                child.expect(r"([a-z]): Yes")
                 child.send(child.match.group(1) + b"\n")
                 break
             else:
@@ -1860,10 +1860,10 @@ class Anita(object):
                 raise AssertionError
 
         def choose_no():
-            child.expect("([a-z]): No")
+            child.expect(r"([a-z]): No")
             child.send(child.match.group(1) + b"\n")
         def choose_yes():
-            child.expect("([a-z]): Yes")
+            child.expect(r"([a-z]): Yes")
             child.send(child.match.group(1) + b"\n")
 
         # Keep track of sets we have already handled, by label.
@@ -1943,7 +1943,7 @@ class Anita(object):
 
         def choose_interface_newstyle():
             self.slog('new-style interface list')
-            child.expect('Available interfaces')
+            child.expect(r'Available interfaces')
             # Choose the first non-fwip interface
             while True:
                 # Make sure to match the digit after the interface
@@ -1957,7 +1957,7 @@ class Anita(object):
 
         def configure_network():
             def choose_dns_server():
-                child.expect("([a-z]): other")
+                child.expect(r"([a-z]): other")
                 child.send(child.match.group(1) + b"\n")
                 child.send((self.net_config.get('dnsserveraddr') or "10.0.1.1") + "\n")
 
@@ -1985,7 +1985,7 @@ class Anita(object):
         def choose_install_media():
             # Noemu installs from HTTP, otherwise we use the CD-ROM
             media = ['CD-ROM', 'HTTP'][self.vmm == 'noemu']
-            child.expect('([a-h]): ' + media)
+            child.expect(r'([a-h]): ' + media)
             child.send(child.match.group(1) + b"\n")
 
         self.network_configured = False
@@ -2157,7 +2157,7 @@ class Anita(object):
                 # also been spotted after executing the sed commands to set the
                 # root password cipher, with 2010.10.27.10.42.12 source.
                 while True:
-                    child.expect("(([a-z]): DES)|(root password)|(Hit enter to continue)")
+                    child.expect(r"(([a-z]): DES)|(root password)|(Hit enter to continue)")
                     if child.match.group(1):
                         # DES
                         child.send(child.match.group(2) + b"\n")
@@ -2170,9 +2170,9 @@ class Anita(object):
                     else:
                         raise AssertionError
                 # Don't set a root password
-                child.expect("b: No")
+                child.expect(r"b: No")
                 child.send("b\n")
-                child.expect("a: /bin/sh")
+                child.expect(r"a: /bin/sh")
                 child.send("\n")
 
                 # "The installation of NetBSD-3.1 is now complete.  The system
@@ -2187,7 +2187,7 @@ class Anita(object):
                 # after running chpass above.
 
                 while True:
-                    child.expect("(Hit enter to continue)|(x: Exit)")
+                    child.expect(r"(Hit enter to continue)|(x: Exit)")
                     if child.match.group(1):
                         child.send("\n")
                     elif child.match.group(2):
@@ -2201,7 +2201,7 @@ class Anita(object):
                 seen_essential_things += 1
             elif r == 9:
                 # (Configure the additional items)
-                child.expect("x: Finished configuring")
+                child.expect(r"x: Finished configuring")
                 child.send("x\n")
                 break
             elif r == 10:
@@ -2227,14 +2227,14 @@ class Anita(object):
                 expect_any(child,
                     r'Hit enter to continue', '\r',
                     r'x: Get Distribution', 'x\n')
-                r = child.expect(["Install from", "/usr/bin/ftp"])
+                r = child.expect([r"Install from", r"/usr/bin/ftp"])
                 if r == 0:
                     # ...and I'm back at the "Install from" menu?
                     # Probably the same bug reported as install/49440.
                     choose_install_media()
                     # And again...
-                    child.expect("The following are the http site")
-                    child.expect("x: Get Distribution")
+                    child.expect(r"The following are the http site")
+                    child.expect(r"x: Get Distribution")
                     child.send("x\n")
                 elif r == 1:
                     pass
@@ -2242,7 +2242,7 @@ class Anita(object):
                     assert(0)
             elif r == 12:
                 # "Is the network information you entered accurate"
-                child.expect("([a-z]): Yes")
+                child.expect(r"([a-z]): Yes")
                 child.send(child.match.group(1) + b"\n")
             elif r == 13:
                  # "(I have found the following network interfaces)"
@@ -2254,7 +2254,7 @@ class Anita(object):
                 configure_network()
             elif r == 15:
                 choose_no()
-                child.expect("No aborts the install process")
+                child.expect(r"No aborts the install process")
                 choose_yes()
             elif r == 16:
                 self.slog("network problems detected")
@@ -2292,7 +2292,7 @@ class Anita(object):
             elif r == 23:
                 # "a: Use one of these disks"
                 child.send("a\n")
-                child.expect("Choose disk")
+                child.expect(r"Choose disk")
                 child.send("0\n")
             elif r == 24:
                 # "(([a-z]): Set sizes of NetBSD partitions)"
@@ -2322,7 +2322,7 @@ class Anita(object):
             elif r == 26:
                 # "a partitioning scheme"
                 if self.partitioning_scheme == 'MBR':
-                    child.expect("([a-z]): Master Boot Record")
+                    child.expect(r"([a-z]): Master Boot Record")
                     child.send(child.match.group(1) + b"\n")
                 else:
                     # Sparc asks the question but does not have MBR as an option,
@@ -2335,20 +2335,20 @@ class Anita(object):
                 raise AssertionError
             elif r == 29 or r == 30:
                 # Install or replace bootcode
-                child.expect("a: Yes")
+                child.expect(r"a: Yes")
                 child.send("\n")
             elif r == 31:
                 # "Please enter a name for your NetBSD disk"
                 child.send("\n")
             elif r == 32:
                 # "ready to install NetBSD on your hard disk"
-                child.expect("Shall we continue")
-                child.expect("b: Yes")
+                child.expect(r"Shall we continue")
+                child.expect(r"b: Yes")
                 child.send("b\n")
                 # newfs is run at this point
             elif r == 33:
                 # "We now have your BSD disklabel partitions"
-                child.expect("x: Partition sizes ok")
+                child.expect(r"x: Partition sizes ok")
                 child.send("x\n")
             elif r == 34:
                 # Your disk currently has a non-NetBSD partition
@@ -2356,9 +2356,9 @@ class Anita(object):
             elif r == 35:
                 # We need to enter these values in cases where sysinst could not
                 # determine disk geometry. Currently, this happens for NetBSD/hpcmips
-                child.expect("sectors")
+                child.expect(r"sectors")
                 child.send("\n")
-                child.expect("heads")
+                child.expect(r"heads")
                 child.send("\n")
             elif r == 36:
                 raise RuntimeError('setting up partitions did not work first time')
@@ -2369,7 +2369,7 @@ class Anita(object):
                 self.provide_entropy(child)
             elif r == 39:
                 # Changing local password for root
-                child.expect("sword:")
+                child.expect(r"sword:")
                 child.send("\n")
             else:
                 raise AssertionError
@@ -2489,7 +2489,7 @@ class Anita(object):
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
             if self.dist.arch() == 'macppc':
-                child.expect('root device.*:')
+                child.expect(r'root device.*:')
                 for c in "wd0a\r\n":
                     child.send(c)
                 child.expect(r"dump device \(default wd0b\):")
@@ -2507,7 +2507,7 @@ class Anita(object):
             child = self.start_gxemul(vmm_args)
         elif self.vmm == 'simh':
             child = self.start_simh(vmm_args)
-            child.expect(">>>")
+            child.expect(r">>>")
             child.send("boot dua0\r\n")
         else:
             raise RuntimeError('unknown vmm %s' % vmm)
@@ -2730,11 +2730,11 @@ class Anita(object):
 def login(child):
     # Send a newline character to get another login prompt, since boot() consumed one.
     child.send("\n")
-    child.expect("login:")
+    child.expect(r"login:")
     child.send("root\n")
     # This used to be "\n# ", but that doesn't work if the machine has
     # a hostname
-    child.expect("# ")
+    child.expect(r"# ")
 
 # Generate a root shell prompt string that is less likely to appear in
 # the console output by accident than the default of "# ".  Must end with "# ".
@@ -2767,7 +2767,7 @@ def expect_with_keepalive(child, patterns, timeout, keepalive_patterns):
 
 def shell_cmd(child, cmd, timeout = -1, keepalive_patterns = None):
     child.send("exec /bin/sh\n")
-    child.expect("# ")
+    child.expect(r"# ")
     prompt = gen_shell_prompt()
     child.send("PS1=" + quote_prompt(prompt) + "\n")
     prompt_re = prompt
