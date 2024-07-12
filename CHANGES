@@ -1,4 +1,6 @@
 
+Fix invalid escape sequences that cause warnings in Python 3.12.
+
 - 2.14 released -
 
 In the deprecated anita.Release method, use https, and use
