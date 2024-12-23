@@ -145,7 +145,7 @@ fi
 # 9.0 hangs at "CTB: PRINTERPORT", need -current
 #runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/alpha/
 
-# sparc64 is broken with PR 54310, PR 54810
+# TODO: add sparc64 back now that PR 54310 and PR 54810 are fixed
 
 # evbarm-aarch64 lacks release images (there are dailies)
 
