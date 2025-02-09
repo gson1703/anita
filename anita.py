@@ -147,6 +147,8 @@ arch_props = {
             'executable': 'qemu-system-alpha',
         },
         'boot_from_default': 'kernel',
+        # Consistency would be nice
+        'inst_kernel': 'installation/instkernel/netbsd.gz',
         'scratch_disk': 'wd1c',
     },
     'riscv-riscv64': {
@@ -722,8 +724,8 @@ class Version(object):
         if self.arch() in ['macppc']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-INSTALL.gz"])
         if self.arch() in ['alpha']:
-            # Consistency would be nice
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "instkernel", "netbsd.gz"])
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(),
+                                  arch_props[self.arch()]['inst_kernel'].split(os.path.sep))
         if self.arch() in ['i386', 'amd64']:
             # This is used when netbooting only, and marked optional
             # so that we can still install NetBSD 4.0 where it doesn't
@@ -1690,9 +1692,10 @@ class Anita(object):
                 # alpha
                 cd_path = self.dist.install_sets_iso_path()
                 vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path)
+                # Uncompress the installation kernel
                 inst_kernel = os.path.join(self.workdir, 'netbsd_install')
                 gunzip(os.path.join(self.dist.download_local_arch_dir(),
-                                    'installation', 'instkernel', 'netbsd.gz'),
+                                    *arch_props[self.dist.arch()]['inst_kernel'].split(os.path.sep)),
                        inst_kernel)
                 vmm_args += ['-kernel', inst_kernel]
             else:
