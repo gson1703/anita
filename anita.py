@@ -140,6 +140,7 @@ arch_props = {
             'machine_default': 'mac99',
         },
         'memory_size': '256M',
+        'inst_kernel': 'binary/kernel/netbsd-INSTALL.gz',
         'scratch_disk': 'wd1c',
     },
     'alpha': {
@@ -721,9 +722,7 @@ class Version(object):
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
         if self.arch() in ['hpcmips', 'landisk', 'macppc', 'alpha']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
-        if self.arch() in ['macppc']:
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-INSTALL.gz"])
-        if self.arch() in ['alpha']:
+        if self.arch() in ['macppc', 'alpha']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(),
                                   arch_props[self.arch()]['inst_kernel'].split(os.path.sep))
         if self.arch() in ['i386', 'amd64']:
