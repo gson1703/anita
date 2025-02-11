@@ -722,9 +722,13 @@ class Version(object):
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
         if self.arch() in ['hpcmips', 'landisk', 'macppc', 'alpha']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
-        if self.arch() in ['macppc', 'alpha']:
+
+        # Download installation kernel if neede
+        inst_kernel_prop = arch_props[self.arch()].get('inst_kernel')
+        if inst_kernel_prop is not None:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(),
-                                  arch_props[self.arch()]['inst_kernel'].split(os.path.sep))
+                                  inst_kernel_prop.split(os.path.sep))
+
         if self.arch() in ['i386', 'amd64']:
             # This is used when netbooting only, and marked optional
             # so that we can still install NetBSD 4.0 where it doesn't
