@@ -116,6 +116,7 @@ arch_props = {
     'hpcmips': {
         'gxemul': {
         },
+        'inst_kernel': 'installation/netbsd.gz',
         'scratch_disk': None,
     },
     'landisk': {
@@ -718,12 +719,10 @@ class Version(object):
             # Nothing more to do as we aren't doing a full installation
             return
 
-        if self.arch() == 'hpcmips':
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "netbsd.gz"])
         if self.arch() in ['hpcmips', 'landisk', 'macppc', 'alpha']:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["binary", "kernel", "netbsd-GENERIC.gz"])
 
-        # Download installation kernel if neede
+        # Download installation kernel if needed
         inst_kernel_prop = arch_props[self.arch()].get('inst_kernel')
         if inst_kernel_prop is not None:
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(),
