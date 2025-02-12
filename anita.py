@@ -728,12 +728,6 @@ class Version(object):
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(),
                                   inst_kernel_prop.split(os.path.sep))
 
-        if self.arch() in ['i386', 'amd64']:
-            # This is used when netbooting only, and marked optional
-            # so that we can still install NetBSD 4.0 where it doesn't
-            # exist yet.
-            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(), ["installation", "misc", "pxeboot_ia32.bin"], True)
-
         i = 0
         # Depending on the NetBSD version, there may be two or more
         # boot floppies.  Treat any floppies past the first two as
@@ -751,15 +745,18 @@ class Version(object):
                 ["installation", "cdrom", bootcd],
                 True)
 
-        # For noemu
-        download_if_missing_3(self.dist_url(),
-            self.download_local_arch_dir(),
-            ["installation", "misc", "pxeboot_ia32.bin"],
-            True)
-        download_if_missing_3(self.dist_url(),
-            self.download_local_arch_dir(),
-            ["binary", "kernel", "netbsd-INSTALL.gz"],
-            True)
+        # For netbooting/noemu
+        if self.arch() in ['i386', 'amd64']:
+            # Must be optional so that we can still install NetBSD 4.0
+            # where it doesn't exist yet.
+            download_if_missing_3(self.dist_url(),
+                self.download_local_arch_dir(),
+                ["installation", "misc", "pxeboot_ia32.bin"],
+                True)
+            download_if_missing_3(self.dist_url(),
+                self.download_local_arch_dir(),
+                ["binary", "kernel", "netbsd-INSTALL.gz"],
+                True)
 
         for set in self.flat_sets:
             if set['install']:
