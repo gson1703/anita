@@ -1698,7 +1698,7 @@ class Anita(object):
                        inst_kernel)
                 vmm_args += ['-kernel', inst_kernel]
             else:
-                raise RuntimeError("unsupported boot-from value %s" % boot_from)
+                raise RuntimeError("unsupported boot-from value %s" % self.boot_from)
 
             # If we don't have a CD with sets already, use the next
             # available CD drive
