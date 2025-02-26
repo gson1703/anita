@@ -1368,7 +1368,7 @@ class Anita(object):
             # Use virtio
             drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
             dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
-        else if self.dist.arch() == 'evbarm-earmv7hf':
+        elif self.dist.arch() == 'evbarm-earmv7hf':
             # Use SD card
             drive_attrs += [('if', 'sd')]
         else:
