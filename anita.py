@@ -1362,16 +1362,15 @@ class Anita(object):
             ('snapshot', ["off", "on"][snapshot])
         ]
         dev_args = []
-        if self.dist.arch() == 'evbarm-earmv7hf':
-            if self.machine == 'virt':
-                drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
-                dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
-            else:
-                drive_attrs += [('if', 'sd')]
-        elif self.dist.arch() == 'evbarm-aarch64' or \
-             self.dist.arch() == 'riscv-riscv64':
+        if self.dist.arch() == 'evbarm-earmv7hf' and self.machine == 'virt' or \
+           self.dist.arch() == 'evbarm-aarch64' or \
+           self.dist.arch() == 'riscv-riscv64':
+            # Use virtio
             drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
             dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
+        else if self.dist.arch() == 'evbarm-earmv7hf':
+            # Use SD card
+            drive_attrs += [('if', 'sd')]
         else:
             pass
         return ["-drive", qemu_format_attrs(drive_attrs)] + dev_args
