@@ -2715,6 +2715,7 @@ class Anita(object):
                                r'entering state S5',
                                r'> ', # sparc64 firmware prompt
                                r'System halted!' # hppa
+                               r'halted' # macppc
                               ], timeout = 60)
         except pexpect.EOF:
             # Didn't see the text but got an EOF; that's OK.
