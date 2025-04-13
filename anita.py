@@ -164,6 +164,11 @@ arch_props = {
         'boot_from_default': 'kernel',
         'scratch_disk': 'ld5c',
     },
+    # Experimental, for noemu
+    'evbmips-mips64eb': {
+        'noemu': {
+        },
+    },
 }
 
 # Filename extensions used for the installation sets in different
