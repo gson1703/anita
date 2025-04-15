@@ -168,6 +168,7 @@ arch_props = {
     'evbmips-mips64eb': {
         'noemu': {
         },
+        'inst_kernel': 'installation/netbsd-INSTALL_OCTEON.gz',
     },
 }
 
@@ -551,7 +552,8 @@ class Version(object):
     #
 
     sets = make_set_dict_list([
-      [ 'kern-GENERIC', r'Kernel (GENERIC)', 1, 0 ],
+      # In all version but not in all ports (missing from evmips-mips64eb)
+      [ 'kern-GENERIC', r'Kernel (GENERIC)', 1, 1 ],
       [ 'kern-GENERIC.NOACPI', r'Kernel \(GENERIC\.NOACPI\)', 0, 1 ],
       [ 'modules', r'Kernel [Mm]odules', 1, 1 ],
       # Must match the end of the label here so we don't accidentally
@@ -1712,9 +1714,11 @@ class Anita(object):
             child = self.start_qemu(vmm_args, snapshot_system_disk = False)
         elif self.vmm == 'noemu':
             child = self.start_noemu(['--boot-from', 'net'])
-            child.expect(r'(PXE [Bb]oot)|(BIOS [Bb]oot)')
-            if child.match.group(2):
-                raise RuntimeError("got BIOS bootloader instead of PXE")
+            if self.dist.arch() in ('i386', 'amd64'):
+                child.expect(r'(PXE [Bb]oot)|(BIOS [Bb]oot)')
+                if child.match.group(2):
+                    raise RuntimeError("got BIOS bootloader instead of PXE")
+            # For 'evbmips-mips64eb', look for r'BOOTP broadcast' instead?
         elif self.vmm == 'gxemul':
             sets_cd_device = 'cd0a'
             if self.dist.arch() == 'hpcmips':
