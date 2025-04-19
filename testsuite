@@ -94,22 +94,22 @@ fi
 
 archive="https://archive.netbsd.org/pub/NetBSD-archive/"
 
-runtest install $archive/NetBSD-2.1/i386/
-runtest install $archive/NetBSD-3.0.1/i386/
-runtest boot $archive/NetBSD-4.0/i386/
-runtest boot $archive/NetBSD-5.0.2/i386/
-runtest boot $archive/NetBSD-5.1.5/i386/
+runtest install ${archive}NetBSD-2.1/i386/
+runtest install ${archive}NetBSD-3.0.1/i386/
+runtest boot ${archive}NetBSD-4.0/i386/
+runtest boot ${archive}NetBSD-5.0.2/i386/
+runtest boot ${archive}NetBSD-5.1.5/i386/
 
 # These fail with "piixide0:0:0: lost interrupt" (tested with qemu 2.2.0)
 # runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.2/i386/
 # runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.2.3/i386/
 
-runtest boot $archive/NetBSD-6.0/amd64/
+runtest boot ${archive}NetBSD-6.0/amd64/
 
 # Test CD boot
-runtest "--boot-from cdrom boot" $archive/NetBSD-7.2/amd64/
+runtest "--boot-from cdrom boot" ${archive}NetBSD-7.2/amd64/
 
-runtest boot $archive/NetBSD-8.2/amd64/
+runtest boot ${archive}NetBSD-8.2/amd64/
 
 # Test newest version
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-10.0/amd64/
@@ -125,7 +125,7 @@ runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.3/amd64/
 # disabled while qemu sparc emulation is broken
 #runtest boot http://ftp.netbsd.org/pub/NetBSD/iso/7.2/NetBSD-7.2-sparc.iso
 
-runtest boot $archive/NetBSD-8.0/macppc/
+runtest boot ${archive}NetBSD-8.0/macppc/
 
 runtest boot http://ftp.netbsd.org/pub/NetBSD/NetBSD-9.0/pmax/
 
@@ -150,7 +150,7 @@ fi
 # evbarm-aarch64 lacks release images (there are dailies)
 
 # Test selecting and installing the games set
-url=$archive/iso/5.0.2/sparccd-5.0.2.iso
+url=${archive}iso/5.0.2/sparccd-5.0.2.iso
 workdir=`$python ./anita print-workdir $url`
 logfile=$logdir/$workdir
 (
