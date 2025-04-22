@@ -1750,10 +1750,10 @@ class Anita(object):
         while True:
             # NetBSD/i386 will prompt for a terminal type if booted from a
             # CD-ROM, but not when booted from floppies.  Sigh.
-            child.expect(
-                # Group 1-2
-                r"(insert disk (\d+), and press return...)|" +
-                # Group 3
+            r = child.expect([
+                # 0 (was Group 1-2)
+                r"insert disk (\d+), and press return...",
+                # 1 (was Group 3)
                 # Match either the English or the German text.
                 # This is a kludge to deal with kernel messages
                 # like "ciss0: normal state on 'ciss0:1'" that
@@ -1761,20 +1761,20 @@ class Anita(object):
                 # other, but are unlikely to appear in the middle of
                 # both.  The installation is done in English no
                 # matter which one we happen to match.
-                r"(Installation messages in English|Installation auf Deutsch)|" +
-                # Group 4
-                r"(Terminal type)|" +
-                # Group 5
-                r"(Installation medium to load the additional utilities from: )|"
-                # Group 6
-                r"(1. Install NetBSD)|" +
-                # Group 7
-                r"(\(I\)nstall, \(S\)hell or \(H\)alt)"
-                )
-            if child.match.group(1):
+                r"Installation messages in English|Installation auf Deutsch",
+                # 2 (was Group 4)
+                r"Terminal type",
+                # 3 (was Group 5)
+                r"Installation medium to load the additional utilities from: ",
+                # 4 (was Group 6)
+                r"1. Install NetBSD",
+                # 5 (was Group 7)
+                r"\(I\)nstall, \(S\)hell or \(H\)alt",
+            ])
+            if r == 0:
                 # We got the "insert disk" prompt
                 # There is no floppy 0, hence the "- 1"
-                floppy_index = int(child.match.group(2)) - 1
+                floppy_index = int(child.match.group(1)) - 1
 
                 # Escape into qemu command mode to switch floppies
                 child.send("\001c")
@@ -1799,14 +1799,14 @@ class Anita(object):
                            floppy_paths[floppy_index].encode('ASCII') + b"\n")
                 # Exit qemu command mode
                 child.send("\001c\n")
-            elif child.match.group(3):
+            elif r == 1:
                 # "Installation messages in English"
                 break
-            elif child.match.group(4):
+            elif r == 2:
                 # "Terminal type"
                 child.send("xterm\n")
                 term = "xterm"
-            elif child.match.group(5):
+            elif r == 3:
                 # "Installation medium to load the additional utilities from"
                 # (SPARC)
                 child.send("cdrom\n")
@@ -1822,10 +1822,10 @@ class Anita(object):
                 term = "xterm"
                 child.expect(r"nstall/Upgrade")
                 child.send("I\n")
-            elif child.match.group(6):
+            elif r == 4:
                 # "1. Install NetBSD"
                 child.send("1\n")
-            elif child.match.group(7):
+            elif r == 5:
                 # "(I)nstall, (S)hell or (H)alt ?"
                 child.send("i\n")
 
