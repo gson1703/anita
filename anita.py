@@ -2508,7 +2508,7 @@ class Anita(object):
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
             # "-net", "nic,model=ne2k_pci", "-net", "user"
-            if self.dist.arch() == 'macppc':
+            if self.dist.arch() == 'macppc' and self.machine == 'mac99':
                 child.expect(r'root device.*:')
                 for c in "wd0a\r\n":
                     child.send(c)
