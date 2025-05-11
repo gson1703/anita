@@ -1669,14 +1669,14 @@ class Anita(object):
                 tftpdir = os.path.join(self.workdir, 'tftp')
                 mkdir_p(tftpdir)
 
+                # Configure pxeboot for a serial console
+                # Alas, this will only work on a NetBSD host.
                 # XXX dup wrt noemu
                 pxeboot_com_fn = 'pxeboot_ia32_com.bin'
                 pxeboot_com_path = os.path.join(tftpdir, pxeboot_com_fn)
                 shutil.copyfile(os.path.join(self.dist.download_local_arch_dir(),
                                              'installation/misc/pxeboot_ia32.bin'),
                                 pxeboot_com_path)
-                # Configure the boot image for a serial console
-                # Alas, this will only work on a NetBSD host.
                 subprocess.check_call(['/usr/sbin/installboot', '-e',
                                        '-o', 'console=com0', pxeboot_com_path])
 
