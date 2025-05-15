@@ -1670,14 +1670,21 @@ class Anita(object):
                 mkdir_p(tftpdir)
 
                 # Configure pxeboot for a serial console
-                # Alas, this will only work on a NetBSD host.
+                # On a non-NetBSD host, you need to cross-build installboot and
+                # install it in the PATH as nbinstalboot
                 # XXX dup wrt noemu
                 pxeboot_com_fn = 'pxeboot_ia32_com.bin'
                 pxeboot_com_path = os.path.join(tftpdir, pxeboot_com_fn)
                 shutil.copyfile(os.path.join(self.dist.download_local_arch_dir(),
                                              'installation/misc/pxeboot_ia32.bin'),
                                 pxeboot_com_path)
-                subprocess.check_call(['/usr/sbin/installboot', '-e',
+
+                if os.uname()[0] == 'NetBSD':
+                    installboot = '/usr/sbin/installboot'
+                else:
+                    installboot = 'nbinstallboot'
+                subprocess.check_call([installboot, '-e',
+                                       '-m', self.dist.arch(),
                                        '-o', 'console=com0', pxeboot_com_path])
 
                 inst_kernel = os.path.join(tftpdir, 'netbsd')
