@@ -2543,6 +2543,8 @@ class Anita(object):
 
     # Like start_boot(), but wait for a login prompt.
     def boot(self, vmm_args = None):
+        # Needed to determine runtime_boot_iso_path on macppc
+        self.dist.set_workdir(self.workdir)
         self.start_boot(vmm_args)
         while True:
             r = self.child.expect([r'\033\[c', r'\033\[5n', r'login:'])
