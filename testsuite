@@ -4,7 +4,7 @@
 # NetBSD versions still works.
 #
 
-python=python2.7
+python=python3.11
 
 # Start background jobs this many seconds apart
 spacing=30
