@@ -92,7 +92,7 @@ then
     runtest "--memory-size=128M --disk-size=2G --sets=kern-GENERIC,etc,base,tests,games,misc,syssrc boot" $debug_build
 fi
 
-ftpsite="http://ftp.netbsd.org/pub/"
+ftpsite="http://ftp.netbsd.org/pub/NetBSD/"
 archive="https://archive.netbsd.org/pub/NetBSD-archive/"
 
 runtest install ${archive}NetBSD-2.1/i386/
@@ -113,10 +113,10 @@ runtest "--boot-from cdrom boot" ${archive}NetBSD-7.2/amd64/
 runtest boot ${archive}NetBSD-8.2/amd64/
 
 # Test newest version
-runtest boot ${ftpsite}NetBSD/NetBSD-10.0/amd64/
+runtest boot ${ftpsite}NetBSD-10.0/amd64/
 
 # Test recent versions
-runtest boot ${ftpsite}NetBSD/NetBSD-9.3/amd64/
+runtest boot ${ftpsite}NetBSD-9.3/amd64/
 
 # This panics with qemu 2.0.0, and fails due to the message
 # "esp0: !TC on DATA XFER [intr 18, stat 82, step 4] prevphase 2, resid 0"
@@ -124,14 +124,14 @@ runtest boot ${ftpsite}NetBSD/NetBSD-9.3/amd64/
 #runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-6.1.3/images/NetBSD-6.1.3-sparc.iso
 
 # disabled while qemu sparc emulation is broken
-#runtest boot ${ftpsite}NetBSD/iso/7.2/NetBSD-7.2-sparc.iso
+#runtest boot ${ftpsite}iso/7.2/NetBSD-7.2-sparc.iso
 
 runtest boot ${archive}NetBSD-8.0/macppc/
 
 runtest boot ${archive}NetBSD-9.0/pmax/
 
 # Installing hpcmips worked with GXemul 0.6.2 but it fails with 0.7.0.
-#runtest boot ${ftpsite}NetBSD/NetBSD-9.0/hpcmips/
+#runtest boot ${ftpsite}NetBSD-9.0/hpcmips/
 
 if /usr/bin/which simh-vax >/dev/null
 then
@@ -141,10 +141,10 @@ else
 fi
 
 # 9.0 fails with assertion "(val & LASI_IRQ_BITS) == val", needs -current?
-# runtest boot ${ftpsite}NetBSD/NetBSD-9.0/images/NetBSD-9.0-hppa.iso
+# runtest boot ${ftpsite}NetBSD-9.0/images/NetBSD-9.0-hppa.iso
 
 # 9.0 hangs at "CTB: PRINTERPORT", need -current
-#runtest boot ${ftpsite}NetBSD/NetBSD-9.0/alpha/
+#runtest boot ${ftpsite}NetBSD-9.0/alpha/
 
 # TODO: add sparc64 back now that PR 54310 and PR 54810 are fixed
 
