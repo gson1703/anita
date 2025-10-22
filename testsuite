@@ -155,13 +155,13 @@ url=${archive}iso/5.0.2/sparccd-5.0.2.iso
 workdir=`$python ./anita print-workdir $url`
 logfile=$logdir/$workdir
 (
-  set -x -e
-  rm -f $workdir/wd0.img
-  $python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot $url | tee stdout.games
-  grep "127 9721" stdout.games
-  rm -f stdout.games
-  rm -f $workdir/wd0.img
-  echo "passed"
+    set -x -e
+    rm -f $workdir/wd0.img
+    $python ./anita --sets=kern-GENERIC,base,etc,games --run "/usr/games/factor 1234567" boot $url | tee stdout.games
+    grep "127 9721" stdout.games
+    rm -f stdout.games
+    rm -f $workdir/wd0.img
+    echo "passed"
 ) >$logfile 2>&1 &
 
 # Test running the ATF tests
@@ -169,28 +169,28 @@ url=${ftpsite}NetBSD-archive/NetBSD-5.1/i386/
 workdir=`$python ./anita print-workdir $url`
 logfile=$logdir/$workdir
 (
-  set -x -e
-  rm -f $workdir/wd0.img
-  $python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee stdout.atf || true
-  # This is not to check that tests pass, but only that they at least run to completion
-  grep 'passed test cases' stdout.atf
-  rm -f stdout.atf
-  rm -f $workdir/wd0.img
-  echo "passed"
+    set -x -e
+    rm -f $workdir/wd0.img
+    $python ./anita --sets=kern-GENERIC,etc,base,tests,games,misc test $url | tee stdout.atf || true
+    # This is not to check that tests pass, but only that they at least run to completion
+    grep 'passed test cases' stdout.atf
+    rm -f stdout.atf
+    rm -f $workdir/wd0.img
+    echo "passed"
 ) >$logfile 2>&1 &
 
 # Test anita 1.2 compatibility (in foreground)
 logfile=$logdir/7.0.1
 (
-workdir=netbsd-7.0.1
-rm -f $workdir/wd0.img
-$python <<END
+    workdir=netbsd-7.0.1
+    rm -f $workdir/wd0.img
+    $python <<END
 import anita
 ver = anita.Release("7.0.1")
 ver.install()
 END
-rm -f $workdir/wd0.img
-echo "passed"
+    rm -f $workdir/wd0.img
+    echo "passed"
 ) >$logfile 2>&1 &
 
 echo "waiting for tests to finish"
@@ -210,7 +210,7 @@ done
 
 if $pass
 then
-echo "passed"
+    echo "passed"
 fi
 
 $pass
