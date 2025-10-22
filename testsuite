@@ -101,9 +101,9 @@ runtest boot ${archive}NetBSD-4.0/i386/
 runtest boot ${archive}NetBSD-5.0.2/i386/
 runtest boot ${archive}NetBSD-5.1.5/i386/
 
-# These fail with "piixide0:0:0: lost interrupt" (tested with qemu 2.2.0)
-# runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.2/i386/
-# runtest boot http://ftp.fi.netbsd.org/pub/NetBSD/NetBSD-5.2.3/i386/
+# These fail with "piixide0:0:0: lost interrupt" (tested with qemu 2.2.0, 10.1.2)
+# runtest boot ${archive}/NetBSD-5.2/i386/
+# runtest boot ${archive}/NetBSD-5.2.3/i386/
 
 runtest boot ${archive}NetBSD-6.0/amd64/
 
