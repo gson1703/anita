@@ -16,7 +16,11 @@ import subprocess
 import sys
 import time
 
-# Deal with gratuitous urllib naming changes in Python 3
+# Deal with gratuitous urllib changes in Python 3
+
+if sys.version_info >= (3, 14, 0):
+    import urllib.request
+
 if sys.version_info[0] >= 3:
     import urllib.request as good_old_urllib
     import urllib.parse as good_old_urlparse
@@ -267,18 +271,21 @@ class pexpect_spawn_log(pexpect.spawn):
         slog(self.structured_log_f, "match", self.match.group(0), timestamp = False);
         return r
 
-# Subclass urllib.FancyURLopener so that we can catch
-# HTTP 404 errors
-
-class MyURLopener(good_old_urllib.FancyURLopener):
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        raise IOError('HTTP error code %d' % errcode)
+if sys.version_info < (3, 14, 0):
+    # Subclass urllib.FancyURLopener so that we can catch
+    # HTTP 404 errors
+    class MyURLopener(good_old_urllib.FancyURLopener):
+        def http_error_default(self, url, fp, errcode, errmsg, headers):
+            raise IOError('HTTP error code %d' % errcode)
 
 def my_urlretrieve(url, filename):
-    r = MyURLopener().retrieve(url, filename)
-    if sys.version_info >= (2, 7, 12):
-        # Work around https://bugs.python.org/issue27973
-        good_old_urllib.urlcleanup()
+    if sys.version_info >= (3, 14, 0):
+        r = urllib.request.urlretrieve(url, filename)
+    else:
+        r = MyURLopener().retrieve(url, filename)
+        if sys.version_info >= (2, 7, 12):
+            # Work around https://bugs.python.org/issue27973
+            good_old_urllib.urlcleanup()
     return r
 
 # Download a file, cleaning up the partial file if the transfer
