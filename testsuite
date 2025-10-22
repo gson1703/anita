@@ -122,7 +122,10 @@ runtest boot ${archive}NetBSD-8.2/amd64/
 
 runtest boot ${archive}NetBSD-8.0/macppc/
 
-runtest boot ${archive}NetBSD-9.0/pmax/
+if /usr/bin/which gxemul >/dev/null
+then
+    runtest boot ${archive}NetBSD-9.0/pmax/
+fi
 
 # Installing hpcmips worked with GXemul 0.6.2 but it fails with 0.7.0.
 #runtest boot ${ftpsite}NetBSD-9.0/hpcmips/
