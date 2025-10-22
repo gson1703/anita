@@ -146,7 +146,7 @@ fi
 
 runtest boot ${ftpsite}NetBSD-9.3/amd64/
 
-runtest boot ${ftpsite}NetBSD-10.0/amd64/
+runtest boot ${ftpsite}NetBSD-10.1/amd64/
 
 # Test selecting and installing the games set
 url=${archive}iso/5.0.2/sparccd-5.0.2.iso
