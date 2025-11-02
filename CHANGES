@@ -1,4 +1,6 @@
 
+- 2.16 released -
+
 Deal with Python 3.13 no longer having urllib.FancyURLopener
 
 - 2.15 released -
