@@ -373,15 +373,6 @@ def download_if_missing_2(url, file, optional = False):
         else:
             raise
 
-# As above, but download a file from the download directory tree
-# rooted at "urlbase" into a mirror tree rooted at "dirbase".  The
-# file name to download is "relfile", which is relative to both roots.
-
-def download_if_missing(urlbase, dirbase, relfile, optional = False):
-    url = urlbase + relfile
-    file = os.path.join(dirbase, relfile)
-    return download_if_missing_2(url, file, optional)
-
 def download_if_missing_3(urlbase, dirbase, relpath, optional = False):
     url = urlbase + "/".join(relpath)
     file = os.path.join(*([dirbase] + relpath))
