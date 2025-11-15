@@ -200,7 +200,7 @@ wait
 pass=true
 for f in $logdir/*
 do
-    if tail -1 $f | grep 'passed' >/dev/null
+    if tail -1 $f | grep '^passed$' >/dev/null
     then
         :
     else
