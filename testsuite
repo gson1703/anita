@@ -166,7 +166,7 @@ logfile=$logdir/$workdir
 ) >$logfile 2>&1 &
 
 # Test running the ATF tests
-url=${ftpsite}NetBSD-archive/NetBSD-5.1/i386/
+url=${archive}NetBSD-5.1/i386/
 workdir=`$python ./anita print-workdir $url`
 logfile=$logdir/$workdir
 (
