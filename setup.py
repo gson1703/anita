@@ -1,8 +1,7 @@
 from distutils.core import setup
-from anita import __version__
 
 setup(name='anita',
-      version=__version__,
+      version='2.16',
       description='Automated NetBSD Installation and Test Application',
       author='Andreas Gustafsson',
       author_email='gson@gson.org',
