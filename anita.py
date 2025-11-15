@@ -18,7 +18,7 @@ import time
 
 # Deal with gratuitous urllib changes in Python 3
 
-if sys.version_info >= (3, 14, 0):
+if sys.version_info >= (3, 13, 0):
     import urllib.request
 
 if sys.version_info[0] >= 3:
@@ -272,7 +272,7 @@ class pexpect_spawn_log(pexpect.spawn):
         slog(self.structured_log_f, "match", self.match.group(0), timestamp = False);
         return r
 
-if sys.version_info < (3, 14, 0):
+if sys.version_info < (3, 13, 0):
     # Subclass urllib.FancyURLopener so that we can catch
     # HTTP 404 errors
     class MyURLopener(good_old_urllib.FancyURLopener):
@@ -280,7 +280,7 @@ if sys.version_info < (3, 14, 0):
             raise IOError('HTTP error code %d' % errcode)
 
 def my_urlretrieve(url, filename):
-    if sys.version_info >= (3, 14, 0):
+    if sys.version_info >= (3, 13, 0):
         r = urllib.request.urlretrieve(url, filename)
     else:
         r = MyURLopener().retrieve(url, filename)
