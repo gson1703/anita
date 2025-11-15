@@ -116,6 +116,7 @@ arch_props = {
         },
         'scratch_disk': 'sd1c',
         'memory_size': '128M',
+        'inst_kernel': 'binary/kernel/netbsd-INSTALL.gz',
     },
     'hpcmips': {
         'gxemul': {
