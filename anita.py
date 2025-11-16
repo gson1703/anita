@@ -292,7 +292,7 @@ def my_urlretrieve(url, filename):
 # Download a file, cleaning up the partial file if the transfer
 # fails or is aborted before completion.
 
-def download_file(file, url):
+def download_file(url, file):
     try:
         my_urlretrieve(url, file)
     except IOError as e:
@@ -355,7 +355,7 @@ def download_if_missing_2(url, file, optional = False):
     try:
         print("Downloading", url + "...", end=' ')
         sys.stdout.flush()
-        download_file(file, url)
+        download_file(url, file)
         print("OK")
         sys.stdout.flush()
         return True
