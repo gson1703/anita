@@ -294,16 +294,10 @@ def my_urlretrieve(url, filename):
 
 def download_file(file, url, optional = False):
     try:
-        print("Downloading", url + "...", end=' ')
         sys.stdout.flush()
         my_urlretrieve(url, file)
-        print("OK")
         sys.stdout.flush()
     except IOError as e:
-        if optional:
-            print("missing but optional, so that's OK")
-        else:
-            print(e)
         sys.stdout.flush()
         if os.path.exists(file):
             os.unlink(file)
@@ -362,15 +356,19 @@ def download_if_missing_2(url, file, optional = False):
     dir = os.path.dirname(file)
     mkdir_p(dir)
     try:
+        print("Downloading", url + "...", end=' ')
         download_file(file, url, optional)
+        print("OK")
         return True
     except IOError as e:
         if optional:
+            print("missing but optional, so that's OK")
             f = open(file + ".MISSING", "w")
             print(e, file = f)
             f.close()
             return False
         else:
+            print(e)
             raise
 
 def download_if_missing_3(urlbase, dirbase, relpath, optional = False):
