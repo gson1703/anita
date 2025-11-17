@@ -385,8 +385,8 @@ if sys.version_info >= (3, 13, 0):
     # error, not just the file legitimately not existing.  When in
     # doubt, for example in the case of ftp URLs, return false.
     def is_real_error(url, e):
-        scheme, *rest = urllib.parse.urlparse(url)
-        scheme = scheme.lower()
+        parts = urllib.parse.urlparse(url)
+        scheme = parts[0].lower()
         return \
             ((scheme == 'http' or scheme == 'https') and \
                 isinstance(e, urllib.error.HTTPError) and e.code != 404) or \
