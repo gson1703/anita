@@ -20,6 +20,7 @@ import time
 
 if sys.version_info >= (3, 13, 0):
     import urllib.request
+    import urllib.parse
 
 if sys.version_info[0] >= 3:
     import urllib.request as good_old_urllib
@@ -361,6 +362,8 @@ def download_if_missing_2(url, file, optional = False):
         return True
     except IOError as e:
         if optional:
+            if is_real_error(url, e):
+                raise
             print("missing but optional, so that's OK")
             sys.stdout.flush()
             f = open(file + ".MISSING", "w")
@@ -375,6 +378,25 @@ def download_if_missing_3(urlbase, dirbase, relpath, optional = False):
     url = urlbase + "/".join(relpath)
     file = os.path.join(*([dirbase] + relpath))
     return download_if_missing_2(url, file, optional)
+
+if sys.version_info >= (3, 13, 0):
+    # Return true if we can confidenlty determine that an attempt to
+    # download "url" that raised the exception "e" is due to a real
+    # error, not just the file legitimately not existing.  When in
+    # doubt, for example in the case of ftp URLs, return false.
+    def is_real_error(url, e):
+        scheme, *rest = urllib.parse.urlparse(url)
+        scheme = scheme.lower()
+        return \
+            ((scheme == 'http' or scheme == 'https') and \
+                isinstance(e, urllib.error.HTTPError) and e.code != 404) or \
+            scheme == 'file' and \
+                not (isinstance(e, urllib.error.URLError) and
+                     isinstance(e.reason, FileNotFoundError))
+else:
+    # Supporting this for all old versions is too painful
+    def is_real_error(url, e):
+        return False
 
 # Map a URL to a directory name.  No two URLs should map to the same
 # directory.
