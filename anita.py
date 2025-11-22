@@ -41,7 +41,7 @@ if sys.version_info[0] >= 3:
     import functools
     print = functools.partial(print, flush = True)
 
-__version__='2.16'
+__version__='2.17'
 
 # Your preferred NetBSD FTP mirror site, and the archive site used for
 # obtaining older releases.

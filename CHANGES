@@ -1,4 +1,6 @@
 
+- 2.17 released -
+
 When downloading a file results in an error, attempt to determine
 whether the error is due to the expected nonexistence of the file or
 some other error that should be treated differently.
