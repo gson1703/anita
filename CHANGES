@@ -3,6 +3,10 @@ When downloading a file results in an error, attempt to determine
 whether the error is due to the expected nonexistence of the file or
 some other error that should be treated differently.
 
+Fix a compatibility issue between setup.py and recent pkgsrc pip.
+
+Fix a regression in NetBSD/pmax target support.
+
 - 2.16 released -
 
 Deal with Python 3.13 no longer having urllib.FancyURLopener
