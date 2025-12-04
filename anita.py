@@ -99,7 +99,6 @@ arch_props = {
         'kernel_name': ['netbsd-VEXPRESS_A15.ub.gz', 'netbsd-GENERIC.ub.gz'],
         'scratch_disk': None,
         'memory_size': '128M',
-        'disk_size': '2G',
     },
     'evbarm-aarch64': {
         'qemu': {
@@ -110,7 +109,6 @@ arch_props = {
         'kernel_name': ['netbsd-GENERIC64.img.gz'],
         'scratch_disk': 'ld5c',
         'memory_size': '512M',
-        'disk_size': '2G',
     },
     'pmax': {
         'gxemul': {
@@ -1097,7 +1095,7 @@ class Anita(object):
         # Set the default disk size if none was given.
         disk_size = disk_size or \
             arch_props[self.dist.arch()].get('disk_size') or \
-            '1536M'
+            '2G'
         self.disk_size = disk_size
 
         # Set the default memory size if none was given.
