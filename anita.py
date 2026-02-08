@@ -2643,51 +2643,54 @@ class Anita(object):
         child = self.boot(scratch_disk_args)
         self.login()
 
-        # Build a shell command to run the tests
+        # Build a shell command to run the tests.
+        # The shell variable $t is the temporary directory where the
+        # test output files should be stored.  This used to be /tmp,
+        # but is now /var/tmp because PR 59560.
         if self.tests == "kyua":
             if self.shell_cmd("grep -q 'MKKYUA.*=.*yes' /etc/release") != 0:
                 raise RuntimeError("kyua is not installed.")
             test_cmd = (
                 "kyua " +
                     "--loglevel=error " +
-                    "--logfile=/tmp/tests/kyua-test.log " +
+                    "--logfile=$t/tests/kyua-test.log " +
                     "test " +
-                    "--store=/tmp/tests/store.db; " +
-                "echo $? >/tmp/tests/test.status; " +
+                    "--store=$t/tests/store.db; " +
+                "echo $? >$t/tests/test.status; " +
                 "kyua " +
                     "report " +
-                    "--store=/tmp/tests/store.db " +
+                    "--store=$t/tests/store.db " +
                     "| tail -n 3; " +
                 "kyua " +
                     "--loglevel=error " +
-                    "--logfile=/tmp/tests/kyua-report-html.log " +
+                    "--logfile=$t/tests/kyua-report-html.log " +
                     "report-html " +
-                    "--store=/tmp/tests/store.db " +
-                    "--output=/tmp/tests/html; ")
+                    "--store=$t/tests/store.db " +
+                    "--output=$t/tests/html; ")
         elif self.tests == "atf":
             atf_aux_files = ['/usr/share/xsl/atf/tests-results.xsl',
                              '/usr/share/xml/atf/tests-results.dtd',
                              '/usr/share/examples/atf/tests-results.css']
             test_cmd = (
-                "{ atf-run; echo $? >/tmp/tests/test.status; } | " +
-                "tee /tmp/tests/test.tps | " +
-                "atf-report -o ticker:- -o ticker:/tmp/tests/test.txt " +
-                "-o xml:/tmp/tests/test.xml; " +
-                "(cd /tmp && for f in %s; do cp $f tests/; done;); " % ' '.join(atf_aux_files))
+                "{ atf-run; echo $? >$t/tests/test.status; } | " +
+                "tee $t/tests/test.tps | " +
+                "atf-report -o ticker:- -o ticker:$t/tests/test.txt " +
+                "-o xml:$t/tests/test.xml; " +
+                "(cd $t && for f in %s; do cp $f tests/; done;); " % ' '.join(atf_aux_files))
         else:
             raise RuntimeError('unknown testing framework %s' % self.test)
 
         # Build a shell command to save the test results
         if results_by_net:
             save_test_results_cmd = (
-                "{ cd /tmp && " +
+                "{ cd $t && " +
                 "tar cf tests-results.img tests && " +
                 "(echo blksize 8192; echo put tests-results.img) | tftp %s; }; " % \
                 (self.net_config.get('serveraddr') or "10.169.0.1")
             )
         elif scratch_disk:
             save_test_results_cmd = (
-            "{ cd /tmp && " +
+            "{ cd $t && " +
                 # Make sure the files will fit on the scratch disk
                 "test `du -sk tests | awk '{print $1}'` -lt %d && " % max_result_size_k +
                 # To guard against accidentally overwriting the wrong
@@ -2702,15 +2705,16 @@ class Anita(object):
             save_test_results_cmd = ""
 
         exit_status = self.shell_cmd(
+            "t=/var/tmp; " +
             "df -k | sed 's/^/df-pre-test /'; " +
-            "mkdir /tmp/tests && " +
+            "mkdir $t/tests && " +
             "cd /usr/tests && " +
             test_cmd +
             save_test_results_cmd +
             "df -k | sed 's/^/df-post-test /'; " +
             "ps -glaxww | sed 's/^/ps-post-test /'; " +
             "vmstat -s; " +
-            "sh -c 'exit `cat /tmp/tests/test.status`'",
+            "s=$(cat /tmp/test.status); sh -c \"exit $s\"",
             timeout, [r'\d test cases', r'\[\d+\.\d+s\]'])
 
         # Halt the VM before reading the scratch disk, to
