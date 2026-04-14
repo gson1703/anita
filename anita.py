@@ -1552,6 +1552,20 @@ class Anita(object):
         if multiline:
             child.send('\n')
 
+    # For vax
+    def set_date(self, child):
+        now = time.gmtime()
+        for letter, format in (
+            (b"a", "%Y"),
+            (b"b", "%m"),
+            (b"c", "%d"),
+            (b"d", "%H"),
+            (b"e", "%M"),
+        ):
+            child.send(letter + b"\n")
+            child.send(time.strftime(format, now).encode('ASCII') + b"\n")
+        child.send(b"f\n")
+
     def _install(self):
         # Download or build the install ISO
         self.dist.set_workdir(self.workdir)
@@ -1866,16 +1880,26 @@ class Anita(object):
         # Confirm "Installation messages in English"
         child.send("\n")
 
-        # i386 and amd64 ask for keyboard type here; sparc doesn't
+        # i386 and amd64 ask for keyboard type here; sparc doesn't.
+        # vax may ask for the date.
         while True:
-            child.expect(r"(Keyboard type)|(a: Install NetBSD to hard disk)|" +
-                "(Shall we continue)")
-            if child.match.group(1) or child.match.group(2):
+            r = child.expect([
+                r"Keyboard type",
+                r"a: Install NetBSD to hard disk",
+                r"Shall we continue",
+                r"Please .* date and time",
+            ])
+            if r == 0 or r == 1:
+                # Keyboard type or Install NetBSD
                 child.send("\n")
-            elif child.match.group(3):
+            elif r == 2:
+                # Shall we continue
                 child.expect(r"([a-z]): Yes")
                 child.send(child.match.group(1) + b"\n")
                 break
+            elif r == 3:
+                # date and time
+                self.set_date(child)
             else:
                 raise AssertionError
 
