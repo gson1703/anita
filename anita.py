@@ -806,11 +806,12 @@ class Version(object):
             makefs = ["mkisofs", "-r", "-hfs", "-part", "-l", "-J", "-N", "-o"]
         else:
             # Prefer native tools
-            if os.uname()[0] == 'NetBSD':
+            sysname = os.uname()[0]
+            if sysname == 'NetBSD':
                 makefs = ["/usr/sbin/makefs", "-t", "cd9660", "-o", "rockridge"]
-            elif os.uname()[0] == 'FreeBSD':
+            elif sysname[0] == 'FreeBSD':
                 makefs = mkisofs
-            elif os.uname()[0] == 'Darwin':
+            elif sysname[0] == 'Darwin':
                 makefs = ["hdiutil", "makehybrid", "-iso", "-joliet", "-o"]
             else:
                 # Linux distributions differ.  Ubuntu has genisoimage
