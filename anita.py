@@ -1298,7 +1298,11 @@ class Anita(object):
                 'attach -r rq3 ' + self.dist.install_sets_iso_path() + '\n' +
                 'boot cpu')
         f.close()
-        child = self.pexpect_spawn('simh-vax', [os.path.join(self.workdir, 'netbsd.ini')])
+        if os.uname()[0] == 'NetBSD':
+            simh = 'simh-vax'
+        else:
+            simh = 'vax'
+        child = self.pexpect_spawn(simh, [os.path.join(self.workdir, 'netbsd.ini')])
         self.configure_child(child)
         return child
 
