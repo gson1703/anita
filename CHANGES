@@ -1,4 +1,16 @@
 
+On platforms other than NetBSD, invoke simh-vax as just vax.
+
+Support upcoming sysinst changes to set the the date and time as part
+of the NetBSD/vax install.
+
+Store the ATF output files under /var/tmp on the guest, because
+/tmp may be a tmpfs which is too small in low-memory configurations
+(NetBSD PR 59560).
+
+Increase default disk size to 2G, as 1536M is no longer enough to run
+the ATF tests on amd64.
+
 - 2.17 released -
 
 When downloading a file results in an error, attempt to determine
