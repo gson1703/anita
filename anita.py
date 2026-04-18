@@ -897,8 +897,10 @@ class Release(NumberedVersion):
 class URL(Version):
     def __init__(self, url, **kwargs):
         Version.__init__(self, **kwargs)
-        self.url = url
-        match = re.match(r'(^.*/)([^/]+)/$', url)
+        # Remove query string and fragment, if any
+        scheme, netloc, path, query, fragment = good_old_urlparse.urlsplit(url)
+        self.url = good_old_urlparse.urlunsplit((scheme, netloc, path, "", ""))
+        match = re.match(r'(^.*/)([^/]+)/$', self.url)
         if match is None:
             raise RuntimeError(("URL '%s' doesn't look like the URL of a " + \
             "NetBSD distribution") % url)
@@ -978,14 +980,19 @@ class ISO(Version):
 # and constructs an URL, ISO, or LocalDirectory object as needed.
 
 def distribution(distarg, **kwargs):
-    if re.search(r'\.iso$', distarg):
+    # This accepts bare paths, too
+    scheme, netloc, path, query, fragment = good_old_urlparse.urlsplit(distarg)
+    if path.endswith('.iso'):
+        # URL or path to ISO
         return ISO(distarg, **kwargs)
-    elif re.match(r'/', distarg):
-        if not re.search(r'/$', distarg):
+    elif distarg.startswith('/'):
+        # Local directory
+        if not distarg.endswith('/'):
             raise RuntimeError("distribution directory should end in a slash")
         return LocalDirectory(distarg, **kwargs)
-    elif re.match(r'[a-z0-9\.0-]+:', distarg):
-        if not re.search(r'/$', distarg):
+    elif scheme:
+        # URL but not ISO
+        if not path.endswith('/'):
             raise RuntimeError("distribution URL should end in a slash")
         return URL(distarg, **kwargs)
     else:
