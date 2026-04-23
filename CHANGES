@@ -1,4 +1,7 @@
 
+Support distribution URLs having a query string and/or fragment
+component
+
 On platforms other than NetBSD, invoke simh-vax as just vax.
 
 Support upcoming sysinst changes to set the the date and time as part
