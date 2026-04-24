@@ -373,7 +373,9 @@ def download_if_missing_2(url, file, optional = False):
             raise
 
 def download_if_missing_3(urlbase, dirbase, relpath, optional = False):
-    url = urlbase + "/".join(relpath)
+    scheme, netloc, path, query, fragment = good_old_urlparse.urlsplit(urlbase)
+    path += "/".join(relpath)
+    url = good_old_urlparse.urlunsplit((scheme, netloc, path, query, fragment))
     file = os.path.join(*([dirbase] + relpath))
     return download_if_missing_2(url, file, optional)
 
@@ -501,7 +503,6 @@ def reverse_virtio_drives(v):
         return sublist[0] == '-drive' and sublist[2] == '-device' \
             and sublist[3].startswith('virtio-blk-device')
     reverse_sublists(v, 4, is_virtio_blk)
-
 
 # Format at set of key-value pairs as used in qemu command line options.
 # Takes a sequence of tuples.
@@ -899,14 +900,14 @@ class Release(NumberedVersion):
 class URL(Version):
     def __init__(self, url, **kwargs):
         Version.__init__(self, **kwargs)
-        # Remove query string and fragment, if any
+        self.url = url
         scheme, netloc, path, query, fragment = good_old_urlparse.urlsplit(url)
-        self.url = good_old_urlparse.urlunsplit((scheme, netloc, path, "", ""))
-        match = re.match(r'(^.*/)([^/]+)/$', self.url)
+
+        match = re.match(r'(^.*/)([^/]+)/$', path)
         if match is None:
             raise RuntimeError(("URL '%s' doesn't look like the URL of a " + \
             "NetBSD distribution") % url)
-        self.url_mi_part = match.group(1)
+        self.url_mi_part = good_old_urlparse.urlunsplit((scheme, netloc, match.group(1), query, fragment))
         self.m_arch = match.group(2)
         check_arch_supported(self.m_arch, 'reltree')
     def dist_url(self):
@@ -995,7 +996,7 @@ def distribution(distarg, **kwargs):
     elif scheme:
         # URL but not ISO
         if not path.endswith('/'):
-            raise RuntimeError("distribution URL should end in a slash")
+            raise RuntimeError("distribution URL path should end in a slash")
         return URL(distarg, **kwargs)
     else:
         raise RuntimeError("expected distribution URL or directory, got " + distarg)
