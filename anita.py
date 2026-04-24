@@ -400,13 +400,15 @@ else:
 # directory.
 
 def url2dir(url):
+    bad_chars = r"/:+-?="
+    bad_chars_re = r"[" + re.escape(bad_chars) + r"]"
     tail = []
     def munge(match):
-        index = "/:+-".find(match.group())
+        index = bad_chars.find(match.group())
         if index != 0:
             tail.append(chr(0x60 + index) + str(match.start()))
         return "-"
-    return "work-" + re.sub("[/:+-]", munge, url) + "+" + "".join(tail)
+    return "work-" + re.sub(bad_chars_re, munge, url) + "+" + "".join(tail)
 
 # Inverse of the above; not used, but included just to show that the
 # mapping is invertible and therefore collision-free
