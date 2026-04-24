@@ -143,11 +143,17 @@ fi
 
 # evbarm-aarch64 lacks release images (there are dailies)
 
-if /usr/bin/which simh-vax >/dev/null
+# Find the SIMH vax emulator binary, if any.  This duplicates some
+# logic in anita itself.
+case "$(uname -s)" in
+    NetBSD) simh="simh-vax" ;;
+    *) simh="vax" ;;
+esac
+if /usr/bin/which $simh >/dev/null
 then
     runtest boot $(archive_url NetBSD-9.0/images/NetBSD-9.0-vax.iso)
 else
-    echo "no simh-vax"
+    echo "no SIMH vax emulator \"$simh\" found"
 fi
 
 runtest boot ${ftpsite}NetBSD-9.3/amd64/
