@@ -2753,7 +2753,7 @@ class Anita(object):
             "df -k | sed 's/^/df-post-test /'; " +
             "ps -glaxww | sed 's/^/ps-post-test /'; " +
             "vmstat -s; " +
-            "s=$(cat /tmp/test.status); sh -c \"exit $s\"",
+            "s=$(cat $t/tests/test.status); sh -c \"exit $s\"",
             timeout, [r'\d test cases', r'\[\d+\.\d+s\]'])
 
         # Halt the VM before reading the scratch disk, to
