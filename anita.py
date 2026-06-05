@@ -2197,7 +2197,7 @@ class Anita(object):
                 # 39
                 r'Changing local password for root',
                 # 40
-                r'(Accept partition sizes)|(Go on)',
+                r'(([a-z]): )?((Accept partition sizes)|(Go on))',
                 ], 10800)
 
             if child.match.group(0) == prevmatch:
@@ -2434,27 +2434,29 @@ class Anita(object):
                 child.send("\n")
             elif r == 40:
                 # (Accept partition sizes)|(Go on)
-                #
-                # In 2.1, no letter label like "x: " is printed before
-                # "Accept partition sizes", hence the kludge of sending
-                # multiple cursor-down sequences.
-
-                #child.send(child.match.group(1) + "\n")
-                # Press cursor-down enough times to get to the end of the list,
-                # to the "Accept partition sizes" entry, then press
-                # enter to continue.  Previously, we used control-N ("\016"),
-                # but if it gets echoed (which has happened), it is interpreted by
-                # the terminal as "enable line drawing character set", leaving the
-                # terminal in an unusable state.
-                if term in ['xterm', 'vt100']:
-                    # For unknown reasons, when using a terminal type of "xterm",
-                    # sysinst puts the terminal in "application mode", causing the
-                    # cursor keys to send a different escape sequence than the default.
-                    cursor_down = b"\033OB"
+                if child.match.group(2):
+                    child.send(child.match.group(2) + b"\n")
                 else:
-                    # Use the default ANSI cursor-down escape sequence
-                    cursor_down = b"\033[B"
-                child.send(cursor_down * 8 + b"\n")
+                    # In 2.1, no letter label like "x: " is printed before
+                    # "Accept partition sizes", hence the kludge of sending
+                    # multiple cursor-down sequences.
+
+                    #child.send(child.match.group(1) + "\n")
+                    # Press cursor-down enough times to get to the end of the list,
+                    # to the "Accept partition sizes" entry, then press
+                    # enter to continue.  Previously, we used control-N ("\016"),
+                    # but if it gets echoed (which has happened), it is interpreted by
+                    # the terminal as "enable line drawing character set", leaving the
+                    # terminal in an unusable state.
+                    if term in ['xterm', 'vt100']:
+                        # For unknown reasons, when using a terminal type of "xterm",
+                        # sysinst puts the terminal in "application mode", causing the
+                        # cursor keys to send a different escape sequence than the default.
+                        cursor_down = b"\033OB"
+                    else:
+                        # Use the default ANSI cursor-down escape sequence
+                        cursor_down = b"\033[B"
+                    child.send(cursor_down * 8 + b"\n")
             else:
                 raise AssertionError
 
