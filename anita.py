@@ -2054,7 +2054,7 @@ class Anita(object):
                        (self.net_config.get('netmask') or "255.255.255.0") + "\n",
                 r"IPv4 gateway",
                        (self.net_config.get('gateway_addr') or "10.169.0.1") + "\n",
-                r"IPv4 name server",
+                r"(IPv4|Your) name server",
                        (self.net_config.get('dnsserveraddr') or "10.0.1.1") + "\n",
                 r"Perform IPv6 autoconfiguration", choose_no,
                 r"Select (IPv6 )?DNS server", choose_dns_server,
