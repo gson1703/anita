@@ -2198,7 +2198,7 @@ class Anita(object):
                 r'Changing local password for root',
                 # 40
                 r'(([a-z]): )?((Accept partition sizes)|(Go on))',
-                ], 10800)
+                ], 3600)
 
             if child.match.group(0) == prevmatch:
                 self.slog('ignoring repeat match')
