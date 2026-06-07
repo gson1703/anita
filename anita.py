@@ -1824,8 +1824,10 @@ class Anita(object):
                 r"1. Install NetBSD",
                 # 5 (was Group 7)
                 r"\(I\)nstall, \(S\)hell or \(H\)alt",
-                # 6 Erlite3 bootloader
+                # 6 Erlite3 bootloader 1
                 r'UBNT_E100',
+                # 7 Erlite3 bootloader 2
+                r'Octeon ubnt_e100#',
             ])
             if r == 0:
                 # We got the "insert disk" prompt
@@ -1886,7 +1888,7 @@ class Anita(object):
                 child.send("i\n")
             elif r == 6:
                 child.send('\003') # control-c
-                child.expect('Octeon ubnt_e100#')
+            elif r == 7:
                 child.send('dhcp;tftp $loadaddr erlite.elf32;bootoctlinux\r')
         if self.vmm == 'noemu':
             self.slog("wait for envsys to settle down")
