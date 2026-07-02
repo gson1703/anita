@@ -2065,7 +2065,8 @@ class Anita(object):
 
         def choose_install_media():
             # Noemu installs from HTTP, otherwise we use the CD-ROM
-            media = ['CD-ROM', 'HTTP'][self.vmm == 'noemu']
+            # For noemu, match HTTP only when not followed by S
+            media = [r'CD-ROM', r'HTTP(?!S)'][self.vmm == 'noemu']
             child.expect(r'([a-h]): ' + media)
             child.send(child.match.group(1) + b"\n")
 
