@@ -574,10 +574,10 @@ class Version(object):
 
     sets = make_set_dict_list([
       # In all version but not in all ports (missing from evmips-mips64eb)
-      [ 'kern-GENERIC', r'Kernel (GENERIC)', 1, 1 ],
+      [ 'kern-GENERIC', r'Kernel \(GENERIC\)', 1, 1 ],
       [ 'kern-GENERIC.NOACPI', r'Kernel \(GENERIC\.NOACPI\)', 0, 1 ],
       # For erlite3 (experimental, disabled by default)
-      [ 'kern-OCTEON', r'Kernel (OCTEON)', 0, 1 ],
+      [ 'kern-OCTEON', r'Kernel \(OCTEON\)', 0, 1 ],
       [ 'modules', r'Kernel [Mm]odules', 1, 1 ],
       # Must match the end of the label here so we don't accidentally
       # match "Base 32-bit compatibility libraries".
