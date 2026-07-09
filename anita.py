@@ -1973,22 +1973,27 @@ class Anita(object):
                 #
                 # Alternatively, match the special letter "x: " which
                 # is not followed by an installation status.
-                child.expect(
-                    r"(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s*\x1b\[\d+;\d+H\x00*))(Yes|No|All|None))|(x: )")
-                (letter, label, yesno, exit) = child.match.groups()
-                if exit:
-                    if len(sets_this_screen) != 0:
-                        break
-                else:
-                    #self.slog(label)
-                    for set in set_list:
-                        if re.match(set[r'label'], label) and label not in labels_seen:
-                            sets_this_screen.append({
-                                'set': set,
-                                'letter': letter,
-                                'state': yesno
-                            })
-                            labels_seen.add(label)
+                r = child.expect([
+                    r"(?:([a-z]): ([^ \x1b]+(?: [^ \x1b]+)*)(?:(?:\s\s+)|(?:\s*\x1b\[\d+;\d+H\x00*))(Yes|No|All|None))|(x: )",
+                    r"<: page up"])
+                if r == 0:
+                    (letter, label, yesno, exit) = child.match.groups()
+                    if exit:
+                        if len(sets_this_screen) != 0:
+                            break
+                    else:
+                        #self.slog(label)
+                        for set in set_list:
+                            if re.match(set[r'label'], label) and label not in labels_seen:
+                                sets_this_screen.append({
+                                    'set': set,
+                                    'letter': letter,
+                                    'state': yesno
+                                })
+                                labels_seen.add(label)
+                elif r == 1:
+                    # Make sure we see any choices that had scrolled off the top
+                    child.send(b"<")
 
             # Then make the actual selections
             for item in sets_this_screen:
