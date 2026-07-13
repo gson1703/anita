@@ -2758,7 +2758,7 @@ class Anita(object):
         exit_status = self.shell_cmd(
             "t=/var/tmp; " +
             "df -k | sed 's/^/df-pre-test /'; " +
-            "mkdir $t/tests && " +
+            "mkdir -p $t/tests && " +
             "cd /usr/tests && " +
             test_cmd +
             save_test_results_cmd +
