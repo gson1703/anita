@@ -59,7 +59,6 @@ netbsd_archive_url = "https://archive.netbsd.org/pub/NetBSD-archive/"
 # 'kernel_name' list, rather than using sysinst.  If multiple
 # kernel names are listed, the first one present in the release
 # is used.
-
 arch_props = {
     'i386': {
         'qemu': {
@@ -167,6 +166,17 @@ arch_props = {
         'memory_size': '256M',
         'boot_from_default': 'kernel',
         'scratch_disk': 'ld5c',
+    },
+    'virt68k': {
+        'qemu': {
+            'executable': 'qemu-system-m68k',
+            'machine_default': 'virt',
+        },
+        'memory_size': '256M',
+        'boot_from_default': 'kernel',
+        'inst_kernel': 'binary/kernel/netbsd-GENERIC.gz',
+        'inst_ramdisk': 'installation/ramdisks/inst-ramdisk.fs',
+        'scratch_disk': 'ld1c',
     },
     # Experimental, for noemu
     'evbmips-mips64eb': {
@@ -758,6 +768,11 @@ class Version(object):
             download_if_missing_3(self.dist_url(), self.download_local_arch_dir(),
                                   inst_kernel_prop.split(os.path.sep))
 
+        inst_ramdisk_prop = arch_props[self.arch()].get('inst_ramdisk')
+        if inst_ramdisk_prop is not None:
+            download_if_missing_3(self.dist_url(), self.download_local_arch_dir(),
+                                  inst_ramdisk_prop.split(os.path.sep))
+
         i = 0
         # Depending on the NetBSD version, there may be two or more
         # boot floppies.  Treat any floppies past the first two as
@@ -1248,6 +1263,11 @@ class Anita(object):
                 '-M', self.machine,
                 '-append', 'root=dk1',
             ]
+        elif self.dist.arch() == 'virt68k':
+            a = [
+                '-M', self.machine,
+                '-cpu', 'm68040',
+            ]
         else:
             a = []
         # When booting an image, we need to pass a kernel
@@ -1358,7 +1378,8 @@ class Anita(object):
         # Deal with virtio device ordering issues
         arch = self.dist.arch()
         if arch == 'evbarm-aarch64' or \
-           arch == 'evbarm-earmv7hf' and self.machine == 'virt':
+           arch == 'evbarm-earmv7hf' and self.machine == 'virt' or \
+           arch == 'virt68k':
             print("reversing virtio devices")
             reverse_virtio_drives(qemu_args)
         else:
@@ -1406,7 +1427,8 @@ class Anita(object):
         dev_args = []
         if self.dist.arch() == 'evbarm-earmv7hf' and self.machine == 'virt' or \
            self.dist.arch() == 'evbarm-aarch64' or \
-           self.dist.arch() == 'riscv-riscv64':
+           self.dist.arch() == 'riscv-riscv64' or \
+           self.dist.arch() == 'virt68k':
             # Use virtio
             drive_attrs += [('if', 'none'), ('id', 'hd%d' % devno)]
             dev_args += ['-device', 'virtio-blk-device,drive=hd%d' % devno]
@@ -1426,11 +1448,20 @@ class Anita(object):
             ('media', 'cdrom'),
             ('readonly', 'on'),
         ]
-        if self.dist.arch() in ('macppc', 'sparc64'):
+        if self.dist.arch() == 'virt68k':
+            drive_attrs += [('if', 'none'), ('id', 'cdrom%d' % self.n_cdrom)]
+        elif self.dist.arch() in ('macppc', 'sparc64'):
             assert(self.n_cdrom == 0)
             drive_attrs += [('index', '2')]
         drive_attrs += extra_attrs
         argv = ["-drive", qemu_format_attrs(drive_attrs)]
+        if self.dist.arch() == 'virt68k':
+            if self.n_cdrom == 0:
+                argv += ['-device', 'virtio-scsi-device,id=scsi0']
+            argv += [
+                '-device',
+                'scsi-cd,bus=scsi0.0,drive=cdrom%d' % self.n_cdrom,
+            ]
         dev = 'cd%da' % self.n_cdrom
         self.n_cdrom += 1
         return argv, dev
@@ -1750,7 +1781,7 @@ class Anita(object):
                                                ('tftp', tftpdir),
                                                ('bootfile', pxeboot_com_fn)])]
             elif self.boot_from == 'kernel':
-                # alpha
+                # alpha and virt68k
                 cd_path = self.dist.install_sets_iso_path()
                 vmm_args, sets_cd_device = self.qemu_add_cdrom(cd_path)
                 # Uncompress the installation kernel
@@ -1759,6 +1790,13 @@ class Anita(object):
                                     *arch_props[self.dist.arch()]['inst_kernel'].split(os.path.sep)),
                        inst_kernel)
                 vmm_args += ['-kernel', inst_kernel]
+                inst_ramdisk_prop = self.get_arch_prop('inst_ramdisk')
+                if inst_ramdisk_prop:
+                    vmm_args += [
+                        '-initrd',
+                        os.path.join(self.dist.download_local_arch_dir(),
+                                     *inst_ramdisk_prop.split(os.path.sep)),
+                    ]
             else:
                 raise RuntimeError("unsupported boot-from value %s" % self.boot_from)
 
@@ -2580,6 +2618,12 @@ class Anita(object):
                                 "binary", "kernel", "netbsd-GENERIC.gz"),
                    generic_kernel)
             vmm_args += ['-kernel', generic_kernel]
+        if self.dist.arch() == 'virt68k':
+            generic_kernel = os.path.join(self.workdir, 'netbsd_generic')
+            gunzip(os.path.join(self.dist.download_local_arch_dir(),
+                                "binary", "kernel", "netbsd-GENERIC.gz"),
+                   generic_kernel)
+            vmm_args += ['-kernel', generic_kernel, '-append', 'root=ld0']
 
         if self.vmm == 'qemu':
             child = self.start_qemu(vmm_args, snapshot_system_disk = snapshot_system_disk)
